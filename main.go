@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Packet"
 	"net"
 	"os"
 	"runtime"
@@ -28,6 +29,7 @@ func main() {
 	logging.SetBackend(B1LF)
 	server.CurrentStatus = server.CreateStatusObject()
 	//Logger Creation END
+	server.Log = Log
 
 	Log.Info("HoneyGO ", HoneyGOVersion, " starting...")
 
@@ -41,8 +43,11 @@ func main() {
 	Log.Info("Server Network Listener Started:", ServerPort)
 	Log.Info("Number of CPU's: ", runtime.NumCPU())
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	Log.Info("Generating Key Chain")
+	go Packet.KeyGen() //Generate Keys used for client Authenication, will be controlled by config file (later release)
 
 	//Accepts connection and creates new goroutine for the connection to be handled
+	//other gorouties are stemmed from HandleConnection
 	for {
 		Connection, err := netlisten.Accept()
 

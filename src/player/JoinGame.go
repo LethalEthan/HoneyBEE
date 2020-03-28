@@ -1,8 +1,13 @@
-package Player
+package player
 
 import (
-	"packet"
+	"Packet"
+	"net"
+
+	logging "github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("HoneyGO")
 
 const (
 	Nether    = -1
@@ -11,6 +16,12 @@ const (
 )
 
 var Dimension = Overworld
+
+//
+type ClientConnection struct {
+	Conn  net.Conn
+	State int
+}
 
 //GameJoin - Structure of the JoinGame packet
 type GameJoin struct {
@@ -26,18 +37,32 @@ type GameJoin struct {
 }
 
 //Temporary
-func CreateGameJoin(*GameJoin) *GameJoin {
-	GJ := new(GameJoin)
-	GJ.EntityID = 0
-	GJ.GameMode = 1
-	GJ.Dimension = 0
-	GJ.HashedSeed = 0
-	GJ.MaxPlayers = 20
-	GJ.LevelType = "default"
-	GJ.ViewDistance = 16
-	GJ.ReducedDebugInfo = false
-	GJ.EnableRespawnScreen = true
+func CreateGameJoin(Conn *ClientConnection) /* *GameJoin */ {
+	//GJ := new(GameJoin)
+	GJ := &GameJoin{1, 1, 0, 12345678, 20, "default", 16, false, true}
+	log.Debug("GJ:", GJ)
 	writer := Packet.CreatePacketWriter(0x26)
 	writer.WriteInt(GJ.EntityID)
-	return GJ
+	writer.WriteUnsignedByte(GJ.GameMode)
+	writer.WriteInt(int32(GJ.Dimension))
+	writer.WriteLong(GJ.HashedSeed)
+	writer.WriteUnsignedByte(0)
+	writer.WriteString("default")
+	writer.WriteVarInt(16)
+	writer.WriteBoolean(false)
+	writer.WriteBoolean(true)
+
+	log.Debug("Data setup")
+	go CreateSetDiff(Conn) //Creates SetDifficultyPacket
+	SendData(Conn, writer)
+	//return GJ
 }
+
+func SendData(Connection *ClientConnection, writer *Packet.PacketWriter) {
+	Connection.Conn.Write(writer.GetPacket())
+}
+
+// func fetchtype(t *GameJoin) {
+// 	fmt.Print(reflect.TypeOf(t.EntityID))
+//
+// }
