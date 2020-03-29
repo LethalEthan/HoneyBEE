@@ -89,7 +89,8 @@ func keys() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print("Key Generated")
+	Log := logging.MustGetLogger("HoneyGO")
+	Log.Info("Key Generated!")
 }
 
 //SendData - Sends the data to the client

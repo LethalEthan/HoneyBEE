@@ -22,24 +22,28 @@ import (
 
 //Define used variables
 var (
-	publicKey             *rsa.PublicKey
-	publicKeyBytes        []byte                       //Hm, wonder what this is? a watermelon ofc
-	privateKey            *rsa.PrivateKey              //Like Do I need to comment this?
-	Encryption            bool                         //TODO: Control via confighandler
-	KeyLength             int                          //Keylength used by Encryption Request
-	playername            string                       //For UUID getter
-	Log                   *logging.Logger              //Pretty obvious
-	CurrentStatus         *ServerStatus                //ServerStatus Object
-	ClientSharedSecret    []byte                       //Cantelope Melon
-	ClientVerifyToken     []byte                       //Lemons
-	ClientConnectionMap   map[string]*ClientConnection //ClientConnectionMap - Map of connections, duh
-	GotDaKeys             = false                      //Got dem keys?
-	ClientSharedSecretLen = 128                        //Initialise CSSL
-	ClientVerifyTokenLen  = 128                        //Initialise CVTL
-	serverID              = ""                         //Apparently this isn't used anymore
-	ServerVerifyToken     = make([]byte, 4)            //Initialise a 4 element byte slice
+	//Encryption Stuff
+	publicKey          *rsa.PublicKey  //Pooblic Key
+	publicKeyBytes     []byte          //PublicKey in a byte array for packet delivery and Auth check
+	privateKey         *rsa.PrivateKey //Like Do I need to comment this?
+	Encryption         bool            //TODO: Control via confighandler
+	KeyLength          int             //Keylength used by Encryption Request
+	ClientSharedSecret []byte          //Cantelope Melon
+	ClientVerifyToken  []byte          //Lemons
+	//HoneyGO, HoneyComb and should there be a HoneyPot that allows plugins and mods to work together? IDK if that's possible but we can try later
+	playername          string                       //For Authentication
+	Log                 *logging.Logger              //Pretty obvious
+	CurrentStatus       *ServerStatus                //ServerStatus Object
+	ClientConnectionMap map[string]*ClientConnection //ClientConnectionMap - Map of connections, duh
+	//Encryption stuff again
+	GotDaKeys             = false           //Got dem keys?
+	ClientSharedSecretLen = 128             //Initialise CSSL
+	ClientVerifyTokenLen  = 128             //Initialise CVTL
+	serverID              = ""              //Apparently this isn't used by mc anymore
+	ServerVerifyToken     = make([]byte, 4) //Initialise a 4 element byte slice of cake
 )
 
+//Making these comments is the only way to make this fun I'm sorry lol
 const (
 	MinecraftVersion         = "1.15.2" //Supported MC version
 	MinecraftProtocolVersion = 578      //Supported MC protocol Version
@@ -83,10 +87,10 @@ func HandleConnection(Connection *ClientConnection) {
 					//--Packet 0x00 S->C Start--//
 					Hpacket, err := Packet.HandshakePacketCreate(packetSize, reader)
 					if err != nil {
-						DestroyClientConnection(Connection)
+						DestroyClientConnection(Connection) //You have been terminated
 						print(err)
 					}
-					Connection.KeepAlive()
+					Connection.KeepAlive() //Ah, ah. ah, ah stayin alive, stayin alive!
 					Connection.State = int(Hpacket.NextState)
 					break
 					//--Packet 0x00 End--//
@@ -132,7 +136,6 @@ func HandleConnection(Connection *ClientConnection) {
 						SendData(Connection, writer)
 						DestroyClientConnection(Connection)
 						break
-
 						//--Packet 0x01 End--//
 					}
 				}
@@ -144,13 +147,13 @@ func HandleConnection(Connection *ClientConnection) {
 					{
 						//NOTE: Cannot be translated via a function due to the goroutine starting before the pointer is ready
 						//Causing a crash
+						playername, _ = reader.ReadString()
 						PE := new(Packet.ClientConnection)
 						PE.Conn = Connection.Conn
 						PE.State = Connection.State
 						go Packet.CreateEncryptionRequest(PE)
 						Connection.KeepAlive()
 						//--Packet 0x00 C->S Start--//
-						//publicKeyBytes = keys()
 						Log.Debug("Login State, packetID 0x00")
 						//NOTE for ethan:UCB
 						break
@@ -159,36 +162,34 @@ func HandleConnection(Connection *ClientConnection) {
 				case 0x01:
 					{
 						//--Packet 0x01 C->S Start--//
-
 						Log.Debug("Login State, packetID 0x01")
 						p := packet
-						ClientSharedSecretLen = 128 //Should always be 128
-
-						//Log.Debug("ClientSharedSecretLength: ", ClientSharedSecretLen, "\n")
+						ClientSharedSecretLen = 128   //Should always be 128
 						ClientSharedSecret = p[2:130] //Find the 128 bytes in the whole byte array
-						//Log.Debug("ClientSharedSecret: ", ClientSharedSecret, "\n")
-						ClientVerifyToken = p[132:] //Find the 128 bytes in whole byte array
-						//Log.Debug("ClientVerifyTokenLen", ClientVerifyTokenLen, "\n")
-						//Log.Debug("ClientVerifyToken: ", ClientVerifyToken, "\n")
+						ClientVerifyToken = p[132:]   //Find the 128 bytes in whole byte array
 						Connection.KeepAlive()
 						//Decrypt Shared Secret
 						decryptSS, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientSharedSecret)
 						if err != nil {
 							fmt.Print(err)
 						}
+						//Set the decrypted value
 						ClientSharedSecret = decryptSS
 						ClientSharedSecretLen = len(ClientSharedSecret)
+						//Basic check to see whether it's 16 bytes
 						if ClientSharedSecretLen != 16 {
 							Log.Warning("Shared Secret Length is NOT 16 bytes :(")
 						} else {
 							Log.Info("ClientSharedSecret Recieved Successfully")
 						}
 						Log.Info("ClientSharedSecret: ", ClientSharedSecret)
+
 						//Decrypt Verify Token
 						decryptVT, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientVerifyToken)
 						if err != nil {
 							fmt.Print(err)
 						}
+
 						ClientVerifyTokenLen = len(decryptVT)
 						if ClientVerifyTokenLen != ServerVerifyTokenLen {
 							Log.Warning("VerifyToken Mismatch!")
@@ -210,24 +211,8 @@ func HandleConnection(Connection *ClientConnection) {
 						if err != nil {
 							Log.Error(err)
 						}
-						//
-						//uuid := UUID.Testing2(playername)
-						uuid := "f41f9506-e8f7-4a2b-bd4d-4db421620bff"
-						//uuid := "f41f9506e8f74a2bbd4d4db421620bff"
-						Log.Debug(uuid)
-
-						writer.WriteString(uuid)
+						writer.WriteString(Auth)
 						writer.WriteString(playername)
-						// pp := writer.GetPacket()
-						// Log.Debug("0x02: ", pp)
-						// writert, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, pp)
-						// if err != nil {
-						// 	fmt.Print(err)
-						// }
-						// writerpo := Packet.CreatePacketWriter(0x2)
-						// writerpo.WriteArray(writert)
-						// Log.Debug("Enc 0x02", writert)
-						// //Connection.State = PLAY
 						SendData(Connection, writer)
 
 						Connection.State = PLAY
@@ -316,9 +301,7 @@ func TranslatePacketStruct(Conn *ClientConnection) *Packet.ClientConnection {
 
 //readPacketHeader - Reads the packet Header and ensures that the packet size is correct, info from wiki.vg
 func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
-
 	packetSize, err := VarTool.ParseVarIntFromConnection(Conn.Conn)
-
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -345,7 +328,6 @@ func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
 	}
 	packet := make([]byte, packetSize-1)
 	Conn.Conn.Read(packet)
-
 	return packet, packetSize - 1, packetID, nil
 }
 
@@ -366,17 +348,16 @@ func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
 // 	return publicKeyBytes
 // }
 
-//var Instance = Authenticator{}
-
-type Authenticator struct{}
-
 var ErrorAuthFailed = errors.New("Authentication failed")
 
 type jsonResponse struct {
 	ID string `json:"id"`
 }
 
-func /*(Authenticator)*/ Authenticate(username string, serverID string, sharedSecret, publicKey []byte) (string, error) {
+func Authenticate(username string, serverID string, sharedSecret, publicKey []byte) (string, error) {
+	//A hash is created using the shared secret and public key and is sent to the mojang sessionserver
+	//The server returns the data about the player including the player's skin blob
+	//Again I cannot thank enough wiki.vg, this is based off one of the linked java gists by Drew DeVault thank you for the gist that I used to base this off
 	sha := sha1.New()
 	sha.Write([]byte(serverID))
 	sha.Write(sharedSecret)

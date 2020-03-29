@@ -1,0 +1,32 @@
+package server
+
+import "jsonstruct"
+
+type ServerStatus struct {
+	Version     StatusVersion           `json:"version"`
+	Players     StatusPlayers           `json:"players"`
+	Description jsonstruct.StatusObject `json:"description"`
+	Favicon     string                  `json:"favicon,omitempty"`
+}
+
+type StatusVersion struct {
+	Name     string `json:"name"`
+	Protocol int32  `json:"protocol"`
+}
+
+type StatusPlayers struct {
+	MaxPlayers    int32 `json:"max"`
+	OnlinePlayers int32 `json:"online"`
+	//SamplePlayer  []SPlayer `json:"sample, omitempty"`
+}
+
+func CreateStatusObject() *ServerStatus {
+	status := new(ServerStatus)
+	//Ref: Server.go: constants for status.Version
+	status.Version = StatusVersion{Name: MinecraftVersion, Protocol: MinecraftProtocolVersion}
+	status.Players = StatusPlayers{MaxPlayers: 20, OnlinePlayers: 0}
+	Extra := make([]jsonstruct.StatusObject, 1)
+	Extra[0] = jsonstruct.StatusObject{Text: "GO!", Bold: true, Color: "gold"}
+	status.Description = jsonstruct.StatusObject{Text: "Honey", Bold: true, Color: "yellow", Extra: Extra}
+	return status
+}
