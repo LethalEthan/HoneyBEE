@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
+	"time"
 
 	logging "github.com/op/go-logging"
 )
@@ -39,6 +40,7 @@ func KeyGen() {
 
 //CreateEncryptionRequest - Creates the packet Encryption Request and sends to the client
 func CreateEncryptionRequest(Connection *ClientConnection) {
+	Connection.KeepAlive()
 	Log := logging.MustGetLogger("HoneyGO")
 	Log.Debug("Login State, packetID 0x00")
 	Encryption = true //TODO: Finish ConfigHandler
@@ -46,11 +48,9 @@ func CreateEncryptionRequest(Connection *ClientConnection) {
 	//Encryption Request
 	//--Packet 0x01 S->C Start --//
 	if Encryption {
-		fmt.Print("Login State, packetID 0x01")
-		Log.Debugf("Login State, packetID 0x01")
-		Log.Debug("key:", publicKeyBytes) //Output Key for Debugging
+		Log.Debug("Login State, packetID 0x01 Start")
 		KeyLength = len(publicKeyBytes)
-		Log.Debug("KeyLength: ", KeyLength)
+		//Log.Debug("KeyLength: ", KeyLength)
 		//KeyLength Checks
 		if KeyLength > 162 {
 			Log.Warning("Key is bigger than expected!")
@@ -68,13 +68,12 @@ func CreateEncryptionRequest(Connection *ClientConnection) {
 		writer.WriteArray(publicKeyBytes)        //Write Key byte Array
 		writer.WriteVarInt(ServerVerifyTokenLen) //Always 4 on notchian servers
 		rand.Read(ServerVerifyToken)             // Randomly Generate ServerVerifyToken
-		Log.Debug("ServerVerifyToken: ", ServerVerifyToken)
+		//Log.Debug("ServerVerifyToken: ", ServerVerifyToken)
 		writer.WriteArray(ServerVerifyToken)
-		fmt.Print("Sent")
 		SendData(Connection, writer)
 		//Packet.LoginPacketCreate(packetSize, reader) //TBD
-		Log.Debug("Encryption Request: ", writer)
-		Log.Debug("Encryption Request Sent, await response from client...")
+		//Log.Debug("Encryption Request: ", writer)
+		Log.Debug("Encryption Request Sent")
 	}
 }
 
@@ -98,6 +97,7 @@ func SendData(Connection *ClientConnection, writer *PacketWriter) {
 	Connection.Conn.Write(writer.GetPacket())
 }
 
+//To be able to retrieve the keychain because it runs within a goroutine
 func GetPrivateKey() *rsa.PrivateKey {
 	return privateKey
 }
@@ -108,4 +108,8 @@ func GetPublicKey() *rsa.PublicKey {
 
 func GetPublicKeyBytes() []byte {
 	return publicKeyBytes
+}
+
+func (Conn *ClientConnection) KeepAlive() {
+	Conn.Conn.SetDeadline(time.Now().Add(time.Second * 10))
 }

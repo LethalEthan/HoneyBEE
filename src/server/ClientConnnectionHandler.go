@@ -8,12 +8,13 @@ import (
 
 //ClientConnection - Simple struct for Client Connections
 type ClientConnection struct {
-	Conn     net.Conn
-	State    int
-	isClosed bool
+	Conn      net.Conn
+	State     int
+	isClosed  bool
+	Direction string
 }
 
-//CreateClientConnection - Creates a client Connection, checks whether Connection previously existed and Restores the Connection and terminates due to a  suspected failure
+//CreateClientConnection - Creates a client Connection, checks whether Connection previously existed and Restores the Connection and terminates due to a suspected failure
 func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 	//Initialise Map
 	if ClientConnectionMap == nil {

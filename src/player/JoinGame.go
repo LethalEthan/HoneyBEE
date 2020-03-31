@@ -3,6 +3,7 @@ package player
 import (
 	"Packet"
 	"net"
+	"time"
 
 	logging "github.com/op/go-logging"
 )
@@ -38,8 +39,8 @@ type GameJoin struct {
 
 //Temporary
 func CreateGameJoin(Conn *ClientConnection) /* *GameJoin */ {
-	//GJ := new(GameJoin)
-	GJ := &GameJoin{1, 1, 0, 12345678, 20, "default", 16, false, true}
+	Conn.Conn.SetDeadline(time.Now().Add(time.Second * 5)) //KeepAlive
+	GJ := &GameJoin{1, 1, 0, 12345, 20, "default", 16, false, true}
 	log.Debug("GJ:", GJ)
 	writer := Packet.CreatePacketWriter(0x26)
 	writer.WriteInt(GJ.EntityID)
@@ -51,15 +52,17 @@ func CreateGameJoin(Conn *ClientConnection) /* *GameJoin */ {
 	writer.WriteVarInt(16)
 	writer.WriteBoolean(false)
 	writer.WriteBoolean(true)
-
-	log.Debug("Data setup")
-	go CreateSetDiff(Conn) //Creates SetDifficultyPacket
 	SendData(Conn, writer)
-	//return GJ
+	log.Debug("GameJoin Packet sent, Sending SetDifficulty packet")
+	go CreateSetDiff(Conn) //Creates SetDifficultyPacket
 }
 
 func SendData(Connection *ClientConnection, writer *Packet.PacketWriter) {
 	Connection.Conn.Write(writer.GetPacket())
+}
+
+func (Conn *ClientConnection) KeepAlive() {
+	Conn.Conn.SetDeadline(time.Now().Add(time.Second * 10))
 }
 
 // func fetchtype(t *GameJoin) {

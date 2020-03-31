@@ -36,14 +36,17 @@ var (
 	CurrentStatus       *ServerStatus                //ServerStatus Object
 	ClientConnectionMap map[string]*ClientConnection //ClientConnectionMap - Map of connections, duh
 	//Encryption stuff again
+	DEBUG                 = true            //Output Debug info?
 	GotDaKeys             = false           //Got dem keys?
 	ClientSharedSecretLen = 128             //Initialise CSSL
 	ClientVerifyTokenLen  = 128             //Initialise CVTL
 	serverID              = ""              //Apparently this isn't used by mc anymore
 	ServerVerifyToken     = make([]byte, 4) //Initialise a 4 element byte slice of cake
+	//Chann                 = make(chan bool)
 )
 
 //Making these comments is the only way to make this fun I'm sorry lol
+//REFERENCE: Play state goes from GameJoin.go -> SetDifficulty.go -> PlayerAbilities.go via goroutines
 const (
 	MinecraftVersion         = "1.15.2" //Supported MC version
 	MinecraftProtocolVersion = 578      //Supported MC protocol Version
@@ -72,10 +75,14 @@ func HandleConnection(Connection *ClientConnection) {
 			return
 		}
 		//DEBUG: print out all values
-		Log.Debug("Packet Size: ", packetSize)
-		Log.Debug("Packet ID: ", packetID)
-		Log.Debugf("Packet Contains: %v\n", packet)
-		Log.Debug("")
+		if DEBUG {
+			Log.Debug("Packet Size: ", packetSize)
+			Log.Debug("Packet ID: ", packetID, "State: ", Connection.State)
+			Log.Debugf("Packet Contains: %v\n", packet)
+			Log.Debug("Direction: ", Connection.Direction)
+			fmt.Print("")
+		}
+		player.CanContinue = false //reset value
 		//Create Packet Reader
 		reader := Packet.CreatePacketReader(packet)
 		//Packet Handling
@@ -88,14 +95,13 @@ func HandleConnection(Connection *ClientConnection) {
 					Hpacket, err := Packet.HandshakePacketCreate(packetSize, reader)
 					if err != nil {
 						DestroyClientConnection(Connection) //You have been terminated
-						print(err)
+						Log.Error(err.Error())
 					}
 					Connection.KeepAlive() //Ah, ah. ah, ah stayin alive, stayin alive!
 					Connection.State = int(Hpacket.NextState)
 					break
 					//--Packet 0x00 End--//
 				}
-
 			case 0xFE:
 				{
 					//--Packet 0xFE Legacy Ping Request --//
@@ -124,10 +130,10 @@ func HandleConnection(Connection *ClientConnection) {
 						SendData(Connection, writer)
 						break
 					}
-
 				case 0x01:
 					{
 						//--Packet 0x01 S->C Start--//
+						Connection.KeepAlive()
 						writer := Packet.CreatePacketWriter(0x01)
 						Log.Debug("Status State, packetID 0x01")
 						mirror, _ := reader.ReadLong()
@@ -145,23 +151,18 @@ func HandleConnection(Connection *ClientConnection) {
 				switch packetID {
 				case 0x00:
 					{
-						//NOTE: Cannot be translated via a function due to the goroutine starting before the pointer is ready
-						//Causing a crash
-						playername, _ = reader.ReadString()
-						PE := new(Packet.ClientConnection)
-						PE.Conn = Connection.Conn
-						PE.State = Connection.State
-						go Packet.CreateEncryptionRequest(PE)
-						Connection.KeepAlive()
 						//--Packet 0x00 C->S Start--//
 						Log.Debug("Login State, packetID 0x00")
-						//NOTE for ethan:UCB
+						Connection.KeepAlive()
+						playername, _ = reader.ReadString()
+						PE := TranslatePacketStruct(Connection)
+						go Packet.CreateEncryptionRequest(PE)
 						break
 					}
-
 				case 0x01:
 					{
 						//--Packet 0x01 C->S Start--//
+						Connection.KeepAlive()
 						Log.Debug("Login State, packetID 0x01")
 						p := packet
 						ClientSharedSecretLen = 128   //Should always be 128
@@ -173,8 +174,7 @@ func HandleConnection(Connection *ClientConnection) {
 						if err != nil {
 							fmt.Print(err)
 						}
-						//Set the decrypted value
-						ClientSharedSecret = decryptSS
+						ClientSharedSecret = decryptSS //Set the decrypted value
 						ClientSharedSecretLen = len(ClientSharedSecret)
 						//Basic check to see whether it's 16 bytes
 						if ClientSharedSecretLen != 16 {
@@ -182,51 +182,62 @@ func HandleConnection(Connection *ClientConnection) {
 						} else {
 							Log.Info("ClientSharedSecret Recieved Successfully")
 						}
-						Log.Info("ClientSharedSecret: ", ClientSharedSecret)
-
 						//Decrypt Verify Token
 						decryptVT, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientVerifyToken)
 						if err != nil {
 							fmt.Print(err)
 						}
-
+						Connection.KeepAlive()
 						ClientVerifyTokenLen = len(decryptVT)
-						if ClientVerifyTokenLen != ServerVerifyTokenLen {
-							Log.Warning("VerifyToken Mismatch!")
-						}
-						Log.Debug("VT:", decryptVT)
+						//Log.Debug("VT:", decryptVT)
 						if ServerVerifyTokenLen != ClientVerifyTokenLen {
 							Log.Warning("Encryption Failed!")
 						} else {
 							Log.Info("Encryption Successful!")
 						}
+						//Authenticate Player
 						Auth, err := Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
-						Log.Debug("Auth: ", Auth)
+						if err != nil {
+							Log.Error(err)
+						}
+						Log.Debug(playername, "[", Auth, "]")
 						//--Packer 0x01 End--//
 
 						//--Packet 0x02 S->C Start--//
 						writer := Packet.CreatePacketWriter(0x02)
-						//UUID, err := Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
 						Log.Debug("Playername: ", playername)
-						if err != nil {
-							Log.Error(err)
-						}
 						writer.WriteString(Auth)
 						writer.WriteString(playername)
 						SendData(Connection, writer)
-
 						Connection.State = PLAY
-						//--Packet 0x02 End--//
-						//writer2 := Packet..CreatePacketWriter(0x04) //Compression Not needed, FOR NOW
-						Connection.KeepAlive()
 						PC := TranslatePlayerStruct(Connection) //Translates Server.ClientConnection -> player.ClientConnection
 						//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 						//this will be useful when multiple clients connect but with some added memory usage
-						go player.CreateGameJoin(PC) //Creates JoinGame packet AND SetDifficulty via go routines
+						go player.CreateGameJoin(PC) //channel) //Creates JoinGame packet AND SetDifficulty AND Player Abilities via go routines
+						//s := time.Now()
+						//Pause switch case until goroutines are finished
+						// for !Val {
+						// 	Val = <-isDone
+						// 	elapsed := time.Since(s)
+						// 	Log.Debug("elapsed: ", elapsed)
+						// 	if elapsed >= time.Duration(5) {
+						// 		DestroyClientConnection(Connection)
+						// 		break
+						// 	}
+						// 	if Val == true && Connection.isClosed == false {
+						// 		Log.Debug("FINISHED JG, SD, PA")
+						// 		break
+						// 	} else {
+						// 		if Connection.isClosed {
+						// 			break
+						// 		}
+						// 	}
+						//continue
+						//}
+						Log.Debug("END")
 						//SendData(Connection, writer26)
 						break
 					}
-
 				case 0x02:
 					{
 						Log.Debug("Login State, packet 0x02")
@@ -268,7 +279,9 @@ func HandleConnection(Connection *ClientConnection) {
 						break
 					}
 				default:
-					Log.Debug("Packet recieved")
+					for {
+						Log.Fatal("Play Packet recieved")
+					}
 				}
 			}
 		}
@@ -299,17 +312,20 @@ func TranslatePacketStruct(Conn *ClientConnection) *Packet.ClientConnection {
 	return PE
 }
 
-//readPacketHeader - Reads the packet Header and ensures that the packet size is correct, info from wiki.vg
+//readPacketHeader - Reads the packet Header for Packet ID and size info
 func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
+	//Read Packet size
 	packetSize, err := VarTool.ParseVarIntFromConnection(Conn.Conn)
 	if err != nil {
-		return nil, 0, 0, err
+		return nil, 0, 0, err //Return nothing on error
 	}
 	//Information used from wiki.vg
+	//Handling Handshake
 	if packetSize == 254 && Conn.State == HANDSHAKE {
-		PreBufferSize := 29
+		PreBufferSize := 30 //Create PreBuffer
 		PreBuffer := make([]byte, PreBufferSize)
 		Conn.Conn.Read(PreBuffer)
+		//PostBuffer -> Big endian
 		PostBufferSize := int(binary.BigEndian.Uint16(PreBuffer[25:]))
 		PostBuffer := make([]byte, PostBufferSize)
 		size := PreBufferSize + PostBufferSize
@@ -331,23 +347,6 @@ func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
 	return packet, packetSize - 1, packetID, nil
 }
 
-// //keys - Generates a random key that is sent to the client in a byte array
-// func keys() (keybytes []byte) {
-// 	var err error
-// 	privateKey, err = rsa.GenerateKey(rand.Reader, 1024)
-// 	if err != nil {
-// 		Log.Error(err.Error())
-// 	}
-// 	privateKey.Precompute()
-// 	//privateKey = privateKey
-// 	publicKey = &privateKey.PublicKey
-// 	publicKeyBytes, err = x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return publicKeyBytes
-// }
-
 var ErrorAuthFailed = errors.New("Authentication failed")
 
 type jsonResponse struct {
@@ -357,7 +356,7 @@ type jsonResponse struct {
 func Authenticate(username string, serverID string, sharedSecret, publicKey []byte) (string, error) {
 	//A hash is created using the shared secret and public key and is sent to the mojang sessionserver
 	//The server returns the data about the player including the player's skin blob
-	//Again I cannot thank enough wiki.vg, this is based off one of the linked java gists by Drew DeVault thank you for the gist that I used to base this off
+	//Again I cannot thank enough wiki.vg, this is based off one of the linked java gists by Drew DeVault; thank you for the gist that I used to base this off
 	sha := sha1.New()
 	sha.Write([]byte(serverID))
 	sha.Write(sharedSecret)
@@ -391,7 +390,8 @@ func Authenticate(username string, serverID string, sharedSecret, publicKey []by
 	if len(res.ID) != 32 {
 		return "", ErrorAuthFailed
 	}
-
+	hyphenater := res.ID[0:8] + "-" + res.ID[8:12] + "-" + res.ID[12:16] + "-" + res.ID[16:20] + "-" + res.ID[20:]
+	res.ID = hyphenater
 	return res.ID, nil
 }
 

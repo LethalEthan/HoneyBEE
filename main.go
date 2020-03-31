@@ -41,13 +41,15 @@ func main() {
 		return
 	}
 	Log.Info("Server Network Listener Started:", ServerPort)
-	Log.Info("Number of CPU's: ", runtime.NumCPU())
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU()) //Set it to the value of how many cores
 	Log.Info("Generating Key Chain")
+	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
+	//this will be useful when multiple clients connect but with some slight added memory usage
 	go Packet.KeyGen() //Generate Keys used for client Authenication, will be controlled by config file (later release)
 
 	//Accepts connection and creates new goroutine for the connection to be handled
-	//other gorouties are stemmed from HandleConnection
+	//other goroutines are stemmed from HandleConnection
 	for {
 		Connection, err := netlisten.Accept()
 

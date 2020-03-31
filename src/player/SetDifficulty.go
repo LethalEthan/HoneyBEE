@@ -1,6 +1,10 @@
 package player
 
-import "Packet"
+import (
+	"Packet"
+
+	logging "github.com/op/go-logging"
+)
 
 //var log = logging.MustGetLogger("HoneyGO")
 
@@ -10,9 +14,14 @@ type SetDifficulty struct {
 }
 
 func CreateSetDiff(Conn *ClientConnection) {
-	SD := &SetDifficulty{0, false} //new(SetDifficulty)
+	Conn.KeepAlive()
+	Log := logging.MustGetLogger("HoneyGO")
+	Log.Debug("Packet Play, 0x0E Created")
+	SD := &SetDifficulty{0, true} //new(SetDifficulty)
 	writer := Packet.CreatePacketWriter(0x0E)
 	writer.WriteUnsignedByte(SD.Difficulty)
 	writer.WriteBoolean(SD.DiffLock)
 	SendData(Conn, writer)
+	Log.Debug("Difficulty set sent, sending PlayerAbilities")
+	go CreatePlayerAbilities(Conn)
 }
