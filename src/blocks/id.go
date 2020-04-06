@@ -1,7 +1,7 @@
 package blocks
 
 //Blocks is an id to block map
-var Blocks = [257]Block{
+var Blocks = [...]Block{
 	0:   Air,
 	1:   Stone,
 	2:   Grass,

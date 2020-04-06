@@ -33,12 +33,7 @@ func CreatePlayerAbilities(Conn *ClientConnection) {
 	writer.WriteFloat(PA.FlyingSpeed)
 	writer.WriteFloat(PA.FOVModifier)
 	Log.Debug("Conn state: ", Conn.State)
-	//SendData(Conn, writer)
+	SendData(Conn, writer)
 	Log.Debug("PlayerAbilities sent")
 	CanContinue = true
 }
-
-// func GetConn() (t *server.ClientConnection) {
-// 	Conn := new(server.ClientConnection)
-// 	return t
-// }

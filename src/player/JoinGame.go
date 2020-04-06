@@ -3,6 +3,7 @@ package player
 import (
 	"Packet"
 	"net"
+	"runtime"
 	"time"
 
 	logging "github.com/op/go-logging"
@@ -37,11 +38,11 @@ type GameJoin struct {
 	EnableRespawnScreen bool //Set false when doImmediateRespawn gamerule is true
 }
 
-//Temporary
-func CreateGameJoin(Conn *ClientConnection) /* *GameJoin */ {
+func CreateGameJoin(Conn *ClientConnection) {
 	Conn.Conn.SetDeadline(time.Now().Add(time.Second * 5)) //KeepAlive
 	GJ := &GameJoin{1, 1, 0, 12345, 20, "default", 16, false, true}
 	log.Debug("GJ:", GJ)
+	//No easy way to do this without this mess, a packet system re-write will be done in the future
 	writer := Packet.CreatePacketWriter(0x26)
 	writer.WriteInt(GJ.EntityID)
 	writer.WriteUnsignedByte(GJ.GameMode)
@@ -54,6 +55,7 @@ func CreateGameJoin(Conn *ClientConnection) /* *GameJoin */ {
 	writer.WriteBoolean(true)
 	SendData(Conn, writer)
 	log.Debug("GameJoin Packet sent, Sending SetDifficulty packet")
+	log.Debug("GOR:", runtime.NumGoroutine())
 	go CreateSetDiff(Conn) //Creates SetDifficultyPacket
 }
 

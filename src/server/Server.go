@@ -23,34 +23,33 @@ import (
 //Define used variables
 var (
 	//Encryption Stuff
-	publicKey          *rsa.PublicKey  //Pooblic Key
+	publicKey          *rsa.PublicKey  //Public Key
 	publicKeyBytes     []byte          //PublicKey in a byte array for packet delivery and Auth check
 	privateKey         *rsa.PrivateKey //Like Do I need to comment this?
 	Encryption         bool            //TODO: Control via confighandler
 	KeyLength          int             //Keylength used by Encryption Request
-	ClientSharedSecret []byte          //Cantelope Melon
-	ClientVerifyToken  []byte          //Lemons
+	ClientSharedSecret []byte          //CSS
+	ClientVerifyToken  []byte          //CVT
 	//HoneyGO, HoneyComb and should there be a HoneyPot that allows plugins and mods to work together? IDK if that's possible but we can try later
 	playername          string                       //For Authentication
 	Log                 *logging.Logger              //Pretty obvious
 	CurrentStatus       *ServerStatus                //ServerStatus Object
 	ClientConnectionMap map[string]*ClientConnection //ClientConnectionMap - Map of connections, duh
 	//Encryption stuff again
-	DEBUG                 = true            //Output Debug info?
+	DEBUG                 = false           //Output Debug info?
 	GotDaKeys             = false           //Got dem keys?
 	ClientSharedSecretLen = 128             //Initialise CSSL
 	ClientVerifyTokenLen  = 128             //Initialise CVTL
-	serverID              = ""              //Apparently this isn't used by mc anymore
+	serverID              = ""              //this isn't used by mc anymore
 	ServerVerifyToken     = make([]byte, 4) //Initialise a 4 element byte slice of cake
 	//Chann                 = make(chan bool)
 )
 
-//Making these comments is the only way to make this fun I'm sorry lol
 //REFERENCE: Play state goes from GameJoin.go -> SetDifficulty.go -> PlayerAbilities.go via goroutines
 const (
 	MinecraftVersion         = "1.15.2" //Supported MC version
 	MinecraftProtocolVersion = 578      //Supported MC protocol Version
-	ServerVerifyTokenLen     = 4        //Should always be 4
+	ServerVerifyTokenLen     = 4        //Should always be 4 on notchian servers
 )
 
 func GetKeyChain() {
@@ -82,7 +81,6 @@ func HandleConnection(Connection *ClientConnection) {
 			Log.Debug("Direction: ", Connection.Direction)
 			fmt.Print("")
 		}
-		player.CanContinue = false //reset value
 		//Create Packet Reader
 		reader := Packet.CreatePacketReader(packet)
 		//Packet Handling
@@ -155,8 +153,9 @@ func HandleConnection(Connection *ClientConnection) {
 						Log.Debug("Login State, packetID 0x00")
 						Connection.KeepAlive()
 						playername, _ = reader.ReadString()
-						PE := TranslatePacketStruct(Connection)
-						go Packet.CreateEncryptionRequest(PE)
+						// PE := TranslatePacketStruct(Connection)
+						// go Packet.CreateEncryptionRequest(PE)
+						go CreatePacketSchedule(0, Connection)
 						break
 					}
 				case 0x01:
@@ -189,7 +188,6 @@ func HandleConnection(Connection *ClientConnection) {
 						}
 						Connection.KeepAlive()
 						ClientVerifyTokenLen = len(decryptVT)
-						//Log.Debug("VT:", decryptVT)
 						if ServerVerifyTokenLen != ClientVerifyTokenLen {
 							Log.Warning("Encryption Failed!")
 						} else {
@@ -213,27 +211,15 @@ func HandleConnection(Connection *ClientConnection) {
 						PC := TranslatePlayerStruct(Connection) //Translates Server.ClientConnection -> player.ClientConnection
 						//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 						//this will be useful when multiple clients connect but with some added memory usage
+
+						/*TODO: Use channels to signal when a goroutine has finished and tell the other goroutines
+						to send the data to the client, this means that all the packets will be created and ready upon recieving the "all clear"
+						Which would theortically reduce latency and the time needed to craft the packets*/
+
+						//Although there maybe a possibility of a lockup if something goes wrong and the data isn't recieved via the channel
+						//Scheduler
 						go player.CreateGameJoin(PC) //channel) //Creates JoinGame packet AND SetDifficulty AND Player Abilities via go routines
-						//s := time.Now()
-						//Pause switch case until goroutines are finished
-						// for !Val {
-						// 	Val = <-isDone
-						// 	elapsed := time.Since(s)
-						// 	Log.Debug("elapsed: ", elapsed)
-						// 	if elapsed >= time.Duration(5) {
-						// 		DestroyClientConnection(Connection)
-						// 		break
-						// 	}
-						// 	if Val == true && Connection.isClosed == false {
-						// 		Log.Debug("FINISHED JG, SD, PA")
-						// 		break
-						// 	} else {
-						// 		if Connection.isClosed {
-						// 			break
-						// 		}
-						// 	}
-						//continue
-						//}
+
 						Log.Debug("END")
 						//SendData(Connection, writer26)
 						break
@@ -298,6 +284,7 @@ func getPacketData(Conn net.Conn) ([]byte, error) {
 	return ioutil.ReadAll(Conn)
 }
 
+//Server ClientConn -> Player ClientConn
 func TranslatePlayerStruct(Conn *ClientConnection) *player.ClientConnection {
 	PC := new(player.ClientConnection)
 	PC.Conn = Conn.Conn
@@ -305,6 +292,7 @@ func TranslatePlayerStruct(Conn *ClientConnection) *player.ClientConnection {
 	return PC
 }
 
+//Server ClientConn -> Packet ClientConn
 func TranslatePacketStruct(Conn *ClientConnection) *Packet.ClientConnection {
 	PE := new(Packet.ClientConnection)
 	PE.Conn = Conn.Conn
