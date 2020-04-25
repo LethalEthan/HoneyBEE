@@ -1,4 +1,3 @@
- 
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -14,7 +13,8 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-src/github.com
-src/golang.org
-/bin
-/pkg
+bin/
+.git/
+pkg/
+src/github.com/
+src/golang.org/

@@ -33,7 +33,7 @@ func KeyGen() {
 }
 
 //CreateEncryptionRequest - Creates the packet Encryption Request and sends to the client
-func CreateEncryptionRequest(Connection *ClientConnection, CH chan bool) {
+func CreateEncryptionRequest(Connection *ClientConnection) /*, CH chan bool)*/ {
 	Connection.KeepAlive()
 	Log := logging.MustGetLogger("HoneyGO")
 	Log.Debug("Login State, packetID 0x00")
@@ -69,7 +69,7 @@ func CreateEncryptionRequest(Connection *ClientConnection, CH chan bool) {
 		//Log.Debug("Encryption Request: ", writer)
 		Log.Debug("Encryption Request Sent")
 		//CH := make(chan bool)
-		CH <- true
+		//CH <- true
 	}
 }
 

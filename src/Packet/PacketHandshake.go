@@ -11,24 +11,24 @@ type HandshakePacket struct {
 func HandshakePacketCreate(length int32, reader *PacketReader) (*HandshakePacket, error) {
 	p := new(HandshakePacket)
 	var err error
-	//Set Packet length
+
 	p.length = length
-	//
+	//Protocol Version
 	p.ProtocolVersion, err = reader.ReadVarInt()
 	if err != nil {
 		return nil, err
 	}
-
+	//Notchian Servers don't use this info
 	p.ServerAddress, err = reader.ReadString()
 	if err != nil {
 		return nil, err
 	}
-
+	//Notchian Servers don't use this info
 	p.ServerPort, err = reader.ReadUnsignedShort()
 	if err != nil {
 		return nil, err
 	}
-
+	//1, status | 2, login
 	p.NextState, err = reader.ReadVarInt()
 	if err != nil {
 		return p, err

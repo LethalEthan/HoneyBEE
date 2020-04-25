@@ -16,6 +16,7 @@ type CompressedPacket interface {
 
 //Used PacketCreation
 type ClientConnection struct {
-	Conn  net.Conn
-	State int
+	Conn     net.Conn
+	State    int
+	isClosed bool
 }
