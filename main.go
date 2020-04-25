@@ -44,8 +44,6 @@ func main() {
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
 	runtime.GOMAXPROCS(runtime.NumCPU()) //Set it to the value of how many cores
 	Log.Info("Generating Key Chain")
-	Log.Info("Performing Scheduler Tests...")
-	go server.Schedule()
 	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 	//this will be useful when multiple clients connect but with some slight added memory usage
 	go Packet.KeyGen() //Generate Keys used for client Authenication, will be controlled by config file (later release)

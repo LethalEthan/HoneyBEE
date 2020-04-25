@@ -3,6 +3,7 @@ package server
 import (
 	"Packet"
 	"VarTool"
+	//	"VarTool"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
@@ -36,7 +37,7 @@ var (
 	CurrentStatus       *ServerStatus                //ServerStatus Object
 	ClientConnectionMap map[string]*ClientConnection //ClientConnectionMap - Map of connections, duh
 	//Encryption stuff again
-	DEBUG                 = false           //Output Debug info?
+	DEBUG                 = true            //Output Debug info?
 	GotDaKeys             = false           //Got dem keys?
 	ClientSharedSecretLen = 128             //Initialise CSSL
 	ClientVerifyTokenLen  = 128             //Initialise CVTL
@@ -153,15 +154,17 @@ func HandleConnection(Connection *ClientConnection) {
 						Log.Debug("Login State, packetID 0x00")
 						Connection.KeepAlive()
 						playername, _ = reader.ReadString()
-						// PE := TranslatePacketStruct(Connection)
-						// go Packet.CreateEncryptionRequest(PE)
-						go CreatePacketSchedule(0, Connection)
+						PE := TranslatePacketStruct(Connection)
+						go Packet.CreateEncryptionRequest(PE)
+						//go CreatePacketSchedule(0, Connection)
 						break
 					}
 				case 0x01:
 					{
 						//--Packet 0x01 C->S Start--//
 						Connection.KeepAlive()
+						PP := TranslatePacketStruct(Connection)
+						go Packet.LoginPacketCreate(playername, publicKeyBytes, PP)
 						Log.Debug("Login State, packetID 0x01")
 						p := packet
 						ClientSharedSecretLen = 128   //Should always be 128
@@ -229,6 +232,11 @@ func HandleConnection(Connection *ClientConnection) {
 						Log.Debug("Login State, packet 0x02")
 						break
 					}
+				case 0x05:
+					{
+						Log.Debug("Packet 0x05")
+						break
+					}
 				}
 			}
 		case PLAY:
@@ -270,6 +278,8 @@ func HandleConnection(Connection *ClientConnection) {
 					}
 				}
 			}
+		default:
+			Log.Debug("oo")
 		}
 	}
 }

@@ -26,7 +26,7 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 	_, ConnectionExists := ClientConnectionMap[RemoteAddress]
 
 	if ConnectionExists {
-		Log.Debug("Client Connection Restored :), therefore you shall be... TERMINATED")
+		Log.Debug("Client Connection Restored :) now fuck off")
 		tmp := ClientConnectionMap[RemoteAddress]
 		tmp.Conn.Close()
 		tmp.Conn = Conn
