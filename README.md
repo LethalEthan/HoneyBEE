@@ -2,7 +2,7 @@
 
 HoneyGO is a Minecraft server written in GO, with help from [wiki.vg](https://wiki.vg) (Huge thanks to them and I suggest helping them out with a donation for the awesome resources that they publish for free <3).
 
-This software is still being developed so expect bugs and issues now and then, also remember that feedback and disclosure of issues is welcomed but please don't send any hateful or spam issues :).
+This software is still being developed so expect bugs and issues now and then, also remember that feedback and disclosure of issues is welcomed but please don't send any hateful or spam issues :). HoneyGO as of now is considered pre-alpha it is very early in development and has only been released publicly on github since 25/4/2020
 
 **Disclaimer: All code is completely original and is not based off of Mojang's code, any PR's must not have any of Mojang's copyrighted code as it will not be accepted nor be encouraged because it would be illegal, please see the Terms and Conditions of Mojang for familiarisation. I am not in any way affiliated with Mojang, I'm just a kid who wants a fast non-laggy mc server :) and because of that this is a learning curve for me and I hope I inspire other people to get into programming and reverse engineering as I have had a lot of fun making this.**
 
@@ -10,7 +10,7 @@ This software is still being developed so expect bugs and issues now and then, a
 
 As of now we only have basic features to start off with but as development continues we will have more features along with a custom plugin system (HoneyComb, will be available later in the future) and perhaps a way to get forge support although that would be WAYY in the future and I'm not too sure how that would be implemented especially with licensing.
 
-I am very supportive of open-source and free software, for that reason this project will be free forever. You can copy, modify and redistribute my code as long it is under the same license and credit is given to proper authors. If you would like to donate to support HoneyGO that would be much appreciated and you will be added to the donator list (Donators.md) 
+I am very supportive of open-source and free software, for that reason this project will be free forever. You can copy, modify and redistribute my code as long it is under the same license and credit is given to proper authors. If you would like to donate to support HoneyGO that would be much appreciated and you will be added to the donator list (Donators.md)
 
 Checklist:
 
