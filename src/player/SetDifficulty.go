@@ -13,7 +13,7 @@ type SetDifficulty struct {
 	DiffLock   bool  //Difficulty Lock
 }
 
-func CreateSetDiff(Conn *ClientConnection) {
+func CreateSetDiff(Conn *ClientConnection, C chan bool) {
 	Conn.KeepAlive()
 	Log := logging.MustGetLogger("HoneyGO")
 	Log.Debug("Packet Play, 0x0E Created")
@@ -21,7 +21,10 @@ func CreateSetDiff(Conn *ClientConnection) {
 	writer := Packet.CreatePacketWriter(0x0E)
 	writer.WriteUnsignedByte(SD.Difficulty)
 	writer.WriteBoolean(SD.DiffLock)
+	wait := <-C
+	log.Debug("SD: ", wait)
 	SendData(Conn, writer)
 	Log.Debug("Difficulty set sent, sending PlayerAbilities")
-	go CreatePlayerAbilities(Conn)
+	go CreatePlayerAbilities(Conn, C)
+	C <- true
 }

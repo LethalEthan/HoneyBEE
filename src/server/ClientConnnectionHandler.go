@@ -26,7 +26,7 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 	_, ConnectionExists := ClientConnectionMap[RemoteAddress]
 
 	if ConnectionExists {
-		Log.Debug("Client Connection Restored :) now fuck off")
+		Log.Debug("Client Connection Restored, closing")
 		tmp := ClientConnectionMap[RemoteAddress]
 		tmp.Conn.Close()
 		tmp.Conn = Conn
@@ -43,8 +43,8 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 	return ClientConnectionMap[RemoteAddress]
 }
 
-//DestroyClientConnection - Destroys a Connection safely by terminating the Connection and deleting the Connection from the ClientConnectionMap
-func DestroyClientConnection(Connection *ClientConnection) {
+//CloseClientConnection - Destroys a Connection safely by terminating the Connection and deleting the Connection from the ClientConnectionMap
+func CloseClientConnection(Connection *ClientConnection) {
 	if ClientConnectionMap == nil {
 		ClientConnectionMap = make(map[string]*ClientConnection)
 	}

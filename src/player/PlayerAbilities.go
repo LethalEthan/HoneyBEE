@@ -21,7 +21,7 @@ const (
 	CreativeModeInstaBreak = 0x08
 )
 
-func CreatePlayerAbilities(Conn *ClientConnection) {
+func CreatePlayerAbilities(Conn *ClientConnection, C chan bool) {
 	Log := logging.MustGetLogger("HoneyGO")
 	Log.Debug("Packet Play, 0x32 Created")
 	Conn.KeepAlive()
@@ -33,6 +33,8 @@ func CreatePlayerAbilities(Conn *ClientConnection) {
 	writer.WriteFloat(PA.FlyingSpeed)
 	writer.WriteFloat(PA.FOVModifier)
 	Log.Debug("Conn state: ", Conn.State)
+	wait := <-C
+	log.Debug("PA:", wait)
 	SendData(Conn, writer)
 	Log.Debug("PlayerAbilities sent")
 	CanContinue = true

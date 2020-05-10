@@ -39,7 +39,7 @@ type GameJoin struct {
 	EnableRespawnScreen bool //Set false when doImmediateRespawn gamerule is true
 }
 
-func CreateGameJoin(Conn *ClientConnection) { //, C chan bool) {
+func CreateGameJoin(Conn *ClientConnection, C chan bool) {
 	Conn.Conn.SetDeadline(time.Now().Add(time.Second * 5)) //KeepAlive
 	GJ := &GameJoin{2, Creative, 0, 12345, 20, "default", 16, false, true}
 	log.Debug("GJ:", GJ)
@@ -54,11 +54,13 @@ func CreateGameJoin(Conn *ClientConnection) { //, C chan bool) {
 	writer.WriteVarInt(16)
 	writer.WriteBoolean(false)
 	writer.WriteBoolean(true)
+	//wait := <-C
+	//log.Debug(wait)
 	SendData(Conn, writer)
 	log.Debug("GameJoin Packet sent, Sending SetDifficulty packet")
 	log.Debug("GOR:", runtime.NumGoroutine())
-	go CreateSetDiff(Conn) //Creates SetDifficultyPacket
-	//C <- true
+	go CreateSetDiff(Conn, C) //Creates SetDifficultyPacket
+	C <- true
 }
 
 func SendData(Connection *ClientConnection, writer *Packet.PacketWriter) {

@@ -1,5 +1,9 @@
 package blocks
 
+import logging "github.com/op/go-logging"
+
+var log = logging.MustGetLogger("HoneyGO")
+
 //BlockData
 var (
 	Air                       = Block{ID: 0}
@@ -261,6 +265,7 @@ var (
 
 var BlockID map[int]string
 
+//Initialise BlockID map
 func InitGlobalID() map[int]string {
 	BlockID = map[int]string{
 		0:   "Air",
@@ -534,5 +539,9 @@ type Block struct {
 }
 
 func GetBlockID(ID int) {
-
+	if BlockID == nil {
+		InitGlobalID()
+	}
+	I := BlockID[ID]
+	log.Info("Block: ", I)
 }

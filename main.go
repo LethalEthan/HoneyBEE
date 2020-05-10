@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"server"
 	"time"
 
@@ -20,7 +21,7 @@ var (
 
 func main() {
 	//Hello from HoneyGO
-
+	debug.SetGCPercent(30)
 	//Logger Creation Start
 	B1 := logging.NewLogBackend(os.Stderr, "", 0)       //New Backend
 	B1Format := logging.NewBackendFormatter(B1, format) //Set Format
@@ -40,7 +41,7 @@ func main() {
 		Log.Fatal(err.Error())
 		return
 	}
-	Log.Info("Server Network Listener Started:", ServerPort)
+	Log.Info("Server Network Listener Started on port", ServerPort)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
 	runtime.GOMAXPROCS(runtime.NumCPU()) //Set it to the value of how many cores
 	Log.Info("Generating Key Chain")

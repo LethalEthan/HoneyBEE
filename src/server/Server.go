@@ -24,14 +24,13 @@ import (
 //Define used variables
 var (
 	//Encryption Stuff
-	publicKey          *rsa.PublicKey  //Public Key
-	publicKeyBytes     []byte          //PublicKey in a byte array for packet delivery and Auth check
-	privateKey         *rsa.PrivateKey //Like Do I need to comment this?
-	Encryption         bool            //TODO: Control via confighandler
-	KeyLength          int             //Keylength used by Encryption Request
-	ClientSharedSecret []byte          //CSS
-	ClientVerifyToken  []byte          //CVT
-	//HoneyGO, HoneyComb and should there be a HoneyPot that allows plugins and mods to work together? IDK if that's possible but we can try later
+	publicKey           *rsa.PublicKey               //Public Key
+	publicKeyBytes      []byte                       //PublicKey in a byte array for packet delivery and Auth check
+	privateKey          *rsa.PrivateKey              //Like Do I need to comment this?
+	Encryption          bool                         //TODO: Control via confighandler
+	KeyLength           int                          //Keylength used by Encryption Request
+	ClientSharedSecret  []byte                       //CSS
+	ClientVerifyToken   []byte                       //CVT
 	playername          string                       //For Authentication
 	Log                 *logging.Logger              //Pretty obvious
 	CurrentStatus       *ServerStatus                //ServerStatus Object
@@ -44,6 +43,7 @@ var (
 	serverID              = ""              //this isn't used by mc anymore
 	ServerVerifyToken     = make([]byte, 4) //Initialise a 4 element byte slice of cake
 	//Chann                 = make(chan bool)
+	PlayerMap = make(map[string]string) //Map Player to UUID
 )
 
 //REFERENCE: Play state goes from GameJoin.go -> SetDifficulty.go -> PlayerAbilities.go via goroutines
@@ -70,7 +70,7 @@ func HandleConnection(Connection *ClientConnection) {
 		packet, packetSize, packetID, err := readPacketHeader(Connection)
 
 		if err != nil {
-			DestroyClientConnection(Connection)
+			CloseClientConnection(Connection)
 			Log.Error("Connection Terminated: " + err.Error())
 			return
 		}
@@ -93,7 +93,7 @@ func HandleConnection(Connection *ClientConnection) {
 					//--Packet 0x00 S->C Start--//
 					Hpacket, err := Packet.HandshakePacketCreate(packetSize, reader)
 					if err != nil {
-						DestroyClientConnection(Connection) //You have been terminated
+						CloseClientConnection(Connection) //You have been terminated
 						Log.Error(err.Error())
 					}
 					Connection.KeepAlive() //Ah, ah. ah, ah stayin alive, stayin alive!
@@ -105,7 +105,7 @@ func HandleConnection(Connection *ClientConnection) {
 				{
 					//--Packet 0xFE Legacy Ping Request --//
 					Log.Warning("Legacy Ping Request received! - Terminated")
-					DestroyClientConnection(Connection)
+					CloseClientConnection(Connection)
 					return
 					//--Packet 0xFE End--//
 				}
@@ -122,7 +122,7 @@ func HandleConnection(Connection *ClientConnection) {
 						marshaledStatus, err := json.Marshal(*CurrentStatus) //Sends status via json
 						if err != nil {
 							Log.Error(err.Error())
-							DestroyClientConnection(Connection)
+							CloseClientConnection(Connection)
 							return
 						}
 						writer.WriteString(string(marshaledStatus))
@@ -139,7 +139,7 @@ func HandleConnection(Connection *ClientConnection) {
 						Log.Debug(mirror)
 						writer.WriteLong(mirror)
 						SendData(Connection, writer)
-						DestroyClientConnection(Connection)
+						CloseClientConnection(Connection)
 						break
 						//--Packet 0x01 End--//
 					}
@@ -163,8 +163,8 @@ func HandleConnection(Connection *ClientConnection) {
 					{
 						//--Packet 0x01 C->S Start--//
 						Connection.KeepAlive()
-						PP := TranslatePacketStruct(Connection)
-						go Packet.LoginPacketCreate(playername, publicKeyBytes, PP)
+						//PP := TranslatePacketStruct(Connection)
+						//go Packet.LoginPacketCreate(playername, publicKeyBytes, PP)
 						Log.Debug("Login State, packetID 0x01")
 						p := packet
 						ClientSharedSecretLen = 128   //Should always be 128
@@ -197,9 +197,26 @@ func HandleConnection(Connection *ClientConnection) {
 							Log.Info("Encryption Successful!")
 						}
 						//Authenticate Player
-						Auth, err := Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
-						if err != nil {
-							Log.Error(err)
+						var Auth string
+						//Check if playermap has any data
+						//if PlayerMap != nil {
+						if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
+							Auth = val //Set auth to value
+						} else { //If uuid isn't found, get it
+							//2 attempts to get UUID
+							Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
+							if err != nil {
+								Log.Error("Authentication Failed, trying second time")
+								Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
+								if err != nil {
+									Log.Error("Authentication failed on second attempt, closing connection")
+									CloseClientConnection(Connection)
+								} else { //If no errors cache uuid in map
+									PlayerMap[playername] = Auth
+								}
+							} else { //If no erros cache uuid in map
+								PlayerMap[playername] = Auth
+							}
 						}
 						Log.Debug(playername, "[", Auth, "]")
 						//--Packer 0x01 End--//
@@ -209,6 +226,11 @@ func HandleConnection(Connection *ClientConnection) {
 						Log.Debug("Playername: ", playername)
 						writer.WriteString(Auth)
 						writer.WriteString(playername)
+						//UUID Cache
+						//PlayerMap[playername] = Auth
+						//DEBUG: REMOVE ME
+						Log.Debug("PlayerMap: ", PlayerMap)
+						Log.Debug("PlayerData:", PlayerMap[playername])
 						SendData(Connection, writer)
 						Connection.State = PLAY
 						PC := TranslatePlayerStruct(Connection) //Translates Server.ClientConnection -> player.ClientConnection
@@ -218,11 +240,9 @@ func HandleConnection(Connection *ClientConnection) {
 						/*TODO: Use channels to signal when a goroutine has finished and tell the other goroutines
 						to send the data to the client, this means that all the packets will be created and ready upon recieving the "all clear"
 						Which would theortically reduce latency and the time needed to craft the packets*/
-
 						//Although there maybe a possibility of a lockup if something goes wrong and the data isn't recieved via the channel
-						//Scheduler
-						go player.CreateGameJoin(PC) //channel) //Creates JoinGame packet AND SetDifficulty AND Player Abilities via go routines
-
+						C := make(chan bool, 4)
+						go player.CreateGameJoin(PC, C) //Creates JoinGame packet AND SetDifficulty AND Player Abilities via go routines
 						Log.Debug("END")
 						//SendData(Connection, writer26)
 						break

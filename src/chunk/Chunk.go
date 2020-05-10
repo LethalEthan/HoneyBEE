@@ -1,7 +1,6 @@
 package chunk
 
 import (
-	"VarTool"
 	"blocks"
 	"fmt"
 )
@@ -9,7 +8,8 @@ import (
 type Location int64
 
 type Chunk struct {
-	ChunkPos  Location
+	ChunkPosX int64
+	ChunkPosY int64
 	Biomes    []byte
 	Blocks    []byte
 	NumBlocks uint16
@@ -17,7 +17,9 @@ type Chunk struct {
 }
 
 var (
-	CLC    = make(map[int]*Chunk)
+	//TBD once everything is in place
+	//CLCX   = make(map[int]*Chunk)
+	//CLCY   = make(map[int]*Chunk)
 	Biomes = make([]byte, (SectionWidth * SectionLength))
 )
 
@@ -35,6 +37,7 @@ const (
 	SectionsNum              = 16
 )
 
+//Note: Currently has a lot of debug and testing stuff, is not finalised
 func CreateNewChunkSection() { //*Chunk {
 	chunk := new(ChunkSection)
 	chunk.BlockCount = SectionVolume
@@ -45,7 +48,7 @@ func CreateNewChunkSection() { //*Chunk {
 	for i := 0; i < len(I); i++ {
 		I[i] = 1
 	}
-	VarTool.ParseVarIntFromArray(I)
+	//VarTool.ParseVarIntFromArray(I)
 	chunk.Palette.PalleteData = []VarInt{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	chunk.DataArrayLength = 3
 	chunk.DataArray = make([]int64, 4096) //chunk.DataArrayLength)
