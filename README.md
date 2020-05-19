@@ -54,7 +54,11 @@ Wanting an experimental Minecraft Server implementation in Rust? Visit [Feather]
 
 Wanting a Minecraft server that supports the SpongeAPI? Visit [Sponge](https://www.spongepowered.org/) and [Lantern](https://github.com/LanternPowered/Lantern)
 
+<<<<<<< HEAD
 **For General use I suggest Paper it is stable, bukkit compatible, fast and is the go to standard for most servers.**
+=======
+**For General use I suggest Paper it is stable, bukkit compatible, fast and is the go to standard for most servers.** 
+>>>>>>> 0d4724463310af3c26cc02324a46d85bbf748cbd
 
 **\
 HoneyGO is still an experimental Minecraft Server (Only started development a few months ago) and with that could come major changes that may break/corrupt worlds (We'll try not to). HoneyGO at the moment is only suitable for a simple creative/lobby server as the terrain generation and entity AI is nowhere near completion and could take some time.**
