@@ -2,8 +2,6 @@ package player
 
 import (
 	"Packet"
-
-	logging "github.com/op/go-logging"
 )
 
 type PlayerAbilities struct {
@@ -22,20 +20,19 @@ const (
 )
 
 func CreatePlayerAbilities(Conn *ClientConnection, C chan bool) {
-	Log := logging.MustGetLogger("HoneyGO")
-	Log.Debug("Packet Play, 0x32 Created")
+	writer := Packet.CreatePacketWriter(0x32)
+	log.Debug("Packet Play, 0x32 Created")
 	Conn.KeepAlive()
 	T := byte(Invulnerable)
 	TT := []byte{T}
 	PA := &PlayerAbilities{TT, 0.05, 0.1}
-	writer := Packet.CreatePacketWriter(0x32)
 	writer.WriteArray(PA.Flags)
 	writer.WriteFloat(PA.FlyingSpeed)
 	writer.WriteFloat(PA.FOVModifier)
-	Log.Debug("Conn state: ", Conn.State)
+	log.Debug("Conn state: ", Conn.State)
 	wait := <-C
 	log.Debug("PA:", wait)
 	SendData(Conn, writer)
-	Log.Debug("PlayerAbilities sent")
+	log.Debug("PlayerAbilities sent")
 	CanContinue = true
 }

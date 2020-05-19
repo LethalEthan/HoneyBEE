@@ -57,6 +57,7 @@ func GetKeyChain() {
 	privateKey = Packet.GetPrivateKey()
 	publicKeyBytes = Packet.GetPublicKeyBytes()
 	publicKey = Packet.GetPublicKey()
+	GotDaKeys = true
 }
 
 func HandleConnection(Connection *ClientConnection) {

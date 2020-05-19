@@ -267,7 +267,22 @@ func (pr *PacketReader) ReadVarInt() (int32, error) {
 			break
 		}
 	}
+	/*TESTING:
+	var buff = make([]byte, 5)
+	for i := 0; i < 5; i++ {
+		buff[i], err = pr.ReadUnsignedByte()
+	}
+	//tt, t := pr.ReadUnsignedByte()
+	test, err := binary.Varint(buff)
+	fmt.Print("TESTING: ", test, "ERR:", err)*/
 	return result, nil
+}
+
+func (pr *PacketReader) ReadVarInt2() (int32, error) {
+	if pr.checkForEOF() {
+		return 0, io.EOF
+	}
+	return 0, io.EOF
 }
 
 func (pr *PacketReader) ReadVarLong() (int64, error) {
