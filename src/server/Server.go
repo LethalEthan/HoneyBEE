@@ -238,10 +238,6 @@ func HandleConnection(Connection *ClientConnection) {
 						//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 						//this will be useful when multiple clients connect but with some added memory usage
 
-						/*TODO: Use channels to signal when a goroutine has finished and tell the other goroutines
-						to send the data to the client, this means that all the packets will be created and ready upon recieving the "all clear"
-						Which would theortically reduce latency and the time needed to craft the packets*/
-						//Although there maybe a possibility of a lockup if something goes wrong and the data isn't recieved via the channel
 						C := make(chan bool)
 						go player.CreateGameJoin(PC, C) //Creates JoinGame packet AND SetDifficulty AND Player Abilities via go routines
 						Log.Debug("END")
