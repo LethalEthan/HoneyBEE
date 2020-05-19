@@ -242,7 +242,7 @@ func HandleConnection(Connection *ClientConnection) {
 						to send the data to the client, this means that all the packets will be created and ready upon recieving the "all clear"
 						Which would theortically reduce latency and the time needed to craft the packets*/
 						//Although there maybe a possibility of a lockup if something goes wrong and the data isn't recieved via the channel
-						C := make(chan bool, 4)
+						C := make(chan bool)
 						go player.CreateGameJoin(PC, C) //Creates JoinGame packet AND SetDifficulty AND Player Abilities via go routines
 						Log.Debug("END")
 						//SendData(Connection, writer26)
