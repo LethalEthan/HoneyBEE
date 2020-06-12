@@ -21,9 +21,9 @@ var Dimension = Overworld
 
 //
 type ClientConnection struct {
-	Conn     net.Conn
-	State    int
-	isClosed bool
+	Conn   net.Conn
+	State  int
+	Closed bool
 }
 
 //GameJoin - Structure of the JoinGame packet
@@ -40,27 +40,36 @@ type GameJoin struct {
 }
 
 func CreateGameJoin(Conn *ClientConnection, C chan bool) {
-	Conn.Conn.SetDeadline(time.Now().Add(time.Second * 5)) //KeepAlive
-	GJ := &GameJoin{2, Creative, 0, 12345, 20, "default", 16, false, true}
+	for !Conn.Closed {
+		//Conn.KeepAlive() //KeepAlive
+		GJ := &GameJoin{2, Creative, 0, 12345, 20, "default", 16, false, true}
+		log.Debug("GJ:", GJ)
+		//No easy way to do this without this mess, a packet system re-write will be done in the future
+		writer := Packet.CreatePacketWriter(0x26)
+		writer.WriteInt(GJ.EntityID)
+		writer.WriteUnsignedByte(GJ.GameMode)
+		writer.WriteInt(int32(GJ.Dimension))
+		writer.WriteLong(GJ.HashedSeed)
+		writer.WriteUnsignedByte(0)
+		writer.WriteString("default")
+		writer.WriteVarInt(16)
+		writer.WriteBoolean(false)
+		writer.WriteBoolean(true)
+		//wait := <-C
+		//log.Debug(wait)
+		SendData(Conn, writer)
+		log.Debug("GameJoin Packet sent, Sending SetDifficulty packet")
+		log.Debug("GOR:", runtime.NumGoroutine())
+		go CreateSetDiff(Conn, C) //Creates SetDifficultyPacket
+		C <- true
+		break
+	}
+}
+
+func /*(GJ *GameJoin)*/ CreateGameJoinInstance(EntityID uint32) {
+	Player := GetPlayer(EntityID)
+	GJ := &GameJoin{2, Player.GameMode, 0, 12345, 20, "default", 16, false, true}
 	log.Debug("GJ:", GJ)
-	//No easy way to do this without this mess, a packet system re-write will be done in the future
-	writer := Packet.CreatePacketWriter(0x26)
-	writer.WriteInt(GJ.EntityID)
-	writer.WriteUnsignedByte(GJ.GameMode)
-	writer.WriteInt(int32(GJ.Dimension))
-	writer.WriteLong(GJ.HashedSeed)
-	writer.WriteUnsignedByte(0)
-	writer.WriteString("default")
-	writer.WriteVarInt(16)
-	writer.WriteBoolean(false)
-	writer.WriteBoolean(true)
-	//wait := <-C
-	//log.Debug(wait)
-	SendData(Conn, writer)
-	log.Debug("GameJoin Packet sent, Sending SetDifficulty packet")
-	log.Debug("GOR:", runtime.NumGoroutine())
-	go CreateSetDiff(Conn, C) //Creates SetDifficultyPacket
-	C <- true
 }
 
 func SendData(Connection *ClientConnection, writer *Packet.PacketWriter) {

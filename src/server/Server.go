@@ -3,6 +3,7 @@ package server
 import (
 	"Packet"
 	"VarTool"
+	"time"
 	//	"VarTool"
 	"crypto/rand"
 	"crypto/rsa"
@@ -24,9 +25,9 @@ import (
 //Define used variables
 var (
 	//Encryption Stuff
-	publicKey           *rsa.PublicKey               //Public Key
+	publicKey           *rsa.PublicKey               //Public Key - Used for authentication
 	publicKeyBytes      []byte                       //PublicKey in a byte array for packet delivery and Auth check
-	privateKey          *rsa.PrivateKey              //Like Do I need to comment this?
+	privateKey          *rsa.PrivateKey              //PrivateKey
 	Encryption          bool                         //TODO: Control via confighandler
 	KeyLength           int                          //Keylength used by Encryption Request
 	ClientSharedSecret  []byte                       //CSS
@@ -43,14 +44,16 @@ var (
 	serverID              = ""              //this isn't used by mc anymore
 	ServerVerifyToken     = make([]byte, 4) //Initialise a 4 element byte slice of cake
 	//Chann                 = make(chan bool)
-	PlayerMap = make(map[string]string) //Map Player to UUID
+	PlayerMap              = make(map[string]string) //Map Player to UUID
+	EntityPlayerMap        = make(map[string]uint32) //Map Player to EID
+	GEID            uint32 = 2
 )
 
 //REFERENCE: Play state goes from GameJoin.go -> SetDifficulty.go -> PlayerAbilities.go via goroutines
 const (
-	MinecraftVersion         = "1.15.2" //Supported MC version
-	MinecraftProtocolVersion = 578      //Supported MC protocol Version
-	ServerVerifyTokenLen     = 4        //Should always be 4 on notchian servers
+	MinecraftVersion               = "1.15.2" //Supported MC version
+	MinecraftProtocolVersion int32 = 578      //Supported MC protocol Version
+	ServerVerifyTokenLen           = 4        //Should always be 4 on notchian servers
 )
 
 func GetKeyChain() {
@@ -97,7 +100,9 @@ func HandleConnection(Connection *ClientConnection) {
 						CloseClientConnection(Connection) //You have been terminated
 						Log.Error(err.Error())
 					}
-					Connection.KeepAlive() //Ah, ah. ah, ah stayin alive, stayin alive!
+					Connection.KeepAlive()
+					Proto, _ := reader.ReadVarInt()
+					Log.Debug("Protocol:", Proto)
 					Connection.State = int(Hpacket.NextState)
 					break
 					//--Packet 0x00 End--//
@@ -137,7 +142,7 @@ func HandleConnection(Connection *ClientConnection) {
 						writer := Packet.CreatePacketWriter(0x01)
 						Log.Debug("Status State, packetID 0x01")
 						mirror, _ := reader.ReadLong()
-						Log.Debug(mirror)
+						Log.Debug("Mirror:", mirror)
 						writer.WriteLong(mirror)
 						SendData(Connection, writer)
 						CloseClientConnection(Connection)
@@ -233,6 +238,7 @@ func HandleConnection(Connection *ClientConnection) {
 						Log.Debug("PlayerMap: ", PlayerMap)
 						Log.Debug("PlayerData:", PlayerMap[playername])
 						SendData(Connection, writer)
+						time.Sleep(5000000) //Debug:Add delay
 						Connection.State = PLAY
 						PC := TranslatePlayerStruct(Connection) //Translates Server.ClientConnection -> player.ClientConnection
 						//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
@@ -241,7 +247,11 @@ func HandleConnection(Connection *ClientConnection) {
 						C := make(chan bool)
 						go player.CreateGameJoin(PC, C) //Creates JoinGame packet AND SetDifficulty AND Player Abilities via go routines
 						Log.Debug("END")
-						//SendData(Connection, writer26)
+						///Entity ID Handling///
+						Log.Debug("GEID: ", GEID)
+						player.InitPlayer(playername, Auth, GEID, 1)
+						GEID++
+						player.GetPlayer(2)
 						break
 					}
 				case 0x02:
@@ -256,6 +266,7 @@ func HandleConnection(Connection *ClientConnection) {
 					}
 				}
 			}
+			//Play will be handled by another package/function
 		case PLAY:
 			{
 				switch packetID {
@@ -316,6 +327,7 @@ func TranslatePlayerStruct(Conn *ClientConnection) *player.ClientConnection {
 	PC := new(player.ClientConnection)
 	PC.Conn = Conn.Conn
 	PC.State = Conn.State
+	PC.Closed = Conn.isClosed
 	return PC
 }
 

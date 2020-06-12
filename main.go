@@ -14,7 +14,7 @@ import (
 
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0"
+	HoneyGOVersion = "1.0.0 (Build 16)"
 	ServerPort     = ":25565"
 	Log            = logging.MustGetLogger("HoneyGO")
 )
@@ -44,6 +44,9 @@ func main() {
 	Log.Info("Server Network Listener Started on port", ServerPort)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
 	runtime.GOMAXPROCS(runtime.NumCPU()) //Set it to the value of how many cores
+	if runtime.NumCPU() < 2 {
+		Log.Critical("Number of CPU's is less than 2 this could impact performance as this is a heavily threaded application")
+	}
 	Log.Info("Generating Key Chain")
 	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 	//this will be useful when multiple clients connect but with some slight added memory usage

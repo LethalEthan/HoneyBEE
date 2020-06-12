@@ -14,7 +14,7 @@ type SetDifficulty struct {
 }
 
 func CreateSetDiff(Conn *ClientConnection, C chan bool) {
-	Conn.KeepAlive()
+	//Conn.KeepAlive()
 	Log := logging.MustGetLogger("HoneyGO")
 	Log.Debug("Packet Play, 0x0E Created")
 	SD := &SetDifficulty{0, true} //new(SetDifficulty)
