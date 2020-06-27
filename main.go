@@ -14,7 +14,7 @@ import (
 
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 16)"
+	HoneyGOVersion = "1.0.0 (Build 17)"
 	ServerPort     = ":25565"
 	Log            = logging.MustGetLogger("HoneyGO")
 )

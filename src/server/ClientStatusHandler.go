@@ -24,9 +24,18 @@ func CreateStatusObject() *ServerStatus {
 	status := new(ServerStatus)
 	//Ref: Server.go: constants for status.Version
 	status.Version = StatusVersion{Name: MinecraftVersion, Protocol: MinecraftProtocolVersion}
-	status.Players = StatusPlayers{MaxPlayers: 20, OnlinePlayers: 0}
+	status.Players = StatusPlayers{MaxPlayers: MPlayers, OnlinePlayers: OPlayers}
 	Extra := make([]jsonstruct.StatusObject, 1)
 	Extra[0] = jsonstruct.StatusObject{Text: "GO!", Bold: true, Color: "gold"}
 	status.Description = jsonstruct.StatusObject{Text: "Honey", Bold: true, Color: "yellow", Extra: Extra}
 	return status
+}
+
+var (
+	MPlayers int32 = 420
+	OPlayers int32 = 69
+)
+
+func OnDisconnect() {
+
 }
