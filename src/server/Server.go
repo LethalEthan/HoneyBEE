@@ -3,8 +3,7 @@ package server
 import (
 	"Packet"
 	"VarTool"
-	"time"
-	//	"VarTool"
+	config "config"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
@@ -18,6 +17,7 @@ import (
 	"net/http"
 	"player"
 	"strings"
+	"time"
 
 	logging "github.com/op/go-logging"
 )
@@ -34,19 +34,18 @@ var (
 	playername         string          //For Authentication
 	Log                *logging.Logger //Pretty obvious
 	CurrentStatus      *ServerStatus   //ServerStatus Object
-	//ClientConnectionMap map[string]*ClientConnection //Moved back to CCH
 	//Encryption stuff again
-	DEBUG                 = true            //Output Debug info?
-	GotDaKeys             = false           //Got dem keys?
-	ClientSharedSecretLen = 128             //Initialise CSSL
-	ClientVerifyTokenLen  = 128             //Initialise CVTL
-	serverID              = ""              //this isn't used by mc anymore
-	ServerVerifyToken     = make([]byte, 4) //Initialise a 4 element byte slice of cake
-	//Chann                 = make(chan bool)
-	PlayerMap     = make(map[string]string)   //Map Player to UUID
-	PlayerConnMap = make(map[net.Conn]string) //Map Connection to Player
+	//DEBUG                 = true            //Output Debug info?
+	GotDaKeys             = false                     //Got dem keys?
+	ClientSharedSecretLen = 128                       //Initialise CSSL
+	ClientVerifyTokenLen  = 128                       //Initialise CVTL
+	serverID              = ""                        //this isn't used by mc anymore
+	ServerVerifyToken     = make([]byte, 4)           //Initialise a 4 element byte slice of cake
+	PlayerMap             = make(map[string]string)   //Map Player to UUID
+	PlayerConnMap         = make(map[net.Conn]string) //Map Connection to Player
 	//	EntityPlayerMap        = player.PlayerEntityMap    //= make(map[string]uint32)   //Map Player to EID
-	GEID uint32 = 2
+	GEID   uint32 = 2
+	Config *config.Config
 )
 
 //REFERENCE: Play state goes from GameJoin.go -> SetDifficulty.go -> PlayerAbilities.go via goroutines
@@ -72,9 +71,10 @@ type PacketHeader struct {
 func HandleConnection(Connection *ClientConnection) {
 	if !GotDaKeys {
 		GetKeyChain()
-		Log.Debug("Got the keys!")
 	}
-	Log.Debug("Connection handler initiated")
+	Config = config.GetConfig()
+	DEBUG := Config.Server.DEBUG
+	Log.Info("Connection handler initiated")
 	//Løøps
 	PH := new(PacketHeader)
 	for !Connection.isClosed {
@@ -86,7 +86,7 @@ func HandleConnection(Connection *ClientConnection) {
 			Log.Error("Connection Terminated: " + err.Error())
 			return
 		}
-		//DEBUG: print out all values
+		//DEBUG: output debug info
 		if DEBUG {
 			Log.Debug("Packet Size: ", PH.packetSize)
 			Log.Debug("Packet ID: ", PH.packetID, "State: ", Connection.State)

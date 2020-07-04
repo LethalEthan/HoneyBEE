@@ -1,5 +1,5 @@
 server:
-  host: "127.0.0.1" //currently doesn't do shit
-  port: "25565" //Set the port
-  debug: true //Wanna see the juicy info?
-  timeout: 15 //In seconds
+  host: "127.0.0.1" #currently doesn't do shit
+  port: ":25565" #Set the port
+  debug: true #Wanna see the juicy info?
+  timeout: 15 #In seconds

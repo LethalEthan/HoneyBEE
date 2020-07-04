@@ -20,6 +20,7 @@ type StatusPlayers struct {
 	//SamplePlayer  []SPlayer `json:"sample, omitempty"`
 }
 
+//Implement RGB for 1.16 later and support multiple client/protocol versions
 func CreateStatusObject() *ServerStatus {
 	status := new(ServerStatus)
 	//Ref: Server.go: constants for status.Version
@@ -31,6 +32,7 @@ func CreateStatusObject() *ServerStatus {
 	return status
 }
 
+//TBD properly
 var (
 	MPlayers int32 = 420
 	OPlayers int32 = 69

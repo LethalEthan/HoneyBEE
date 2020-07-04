@@ -16,8 +16,7 @@ import (
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
 	HoneyGOVersion = "1.0.0 (Build 18)"
-	//ServerPort     = ":25565"
-	Log = logging.MustGetLogger("HoneyGO")
+	Log            = logging.MustGetLogger("HoneyGO")
 )
 
 func main() {
@@ -35,14 +34,15 @@ func main() {
 
 	Log.Info("HoneyGO ", HoneyGOVersion, " starting...")
 	conf := config.ConfigStart()
+	var ServerPort string = conf.Server.Port
 	//Network Listener on defined port 25565
 	//TODO: Finish ConfigHandler for custom ports
-	netlisten, err := net.Listen("tcp", conf.Server.Port)
+	netlisten, err := net.Listen("tcp", ServerPort)
 	if err != nil {
 		Log.Fatal(err.Error())
 		return
 	}
-	Log.Info("Server Network Listener Started on port", conf.Server.Port)
+	Log.Info("Server Network Listener Started on port", ServerPort)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
 	runtime.GOMAXPROCS(runtime.NumCPU()) //Set it to the value of how many cores
 	if runtime.NumCPU() < 2 {

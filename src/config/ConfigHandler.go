@@ -3,14 +3,16 @@ package config
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	logging "github.com/op/go-logging"
 	yaml "gopkg.in/yaml.v3"
 )
 
-var Log *logging.Logger
+var (
+	log     = logging.MustGetLogger("HoneyGO")
+	ConfigR *Config
+)
 
 // Config struct for HoneyGO config
 type Config struct {
@@ -81,6 +83,13 @@ func ConfigStart() *Config {
 	if err != nil {
 		log.Fatal(err)
 	}
-	Log.Debug("cfg: ", cfg)
+	ConfigR = cfg
+	if cfg.Server.DEBUG {
+		log.Debug("cfg: ", cfg)
+	}
 	return cfg
+}
+
+func GetConfig() *Config {
+	return ConfigR
 }
