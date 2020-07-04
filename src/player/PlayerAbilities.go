@@ -6,7 +6,7 @@ import (
 )
 
 type PlayerAbilities struct {
-	Flags       []byte
+	Flags       int8
 	FlyingSpeed float32
 	FOVModifier float32
 }
@@ -18,7 +18,7 @@ const (
 	Flying                 = 0x02
 	AllowFlying            = 0x04
 	CreativeModeInstaBreak = 0x08
-	DEBUG                  = true
+	DEBUG                  = false
 )
 
 func CreatePlayerAbilities(Conn *ClientConnection, C chan bool) {
@@ -28,10 +28,10 @@ func CreatePlayerAbilities(Conn *ClientConnection, C chan bool) {
 	writer := Packet.CreatePacketWriter(0x32)
 	log.Debug("Packet Play, 0x32 Created")
 	//Conn.KeepAlive()
-	T := byte(Invulnerable)
-	TT := []byte{T}
-	PA := &PlayerAbilities{TT, 0.05, 0.1}
-	writer.WriteArray(PA.Flags)
+	//T := byte(Invulnerable)
+	//TT := []byte{T}
+	PA := &PlayerAbilities{Invulnerable, 0.05, 0.1}
+	writer.WriteByte(PA.Flags)
 	writer.WriteFloat(PA.FlyingSpeed)
 	writer.WriteFloat(PA.FOVModifier)
 	log.Debug("Conn state: ", Conn.State)

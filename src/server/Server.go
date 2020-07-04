@@ -28,7 +28,6 @@ var (
 	publicKey          *rsa.PublicKey  //Public Key - Used for authentication
 	publicKeyBytes     []byte          //PublicKey in a byte array for packet delivery and Auth check
 	privateKey         *rsa.PrivateKey //PrivateKey
-	Encryption         bool            //TODO: Control via confighandler
 	KeyLength          int             //Keylength used by Encryption Request
 	ClientSharedSecret []byte          //CSS
 	ClientVerifyToken  []byte          //CVT
@@ -167,18 +166,19 @@ func HandleConnection(Connection *ClientConnection) {
 				switch PH.packetID {
 				case 0x00:
 					{
-						//--Packet 0x00 C->S Start--//
+						//--Packet 0x00 S->C Start--//
 						Log.Debug("Login State, packetID 0x00")
 						Connection.KeepAlive()
 						playername, _ = reader.ReadString()
-						PE := TranslatePacketStruct(Connection)
-						go Packet.CreateEncryptionRequest(PE)
-						//go CreatePacketSchedule(0, Connection)
+						//PE := TranslatePacketStruct(Connection)
+						//go Packet.CreateEncryptionRequest(PE)
+						go CreateEncryptionRequest(Connection)
 						break
 					}
 				case 0x01:
 					{
 						//--Packet 0x01 C->S Start--//
+						//EncryptionResponse
 						Connection.KeepAlive()
 						Log.Debug("Login State, packetID 0x01")
 						Log.Debug("PacketSIZE: ", PH.packetSize)
@@ -212,8 +212,9 @@ func HandleConnection(Connection *ClientConnection) {
 							Log.Info("Encryption Successful!")
 						}
 						var Auth string
+						//--Authentication Stuff--//
 						//Authenticate Player
-						//Check if playermap has any data
+						//Check if playermap has any data -- UUID Caching
 						if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
 							Auth = val //Set auth to value
 						} else { //If uuid isn't found, get it
@@ -244,14 +245,14 @@ func HandleConnection(Connection *ClientConnection) {
 						//DEBUG: REMOVE ME
 						Log.Debug("PlayerMap: ", PlayerMap)
 						Log.Debug("PlayerData:", PlayerMap[playername])
-						time.Sleep(5000000) //Debug:Add delay
+						time.Sleep(5000000) //DEBUG:Add delay -- remove me later
 						SendData(Connection, writer)
 
 						///Entity ID Handling///
 						PlayerConnMap[Connection.Conn] = playername //link connection to player
 						player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
 						player.GetPlayerByID(player.PlayerEntityMap[playername])
-						go player.GCPlayer() //DEBUG: REMOVE ME LATER
+						//go player.GCPlayer() //DEBUG: REMOVE ME LATER
 						//--//
 						Connection.State = PLAY
 						PC := TranslatePlayerStruct(Connection) //Translates Server.ClientConnection -> player.ClientConnection
@@ -444,7 +445,126 @@ func twosCompliment(p []byte) {
 	}
 }
 
-func Disconnect(player string) {
-	Log.Debug("Disconnecting Player: ", player)
-	//	player.Disconnect(player)
+func Disconnect(Player string) {
+	Log.Debug("Disconnecting Player: ", Player)
+	player.Disconnect(Player)
+}
+
+//--Encryption Response/Request--//
+func CreateEncryptionResponse(Connection *ClientConnection, PH *PacketHeader) {
+	//--Packet 0x01 C->S Start--//
+	Connection.KeepAlive()
+	Log.Debug("Login State, packetID 0x01")
+	Log.Debug("PacketSIZE: ", PH.packetSize)
+	ClientSharedSecretLen = 128           //Should always be 128
+	ClientSharedSecret = PH.packet[2:130] //Find the 128 bytes in the whole byte array
+	ClientVerifyToken = PH.packet[132:]   //Find the 128 bytes in whole byte array
+	Connection.KeepAlive()
+	//Decrypt Shared Secret
+	decryptSS, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientSharedSecret)
+	if err != nil {
+		fmt.Print(err)
+	}
+	ClientSharedSecret = decryptSS //Set the decrypted value
+	ClientSharedSecretLen = len(ClientSharedSecret)
+	//Basic check to see whether it's 16 bytes
+	if ClientSharedSecretLen != 16 {
+		Log.Warning("Shared Secret Length is NOT 16 bytes :(")
+	} else {
+		Log.Info("ClientSharedSecret Recieved Successfully")
+	}
+	//Decrypt Verify Token
+	decryptVT, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientVerifyToken)
+	if err != nil {
+		fmt.Print(err)
+	}
+	Connection.KeepAlive()
+	ClientVerifyTokenLen = len(decryptVT)
+	if ServerVerifyTokenLen != ClientVerifyTokenLen {
+		Log.Warning("Encryption Failed!")
+	} else {
+		Log.Info("Encryption Successful!")
+	}
+	var Auth string
+	//Authenticate Player
+	//Check if playermap has any data
+	if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
+		Auth = val //Set auth to value
+	} else { //If uuid isn't found, get it
+		//2 attempts to get UUID
+		Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
+		if err != nil {
+			Log.Error("Authentication Failed, trying second time")
+			Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
+			if err != nil {
+				Log.Error("Authentication failed on second attempt, closing connection")
+				CloseClientConnection(Connection)
+			} else { //If no errors cache uuid in map
+				PlayerMap[playername] = Auth
+			}
+		} else { //If no erros cache uuid in map
+			PlayerMap[playername] = Auth
+		}
+	}
+	Log.Debug(playername, "[", Auth, "]")
+	//--Packer 0x01 End--//
+
+	//--Packet 0x02 S->C Start--//
+	writer := Packet.CreatePacketWriter(0x02)
+	Log.Debug("Playername: ", playername)
+	writer.WriteString(Auth)
+	writer.WriteString(playername)
+	//UUID Cache
+	//DEBUG: REMOVE ME
+	Log.Debug("PlayerMap: ", PlayerMap)
+	Log.Debug("PlayerData:", PlayerMap[playername])
+	//time.Sleep(5000000) //Debug:Add delay
+	SendData(Connection, writer)
+
+	///Entity ID Handling///
+	PlayerConnMap[Connection.Conn] = playername //link connection to player
+	player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
+	player.GetPlayerByID(player.PlayerEntityMap[playername])
+	//go player.GCPlayer() //DEBUG: REMOVE ME LATER
+	//--//
+	Connection.State = PLAY
+	PC := TranslatePlayerStruct(Connection) //Translates Server.ClientConnection -> player.ClientConnection
+	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
+	//this will be useful when multiple clients connect but with some added memory usage
+	C := make(chan bool)
+	go player.CreateGameJoin(PC, C, player.PlayerEntityMap[playername]) //Creates JoinGame packet AND SetDifficulty AND Player Abilities via go routines
+	Log.Debug("END")
+	//time.Sleep(60000000)
+	//CloseClientConnection(Connection)
+}
+
+func CreateEncryptionRequest(Connection *ClientConnection) {
+	Connection.KeepAlive()
+	Log := logging.MustGetLogger("HoneyGO")
+	Log.Debug("Login State, packetID 0x00")
+
+	//Encryption Request
+	//--Packet 0x01 S->C Start --//
+	Log.Debug("Login State, packetID 0x01 Start")
+	KeyLength = len(publicKeyBytes)
+	//KeyLength Checks
+	if KeyLength > 162 {
+		Log.Warning("Key is bigger than expected!")
+	}
+	if KeyLength < 162 {
+		Log.Warning("Key is smaller than expected!")
+	} else {
+		Log.Debug("Key Generated Successfully")
+	}
+
+	//PacketWrite - // NOTE: Later on the packet system will be redone in a more efficient manor where packets will be created in bulk
+	writer := Packet.CreatePacketWriter(0x01)
+	writer.WriteString("")                   //Empty;ServerID
+	writer.WriteVarInt(int32(KeyLength))     //Key Byte array length
+	writer.WriteArray(publicKeyBytes)        //Write Key byte Array
+	writer.WriteVarInt(ServerVerifyTokenLen) //Always 4 on notchian servers
+	rand.Read(ServerVerifyToken)             // Randomly Generate ServerVerifyToken
+	writer.WriteArray(ServerVerifyToken)
+	SendData(Connection, writer)
+	Log.Debug("Encryption Request Sent")
 }

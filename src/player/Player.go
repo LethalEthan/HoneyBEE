@@ -22,7 +22,7 @@ var (
 )
 
 //InitPlayer - Create Player Object
-func InitPlayer(Name string, UUID string/*, EntityID uint32*/, GameMode uint8) (*PlayerObject, error) {
+func InitPlayer(Name string, UUID string, GameMode uint8) (*PlayerObject, error) {
 	//Overflow protect - in the unlikely event that the assigned number of Player EID's is too big
 	if val, tmp := PlayerEntityMap[Name]; tmp { //If PlayerEntityMap returns a value
 		P := PlayerObjectMap[val] //Set P to pre-existing value - Saves time and reuses previous EntityID
@@ -38,7 +38,6 @@ func InitPlayer(Name string, UUID string/*, EntityID uint32*/, GameMode uint8) (
 		return P, nil
 	}
 }
-
 
 //GetPlayerByID - Gets PlayerObject from map by ID
 func GetPlayerByID(EID uint32) *PlayerObject {
@@ -76,6 +75,8 @@ func GCPlayer() {
 			{
 				if val.Online != true {
 					Elapse := int64(time.Since(val.TOC)) //time.Time -> int64 - simplifies checking
+					log.Warning("Elapse: ", Elapse)
+					log.Warning("TTL: ", TTL)
 					if Elapse > TTL {
 						log.Debug("Longer than 15 mins")
 						delete(PlayerEntityMap, val.Name)
@@ -102,6 +103,7 @@ func TrackPlayerCount(D bool) {
 func Disconnect(Name string) {
 	P := GetPlayerByName(Name)
 	P.Online = false
+	go GCPlayer()
 	//delete(PlayerObjectMap, P.EntityID)
 }
 
@@ -113,7 +115,7 @@ func AssignEID(P string) uint32 {
 		go FindFreeID(C)
 		ID := <-C
 		log.Debug("IIL: ", ID)
-//		close(C)
+		//		close(C)
 		return ID
 	}
 }
@@ -138,6 +140,7 @@ func FindFreeID(C chan uint32) {
 		}
 	}
 }
+
 /*
 func Findy(P string) uint32 {
 	var i uint32

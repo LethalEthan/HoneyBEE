@@ -14,7 +14,6 @@ var (
 	publicKey          *rsa.PublicKey    //PublicKey
 	privateKey         *rsa.PrivateKey   //PrivateKey
 	KeyLength          int               //Length of key array (should be 162)
-	Encryption         bool              //Finish ConfigHandler
 	Log                *logging.Logger   //Logger
 	ClientSharedSecret []byte            //Used for Authentication
 	ClientVerifyToken  []byte            //Used for Authentication
@@ -37,40 +36,31 @@ func CreateEncryptionRequest(Connection *ClientConnection) /*, CH chan bool)*/ {
 	Connection.KeepAlive()
 	Log := logging.MustGetLogger("HoneyGO")
 	Log.Debug("Login State, packetID 0x00")
-	Encryption = true //TODO: Finish ConfigHandler
 
 	//Encryption Request
 	//--Packet 0x01 S->C Start --//
-	if Encryption {
-		Log.Debug("Login State, packetID 0x01 Start")
-		KeyLength = len(publicKeyBytes)
-		//Log.Debug("KeyLength: ", KeyLength)
-		//KeyLength Checks
-		if KeyLength > 162 {
-			Log.Warning("Key is bigger than expected!")
-		}
-		if KeyLength < 162 {
-			Log.Warning("Key is smaller than expected!")
-		} else {
-			Log.Debug("Key Generated Successfully")
-		}
-
-		//PacketWrite - // NOTE: Later on the packet system will be redone in a more efficient manor where packets will be created in bulk
-		writer := CreatePacketWriter(0x01)
-		writer.WriteString("")                   //Empty;ServerID
-		writer.WriteVarInt(int32(KeyLength))     //Key Byte array length
-		writer.WriteArray(publicKeyBytes)        //Write Key byte Array
-		writer.WriteVarInt(ServerVerifyTokenLen) //Always 4 on notchian servers
-		rand.Read(ServerVerifyToken)             // Randomly Generate ServerVerifyToken
-		//Log.Debug("ServerVerifyToken: ", ServerVerifyToken)
-		writer.WriteArray(ServerVerifyToken)
-		SendData(Connection, writer)
-		//Packet.LoginPacketCreate(packetSize, reader) //TBD
-		//Log.Debug("Encryption Request: ", writer)
-		Log.Debug("Encryption Request Sent")
-		//CH := make(chan bool)
-		//CH <- true
+	Log.Debug("Login State, packetID 0x01 Start")
+	KeyLength = len(publicKeyBytes)
+	//KeyLength Checks
+	if KeyLength > 162 {
+		Log.Warning("Key is bigger than expected!")
 	}
+	if KeyLength < 162 {
+		Log.Warning("Key is smaller than expected!")
+	} else {
+		Log.Debug("Key Generated Successfully")
+	}
+
+	//PacketWrite - // NOTE: Later on the packet system will be redone in a more efficient manor where packets will be created in bulk
+	writer := CreatePacketWriter(0x01)
+	writer.WriteString("")                   //Empty;ServerID
+	writer.WriteVarInt(int32(KeyLength))     //Key Byte array length
+	writer.WriteArray(publicKeyBytes)        //Write Key byte Array
+	writer.WriteVarInt(ServerVerifyTokenLen) //Always 4 on notchian servers
+	rand.Read(ServerVerifyToken)             // Randomly Generate ServerVerifyToken
+	writer.WriteArray(ServerVerifyToken)
+	SendData(Connection, writer)
+	Log.Debug("Encryption Request Sent")
 }
 
 func keys() {
