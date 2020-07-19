@@ -40,7 +40,7 @@ type GameJoin struct {
 func CreateGameJoin(Conn *ClientConnection, C chan bool, EID uint32) {
 	for !Conn.Closed {
 		//Conn.KeepAlive() //KeepAlive
-		GJ := &GameJoin{EID, Creative, 0, 12345, 20, "default", 16, false, true}
+		GJ := &GameJoin{EID, Creative, 0, 53873645, 20, "default", 16, false, true}
 		//log.Debug("GJ:", GJ)
 		//No easy way to do this without this mess, a packet system re-write will be done in the future
 		writer := Packet.CreatePacketWriter(0x26)

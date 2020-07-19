@@ -1,6 +1,7 @@
 package VarTool //A tool to help decode and encode Variable Integer values used by minecrafts' protocol
 //Right now this is a massive mess of spaget code
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 )
@@ -13,16 +14,12 @@ func DecodeVarInt(DM VarInt) (int32, error) {
 	var result int32
 	var numRead uint32
 	for {
-
 		value := int32((DM & 0x7F))
 		result |= (value << (7 * numRead))
-
 		numRead++
-
 		if numRead > 5 {
 			return 0, fmt.Errorf("varint was over five bytes without termination")
 		}
-
 		if DM&0x80 == 0 {
 			break
 		}
@@ -30,16 +27,11 @@ func DecodeVarInt(DM VarInt) (int32, error) {
 	return result, nil
 }
 
-func EncodeVarInt(EM int) (int32, error) {
-	for {
-		bytetemp := byte(EM)
-		fmt.Print(bytetemp)
-		// value >>>= 7
-		// if (value != 0) {
-		//   temp
-		// }
-		return 8999, nil
-	}
+func EncodeVarInt(EM int32) (int32, error) {
+	buf := make([]byte, 6)
+	test := binary.PutVarint(buf, int64(EM))
+	test2 := int32(test)
+	return test2, nil
 }
 
 func DecodeVarLong(DM VarLong) (int64, error) {

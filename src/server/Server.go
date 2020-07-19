@@ -492,18 +492,15 @@ func CreateEncryptionResponse(Connection *ClientConnection, PH *PacketHeader) {
 		Auth = val //Set auth to value
 	} else { //If uuid isn't found, get it
 		//2 attempts to get UUID
-		Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
-		if err != nil {
-			Log.Error("Authentication Failed, trying second time")
+		for i := 0; i <= 2; i++ {
 			Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
 			if err != nil {
-				Log.Error("Authentication failed on second attempt, closing connection")
-				CloseClientConnection(Connection)
-			} else { //If no errors cache uuid in map
+				Log.Error("Authentication Failed, trying ", i, " time")
+				//Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
+			} else {
 				PlayerMap[playername] = Auth
+				break
 			}
-		} else { //If no erros cache uuid in map
-			PlayerMap[playername] = Auth
 		}
 	}
 	Log.Debug(playername, "[", Auth, "]")

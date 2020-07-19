@@ -33,7 +33,7 @@ const (
 	SectionHeight      int16 = 16
 	SectionWidth       int16 = 16
 	SectionLength      int16 = 16
-	SectionVolume      int16 = (SectionWidth * SectionHeight * SectionLength)
+	SectionVolume      int16 = 4096
 	SectionsNum              = 16
 )
 

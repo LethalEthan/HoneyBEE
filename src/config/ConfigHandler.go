@@ -22,6 +22,9 @@ type Config struct {
 		DEBUG   bool   `yaml:"debug"`   //Output DEBUG info -- TO BE LINKED
 		Timeout int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
 	} `yaml:"server"`
+	Performance struct {
+		CPU int `yaml:"cpu"`
+	} `yaml:"performance"`
 }
 
 // NewConfig returns a new decoded Config struct
@@ -46,11 +49,11 @@ func NewConfig(configPath string) (*Config, error) {
 
 //ValidateConfigPath - makes sure that the path provided is a file that can be read
 func ValidateConfigPath(path string) error {
-	s, err := os.Stat(path)
+	stat, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
-	if s.IsDir() {
+	if stat.IsDir() {
 		return fmt.Errorf("'%s' is a directory, not a normal file", path)
 	}
 	return nil
@@ -62,13 +65,13 @@ func ParseFlags() (string, error) {
 
 	//Set up a CLI flag "-config" to allow users to supply the configuration file - defaults to config.yml
 	flag.StringVar(&configPath, "config", "./config.yml", "path to config file")
-	//Pparse the flags
+	//Parse the flags
 	flag.Parse()
 	//Validate the path
 	if err := ValidateConfigPath(configPath); err != nil {
 		return "", err
 	}
-	// Return the configuration path
+	//Return the configuration path
 	return configPath, nil
 }
 
@@ -92,4 +95,8 @@ func ConfigStart() *Config {
 
 func GetConfig() *Config {
 	return ConfigR
+}
+
+func GetSPort() string {
+	return ConfigR.Server.Port
 }

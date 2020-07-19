@@ -30,7 +30,7 @@ func CreatePlayerAbilities(Conn *ClientConnection, C chan bool) {
 	//Conn.KeepAlive()
 	//T := byte(Invulnerable)
 	//TT := []byte{T}
-	PA := &PlayerAbilities{Invulnerable, 0.05, 0.1}
+	PA := &PlayerAbilities{0x01, 0.05, 0.1}
 	writer.WriteByte(PA.Flags)
 	writer.WriteFloat(PA.FlyingSpeed)
 	writer.WriteFloat(PA.FOVModifier)

@@ -1,6 +1,7 @@
 package Packet
 
 import (
+	"VarTool"
 	"encoding/binary"
 	"math"
 )
@@ -112,6 +113,8 @@ func (pw *PacketWriter) WriteString(val string) {
 //WriteVarInt - Write Var Int to packet (int32)
 func (pw *PacketWriter) WriteVarInt(val int32) {
 	pw.WriteVarLong(int64(val))
+	test, _ := VarTool.EncodeVarInt(val)
+	println("!!!!!!!!!!!!!!!!!!!: ", test)
 }
 
 //WriteVarLong - Write Var Long (int64)
@@ -124,12 +127,11 @@ func (pw *PacketWriter) CreateVarLong(val int64) []byte {
 	var buff []byte
 	for {
 		temp := byte(val & 0x7F)
-		val = int64(uint64(val) >> 7)
+		val = int64(val >> 7)
 		if val != 0 {
 			temp |= 0x80
 		}
 		buff = append(buff, temp)
-
 		if val == 0 {
 			break
 		}

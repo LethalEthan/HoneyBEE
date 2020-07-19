@@ -10,8 +10,8 @@ type ServerStatus struct {
 }
 
 type StatusVersion struct {
-	Name     string `json:"name"`
-	Protocol int32  `json:"protocol"`
+	Name     string  `json:"name"`
+	Protocol int32   `json:"protocol"`
 }
 
 type StatusPlayers struct {
@@ -21,7 +21,7 @@ type StatusPlayers struct {
 }
 
 //Implement RGB for 1.16 later and support multiple client/protocol versions
-func CreateStatusObject() *ServerStatus {
+func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string) *ServerStatus {
 	status := new(ServerStatus)
 	//Ref: Server.go: constants for status.Version
 	status.Version = StatusVersion{Name: MinecraftVersion, Protocol: MinecraftProtocolVersion}

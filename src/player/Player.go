@@ -57,40 +57,28 @@ func GetPlayerByName(Name string) *PlayerObject {
 //GCPlayer - Garbage Collect offline and expired players
 func GCPlayer() {
 	//--//
-	L := uint32(len(PlayerObjectMap))    //size of map
 	TT, err := time.ParseDuration("20m") //Duration to check for
 	if err != nil {
 		log.Error("Time didn't work")
 	}
 	TTL := int64(TT) //Duration -> int64 - simplifies checking
-	var i uint32
-	//--//
 	//--//
 	//iterate through map and check if player object should expire
 	//if PlayerObjectMap != nil {
-	for i = 2; i <= L; i++ {
-		val, tmp := PlayerObjectMap[i]
-		switch tmp {
-		case true:
-			{
-				if val.Online != true {
-					Elapse := int64(time.Since(val.TOC)) //time.Time -> int64 - simplifies checking
-					log.Warning("Elapse: ", Elapse)
-					log.Warning("TTL: ", TTL)
-					if Elapse > TTL {
-						log.Debug("Longer than 15 mins")
-						delete(PlayerEntityMap, val.Name)
-						delete(PlayerObjectMap, i)
-						log.Debug("Player:", val.Name, "deleted from map")
-					}
-				}
-				break
+	for i, val := range PlayerObjectMap {
+		if val.Online != true {
+			Elapse := int64(time.Since(val.TOC)) //time.Time -> int64 - simplifies checking
+			log.Warning("Elapse: ", Elapse)
+			log.Warning("TTL: ", TTL)
+			if Elapse > TTL {
+				log.Debug("Longer than 15 mins")
+				delete(PlayerEntityMap, val.Name)
+				delete(PlayerObjectMap, i)
+				log.Debug("Player:", val.Name, "deleted from map")
 			}
-		case false:
-			{
-				log.Debug("No player to GC found in map")
-				break
-			}
+		} else {
+			log.Debug("No player to GC found in map")
+			break
 		}
 	}
 }
