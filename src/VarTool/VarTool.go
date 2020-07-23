@@ -129,7 +129,7 @@ func ParseBoolFromConnection(conn net.Conn) (bool, error) {
 // 	return 0, nil //buff, nil
 // }
 
-func (v VarInt) Encode() (vi []byte) {
+func EncodeVarLong(v int64) (vi []byte) {
 	num := uint32(v)
 	for {
 		b := num & 0x7F

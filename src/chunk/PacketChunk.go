@@ -4,8 +4,8 @@ type VarInt int32
 type NBT byte //Temporary
 
 type ChunkPacket struct {
-	ChunkX                int
-	ChunkY                int
+	ChunkX                int64
+	ChunkZ                int64
 	FullChunk             bool
 	PBitMask              VarInt
 	HeightMaps            NBT

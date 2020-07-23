@@ -43,6 +43,7 @@ var (
 	ServerVerifyToken     = make([]byte, 4)           //Initialise a 4 element byte slice of cake
 	PlayerMap             = make(map[string]string)   //Map Player to UUID
 	PlayerConnMap         = make(map[net.Conn]string) //Map Connection to Player
+	ConnPlayerMap         = make(map[uint32]net.Conn)
 	//	EntityPlayerMap        = player.PlayerEntityMap    //= make(map[string]uint32)   //Map Player to EID
 	GEID   uint32 = 2
 	Config *config.Config
@@ -252,9 +253,12 @@ func HandleConnection(Connection *ClientConnection) {
 						PlayerConnMap[Connection.Conn] = playername //link connection to player
 						player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
 						player.GetPlayerByID(player.PlayerEntityMap[playername])
+						EID := player.PlayerEntityMap[playername]
+						ConnPlayerMap[EID] = Connection.Conn
 						//go player.GCPlayer() //DEBUG: REMOVE ME LATER
 						//--//
 						Connection.State = PLAY
+						//worldtime.
 						PC := TranslatePlayerStruct(Connection) //Translates Server.ClientConnection -> player.ClientConnection
 						//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 						//this will be useful when multiple clients connect but with some added memory usage

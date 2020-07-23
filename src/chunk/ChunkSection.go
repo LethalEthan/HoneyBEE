@@ -40,3 +40,35 @@ func DirectPallete(Chunk *ChunkSection) {
 func PrimaryBitMask() {
 
 }
+
+func GenChunkSection(BC int16) (*ChunkSection) {
+	CS := new(ChunkSection)
+	CS.BlockCount = BC
+	CS.BitsPerBlock = 8
+	//CS.Palette.PaletteLength = VarTool.EncodeVarLong(1)
+	//CS.Palette.PalleteData = VarInt.Encode()
+
+	CS.DataArray = make([]int64, 512)
+	for i := 0; i < 512; i++ {
+		CS.DataArray[i] = 0xFFFFFFFFFFFFFFF
+	}
+	DL := VarInt(len(CS.DataArray))
+	CS.DataArrayLength = DL
+	return CS
+}
+
+func (v VarInt) Encode( /*v int64*/ ) (vi []byte) {
+	num := uint32(v)
+	for {
+		b := num & 0x7F
+		num >>= 7
+		if num != 0 {
+			b |= 0x80
+		}
+		vi = append(vi, byte(b))
+		if num == 0 {
+			break
+		}
+	}
+	return
+}

@@ -19,14 +19,15 @@ type PlayerObject struct {
 var (
 	PlayerObjectMap = make(map[uint32]*PlayerObject) //PlayerObjectMap - EID/PlayerObject
 	PlayerEntityMap = make(map[string]uint32)        //PlayerEntityMap - Name/EID
+	OnlinePlayerMap = make(map[string]bool)          //OnlinePlayerMap - Name/bool
 )
 
 //InitPlayer - Create Player Object
 func InitPlayer(Name string, UUID string, GameMode uint8) (*PlayerObject, error) {
-	//Overflow protect - in the unlikely event that the assigned number of Player EID's is too big
 	if val, tmp := PlayerEntityMap[Name]; tmp { //If PlayerEntityMap returns a value
 		P := PlayerObjectMap[val] //Set P to pre-existing value - Saves time and reuses previous EntityID
 		P.Online = true
+		OnlinePlayerMap[P.Name] = P.Online
 		return P, nil
 	} else { //Create Player
 		P := new(PlayerObject)
@@ -91,6 +92,7 @@ func TrackPlayerCount(D bool) {
 func Disconnect(Name string) {
 	P := GetPlayerByName(Name)
 	P.Online = false
+	delete(OnlinePlayerMap, P.Name)
 	go GCPlayer()
 	//delete(PlayerObjectMap, P.EntityID)
 }
@@ -99,6 +101,8 @@ func AssignEID(P string) uint32 {
 	if val, tmp := PlayerEntityMap[P]; tmp { //Pre-Existing Value
 		return val
 	} else {
+		//Maybe parrelised later by splitting the work load i.e. one go routine searches ID range 1-2000 and another searches 20001-4000
+		//This may not be necessary though but is a consideration in case the performance impact is too much
 		C := make(chan uint32)
 		go FindFreeID(C)
 		ID := <-C
@@ -122,33 +126,8 @@ func FindFreeID(C chan uint32) {
 		case false: //if ID isn't being used
 			{
 				C <- i
-				//close(C)
 				return
 			}
 		}
 	}
 }
-
-/*
-func Findy(P string) uint32 {
-	var i uint32
-	if val, tmp := PlayerEntityMap[P]; tmp { //Pre-Existing non-exValue
-		return val
-	} else {
-		for i = 2; i <= 4294967294; i++ {
-			_, tmp := PlayerObjectMap[i] //check current objects
-			switch tmp {
-			case true:
-				{
-				log.Debug("ID:", i, " being used, skip")
-				//break
-				}
-			case false: //if ID isn't being used
-				{
-				return i
-				}
-			}
-		}
-	}
-	return 90000
-}*/

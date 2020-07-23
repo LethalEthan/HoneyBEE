@@ -9,10 +9,11 @@ type Location int64
 
 type Chunk struct {
 	ChunkPosX int64
-	ChunkPosY int64
+	ChunkPosZ int64
 	Biomes    []byte
 	Blocks    []byte
 	NumBlocks uint16
+	NumSecs   uint8
 	Modfied   bool
 }
 
@@ -78,6 +79,28 @@ func GlobalPalette() map[int]string {
 }
 
 //Testing using only stone blocks
-func GenChunk() {
-	GenSectionPalette(1, 1) //NumOfBlocks, BlockID
+func GenChunk(CX int64, CY int64) Chunk {
+	//GenSectionPalette(1, 1) //NumOfBlocks, BlockID
+	Chunk := new(Chunk)
+	Chunk.ChunkPosX = CX
+	Chunk.ChunkPosZ = CY
+	Chunk.NumSecs = 2
+	//t := SectionVolume * int16(Chunk.NumSecs)
+	Chunk.Blocks = make([]byte, 512)
+	for i := 0; i <= 7; i++ {
+		Chunk.Blocks[i] = 1
+	}
+	return *Chunk
+}
+
+func SendChunkPacket(Chunk *Chunk, BitMask VarInt, DAL int) {
+	CP := new(ChunkPacket)
+	CP.ChunkX = Chunk.ChunkPosX
+	CP.ChunkZ = Chunk.ChunkPosZ
+	CP.FullChunk = true
+	CP.PBitMask = BitMask
+	//CP.HeightMaps = []int64{}
+	CP.Size = VarInt(DAL)
+	CS := new(ChunkSection)
+	CS.BitsPerBlock = 8
 }
