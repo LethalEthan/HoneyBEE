@@ -8,11 +8,13 @@ import (
 
 //var log = logging.MustGetLogger("HoneyGO")
 
+//SetDifficulty - Packet struct for SetDifficulty
 type SetDifficulty struct {
 	Difficulty uint8 //0:Peaceful, 1:easy, 2:normal, 3:hard
 	DiffLock   bool  //Difficulty Lock
 }
 
+//CreateSetDiff - Create SetDifficulty Packet and send
 func CreateSetDiff(Conn *ClientConnection, C chan bool) {
 	//Conn.KeepAlive()
 	Log := logging.MustGetLogger("HoneyGO")

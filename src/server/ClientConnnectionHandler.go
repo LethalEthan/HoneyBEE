@@ -31,6 +31,7 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 		if val, PCM := PlayerConnMap[tmp.Conn]; PCM {
 			Log.Warning("PCM: Deleted:, ", val)
 			delete(PlayerConnMap, tmp.Conn)
+			//delete(ConnPlayerMap, tmp.Conn)
 			go Disconnect(val)
 		} else {
 			Log.Warning("No player mapped to connection, ignoring")
@@ -56,6 +57,7 @@ func CloseClientConnection(Connection *ClientConnection) {
 	if val, PCM := PlayerConnMap[Connection.Conn]; PCM {
 		Log.Warning("PCM: Deleted:, ", val)
 		delete(PlayerConnMap, Connection.Conn)
+		//delete(ConnPlayerMap, val)
 	} else {
 		Log.Warning("No player mapped to connection, ignoring")
 	}

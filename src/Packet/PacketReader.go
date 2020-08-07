@@ -114,9 +114,9 @@ func (pr *PacketReader) ReadBoolean() (bool, error) {
 
 //ReadByte - reads a single byte from the packet and returns it, it returns a zero and an io.EOF if the packet has been already read to the end.
 func (pr *PacketReader) ReadByte() (byte, error) {
-	bytee, err := pr.ReadUnsignedByte()
+	Byte, err := pr.ReadUnsignedByte()
 
-	return byte(bytee), err
+	return byte(Byte), err
 }
 
 func (pr *PacketReader) ReadUnsignedByte() (byte, error) {
@@ -124,15 +124,15 @@ func (pr *PacketReader) ReadUnsignedByte() (byte, error) {
 		return 0, io.EOF
 	}
 
-	bytee := pr.data[pr.seek]
+	Byte := pr.data[pr.seek]
 
 	_, err := pr.seekWithEOF(1, io.SeekCurrent)
 
 	if err != nil {
-		return bytee, err
+		return Byte, err
 	}
 
-	return bytee, nil
+	return Byte, nil
 }
 
 func (pr *PacketReader) ReadShort() (int16, error) {
@@ -250,11 +250,11 @@ func (pr *PacketReader) ReadVarInt() (int32, error) {
 	var result int32
 	var numRead uint32
 	for {
-		bytee, err := pr.ReadUnsignedByte()
+		Byte, err := pr.ReadUnsignedByte()
 		if err != nil {
 			return 0, err
 		}
-		val := int32((bytee & 0x7F))
+		val := int32((Byte & 0x7F))
 		result |= (val << (7 * numRead))
 
 		numRead++
@@ -263,7 +263,7 @@ func (pr *PacketReader) ReadVarInt() (int32, error) {
 			return 0, fmt.Errorf("varint was over five bytes without termination")
 		}
 
-		if bytee&0x80 == 0 {
+		if Byte&0x80 == 0 {
 			break
 		}
 	}
@@ -293,20 +293,20 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 	var result int64
 	var numRead uint64
 	for {
-		bytee, err := pr.ReadUnsignedByte()
+		Byte, err := pr.ReadUnsignedByte()
 		if err != nil {
 			return 0, err
 		}
-		val := int64((bytee & 0x7F))
+		val := int64((Byte & 0x7F))
 		result |= (val << (7 * numRead))
 
 		numRead++
 
 		if numRead > 10 {
-			return 0, fmt.Errorf("varint was over five bytes without termination")
+			return 0, fmt.Errorf("varlong was over 10 bytes without termination")
 		}
 
-		if bytee&0x80 == 0 {
+		if Byte&0x80 == 0 {
 			break
 		}
 	}

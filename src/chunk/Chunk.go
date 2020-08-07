@@ -39,21 +39,40 @@ const (
 )
 
 //Note: Currently has a lot of debug and testing stuff, is not finalised
-func CreateNewChunkSection() { //*Chunk {
+func CreateNewChunkSection() *ChunkSection { //*Chunk {
 	chunk := new(ChunkSection)
-	chunk.BlockCount = SectionVolume
-	chunk.BitsPerBlock = 8
-	chunk.Palette.PaletteLength = 16
-	I := make([]int32, 64)
-	//I[0:64] = 1
-	for i := 0; i < len(I); i++ {
-		I[i] = 1
-	}
+	chunk.BlockCount = SectionVolume * 2
+	chunk.BitsPerBlock = 4
+	//chunk.Palette.PaletteLength = 16
+	// I := make([]int32, 64)
+	// //I[0:64] = 1
+	// for i := 0; i < len(I); i++ {
+	// 	I[i] = 1
+	// }
 	//VarTool.ParseVarIntFromArray(I)
-	chunk.Palette.PalleteData = []VarInt{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-	chunk.DataArrayLength = 3
-	chunk.DataArray = make([]int64, 4096) //chunk.DataArrayLength)
-	//return chunk
+	//chunk.Palette.PalleteData = []VarInt{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	chunk.DataArrayLength = 2
+	chunk.DataArray = make([]int64, 64) //chunk.DataArrayLength)
+	chunk.DataArray = BuildDataArray(0, chunk)
+	for i := 0; i < 64; i++ {
+		chunk.DataArray[i] = chunk.DataArray[0]
+	}
+	fmt.Print(chunk.DataArray)
+	return chunk
+}
+
+//Very WIP
+func BuildDataArray(Index int, chunk *ChunkSection) []int64 {
+	var t int
+	t = 60
+	for i := 0; i < 16; i++ {
+		chunk.DataArray[Index] |= 1 << t
+		//chunk.DataArray[Index] = 1 << t
+		t = t - 4
+		fmt.Print("\n")
+		fmt.Printf("%064b", chunk.DataArray[Index])
+	}
+	return chunk.DataArray
 }
 
 func Getblocks() uint16 {
@@ -86,7 +105,7 @@ func GenChunk(CX int64, CY int64) Chunk {
 	Chunk.ChunkPosZ = CY
 	Chunk.NumSecs = 2
 	//t := SectionVolume * int16(Chunk.NumSecs)
-	Chunk.Blocks = make([]byte, 512)
+	Chunk.Blocks = make([]byte, 256)
 	for i := 0; i <= 7; i++ {
 		Chunk.Blocks[i] = 1
 	}
@@ -102,5 +121,6 @@ func SendChunkPacket(Chunk *Chunk, BitMask VarInt, DAL int) {
 	//CP.HeightMaps = []int64{}
 	CP.Size = VarInt(DAL)
 	CS := new(ChunkSection)
-	CS.BitsPerBlock = 8
+	CS.BitsPerBlock = 4
+
 }

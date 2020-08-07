@@ -3,6 +3,8 @@ package main
 import (
 	"Packet"
 	"config"
+	//	"fmt"
+	"chunk"
 	"net"
 	"os"
 	"os/signal"
@@ -11,13 +13,16 @@ import (
 	"server"
 	"syscall"
 	"time"
-
+	//	"worldtime"
+	//	_ "net/http/pprof"
+	//	"net/http"
 	logging "github.com/op/go-logging"
 )
 
+//R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 19)"
+	HoneyGOVersion = "1.0.0 (Build 20)"
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -36,10 +41,8 @@ func main() {
 	B1LF := logging.AddModuleLevel(B1Format)            //Add formatting Levels
 	B1LF.SetLevel(logging.DEBUG, "")
 	logging.SetBackend(B1LF)
-	server.CurrentStatus = server.CreateStatusObject(578, "1.15.2")
 	server.Log = Log
 	//Logger Creation END
-
 	Log.Info("HoneyGO ", HoneyGOVersion, " starting...")
 	Run = true
 	conf := config.ConfigStart()
@@ -49,6 +52,7 @@ func main() {
 		Log.Fatal(err.Error())
 		return
 	}
+	//--//
 	Log.Info("Server Network Listener Started on port", ServerPort)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
 	if conf.Performance.CPU == 0 {
@@ -58,18 +62,25 @@ func main() {
 		Log.Info("Setting GOMAXPROCS to config")
 		runtime.GOMAXPROCS(conf.Performance.CPU)
 	}
-	if runtime.NumCPU() < 2 {
+	if runtime.NumCPU() < 2 || conf.Performance.CPU < 2 && conf.Performance.CPU != 0 {
 		Log.Critical("Number of CPU's is less than 2 this could impact performance as this is a heavily threaded application")
 	}
 	Log.Info("Generating Key Chain")
 	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 	//this will be useful when multiple clients connect but with some slight added memory usage
 	go Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
+	//server.OnStart()
+	//S := make(chan bool)
+	//go worldtime.WorldTime(S)
+	server.Init() //Initalise server
+	go Shutdown()
 	//Accepts connection and creates new goroutine for the connection to be handled
 	//other goroutines are stemmed from HandleConnection
-	//server.OnStart()
-	go Shutdown()
 	Log.Info("Accepting Connections")
+	// go func() {
+	// 	fmt.Println(http.ListenAndServe("localhost:6060", nil))
+	// }()
+	chunk.CreateNewChunkSection()
 	for Run {
 		Connection, err = netlisten.Accept()
 		if err != nil && Run == true {
@@ -91,12 +102,15 @@ func Shutdown() {
 			Log.Warning("Starting shutdown")
 			Run = false
 			if netlisten != nil && Connection != nil {
+				//worldtime.Shutdown()
 				Connection.Close()
 				Log.Info("Connection Closed")
 				netlisten.Close()
 				Log.Info("Net Listen Closed")
+				//worldtime.Shutdown()
 				os.Exit(0)
 			}
+			//worldtime.Shutdown()
 			os.Exit(0)
 		}
 	}

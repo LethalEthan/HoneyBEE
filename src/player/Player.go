@@ -17,9 +17,12 @@ type PlayerObject struct {
 }
 
 var (
-	PlayerObjectMap = make(map[uint32]*PlayerObject) //PlayerObjectMap - EID/PlayerObject
-	PlayerEntityMap = make(map[string]uint32)        //PlayerEntityMap - Name/EID
-	OnlinePlayerMap = make(map[string]bool)          //OnlinePlayerMap - Name/bool
+	//PlayerObjectMap - EID/PlayerObject
+	PlayerObjectMap = make(map[uint32]*PlayerObject)
+	//PlayerEntityMap - Name/EID
+	PlayerEntityMap = make(map[string]uint32)
+	//OnlinePlayerMap - Name/bool
+	OnlinePlayerMap = make(map[string]bool)
 )
 
 //InitPlayer - Create Player Object

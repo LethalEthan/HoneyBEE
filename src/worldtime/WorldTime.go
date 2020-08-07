@@ -32,7 +32,8 @@ func WorldTime(S chan bool) {
 				println("Ticker stopped")
 				return
 			case t := <-ticker.C:
-				fmt.Println("Tick at", t)
+				//fmt.Println("Tick at", t)
+				_ = t
 				WT.Time_Of_Day = WT.Time_Of_Day + 20
 				go SendTime(WT)
 			}
