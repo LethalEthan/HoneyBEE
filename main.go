@@ -4,7 +4,7 @@ import (
 	"Packet"
 	"config"
 	//	"fmt"
-	"chunk"
+
 	"net"
 	"os"
 	"os/signal"
@@ -68,7 +68,7 @@ func main() {
 	Log.Info("Generating Key Chain")
 	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 	//this will be useful when multiple clients connect but with some slight added memory usage
-	go Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
+	Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
 	//server.OnStart()
 	//S := make(chan bool)
 	//go worldtime.WorldTime(S)
@@ -80,7 +80,7 @@ func main() {
 	// go func() {
 	// 	fmt.Println(http.ListenAndServe("localhost:6060", nil))
 	// }()
-	chunk.CreateNewChunkSection()
+	//chunk.CreateNewChunkSection()
 	for Run {
 		Connection, err = netlisten.Accept()
 		if err != nil && Run == true {

@@ -51,10 +51,10 @@ func CreateNewChunkSection() *ChunkSection { //*Chunk {
 	// }
 	//VarTool.ParseVarIntFromArray(I)
 	//chunk.Palette.PalleteData = []VarInt{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-	chunk.DataArrayLength = 2
-	chunk.DataArray = make([]int64, 64) //chunk.DataArrayLength)
+	chunk.DataArrayLength = 256
+	chunk.DataArray = make([]int64, 256) //chunk.DataArrayLength)
 	chunk.DataArray = BuildDataArray(0, chunk)
-	for i := 0; i < 64; i++ {
+	for i := 0; i < 256; i++ {
 		chunk.DataArray[i] = chunk.DataArray[0]
 	}
 	fmt.Print(chunk.DataArray)

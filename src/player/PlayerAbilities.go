@@ -21,31 +21,26 @@ const (
 	DEBUG                  = false
 )
 
-func CreatePlayerAbilities(Conn *ClientConnection, C chan bool) {
+func CreatePlayerAbilities(Conn *ClientConnection) {
 	if DEBUG {
 		start = time.Now()
 	}
 	writer := Packet.CreatePacketWriter(0x32)
-	log.Debug("Packet Play, 0x32 Created")
-	//Conn.KeepAlive()
-	//T := byte(Invulnerable)
-	//TT := []byte{T}
+	//log.Debug("Packet Play, 0x32 Created")
 	PA := &PlayerAbilities{0x01, 0.05, 0.1}
 	writer.WriteByte(PA.Flags)
 	writer.WriteFloat(PA.FlyingSpeed)
 	writer.WriteFloat(PA.FOVModifier)
-	log.Debug("Conn state: ", Conn.State)
-	if DEBUG {
-		elapse := time.Since(start)
-		log.Debug("Time before wait block:", elapse)
-	}
-	wait := <-C //Blocks goroutine until value is recieved
-	log.Debug("PA:", wait)
-	if DEBUG {
-		elapse := time.Since(start)
-		log.Warning("Time after wait block:", elapse)
-	}
+	// if DEBUG {
+	// 	elapse := time.Since(start)
+	// 	log.Debug("Time before wait block:", elapse)
+	// }
+	// wait := <-C //Blocks goroutine until value is recieved
+	// log.Debug("PA:", wait)
+	// if DEBUG {
+	// 	elapse := time.Since(start)
+	// 	log.Warning("Time after wait block:", elapse)
+	// }
 	SendData(Conn, writer)
-	close(C)
-	log.Debug("PlayerAbilities sent")
+	//log.Debug("PlayerAbilities sent")
 }

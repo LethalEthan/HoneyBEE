@@ -37,29 +37,27 @@ type GameJoin struct {
 	EnableRespawnScreen bool //Set false when doImmediateRespawn gamerule is true
 }
 
-func CreateGameJoin(Conn *ClientConnection, C chan bool, EID uint32) {
-	for !Conn.Closed {
-		//Conn.KeepAlive() //KeepAlive
-		GJ := &GameJoin{EID, Creative, 0, 53873645, 20, "default", 16, false, true}
-		//log.Debug("GJ:", GJ)
-		//No easy way to do this without this mess, a packet system re-write will be done in the future
-		writer := Packet.CreatePacketWriter(0x26)
-		writer.WriteInt(int32(GJ.EntityID)) //In PW it goes from int32 -> uint32 this will be different when packethandler rewrite is complete
-		writer.WriteUnsignedByte(GJ.GameMode)
-		writer.WriteInt(int32(GJ.Dimension))
-		writer.WriteLong(GJ.HashedSeed)
-		writer.WriteUnsignedByte(0)
-		writer.WriteString("default")
-		writer.WriteVarInt(16)
-		writer.WriteBoolean(false)
-		writer.WriteBoolean(true)
-		SendData(Conn, writer)
-		log.Debug("GameJoin Packet sent, Sending SetDifficulty packet")
-		//log.Debug("GOR:", runtime.NumGoroutine())
-		go CreateSetDiff(Conn, C) //Creates SetDifficultyPacket
-		C <- true
-		break
-	}
+func CreateGameJoin(Conn *ClientConnection /*, C chan bool*/, EID uint32) {
+	//log.Debug("Packet Play, 0x26 Created")
+	//Conn.KeepAlive() //KeepAlive
+	GJ := &GameJoin{EID, Creative, 0, 53873645, 20, "default", 16, false, true}
+	//log.Debug("GJ:", GJ)
+	//No easy way to do this without this mess, a packet system re-write will be done in the future
+	writer := Packet.CreatePacketWriter(0x26)
+	writer.WriteInt(int32(GJ.EntityID)) //In PW it goes from int32 -> uint32 this will be different when packethandler rewrite is complete
+	writer.WriteUnsignedByte(GJ.GameMode)
+	writer.WriteInt(int32(GJ.Dimension))
+	writer.WriteLong(GJ.HashedSeed)
+	writer.WriteUnsignedByte(0)
+	writer.WriteString("default")
+	writer.WriteVarInt(16)
+	writer.WriteBoolean(false)
+	writer.WriteBoolean(true)
+	SendData(Conn, writer)
+	//log.Debug("GameJoin Packet sent")
+	//log.Debug("GOR:", runtime.NumGoroutine())
+	//CreateSetDiff(Conn) //Creates SetDifficultyPacket
+	//C <- true
 }
 
 // func CreateGameJoinInstance(EntityID uint32) {

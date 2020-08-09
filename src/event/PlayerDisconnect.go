@@ -1,19 +1,19 @@
 package event
 
 import (
-	"player"
-
 	logging "github.com/op/go-logging"
 )
 
-var Log *logging.Logger
+var Log = logging.MustGetLogger("HoneyGO")
+
+type Player string
 
 //Event - Bleh
 type Event interface {
-	PlayerDisconnect() *player.PlayerObject
+	PlayerDisconnect() //*player.PlayerObject
 }
 
 //PlayerDisconnect - Handle Player Disconnect
-func PlayerDisconnect() {
-
+func (player Player) /*player.PlayerObject)*/ PlayerDisconnect() {
+	Log.Info("Player: ", player, "Disconnected")
 }

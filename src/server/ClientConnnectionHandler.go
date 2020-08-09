@@ -27,6 +27,7 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 		tmp := ClientConnectionMap[RemoteAddress]
 		tmp.Conn.Close()
 		tmp.Conn = Conn
+		tmp.Conn.Close()
 		ClientConnectionMap[RemoteAddress] = tmp
 		if val, PCM := PlayerConnMap[tmp.Conn]; PCM {
 			Log.Warning("PCM: Deleted:, ", val)
