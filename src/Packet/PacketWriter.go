@@ -1,10 +1,13 @@
 package Packet
 
 import (
-	"VarTool"
 	"encoding/binary"
 	"math"
+
+	logging "github.com/op/go-logging"
 )
+
+var Log = logging.MustGetLogger("HoneyGO")
 
 type PacketWriter struct {
 	Data       []byte
@@ -21,7 +24,6 @@ func CreatePacketWriter(packetID int32) *PacketWriter {
 }
 
 func (pw *PacketWriter) GetPacket() []byte {
-	//fmt.Printf("GetPacket Called, Data: ")
 	return append(pw.CreateVarLong(int64(pw.packetSize)), pw.Data...)
 }
 
@@ -110,19 +112,19 @@ func (pw *PacketWriter) WriteString(val string) {
 	pw.appendByteSlice([]byte(val))
 }
 
-//WriteVarInt - Write Var Int to packet (int32)
+//WriteVarInt - Write VarInt to packet (int32)
 func (pw *PacketWriter) WriteVarInt(val int32) {
 	pw.WriteVarLong(int64(val))
-	test, _ := VarTool.EncodeVarInt(val)
-	println("!!!!!!!!!!!!!!!!!!!: ", test)
 }
 
-//WriteVarLong - Write Var Long (int64)
+//WriteVarLong - Write VarLong (int64)
 func (pw *PacketWriter) WriteVarLong(val int64) {
+	//tt := pw.CreateVarLong(val)
+	//Log.Debug("!!!!: ", tt)
 	pw.appendByteSlice(pw.CreateVarLong(val))
 }
 
-//CreateVarLong - Creates a Var Long
+//CreateVarLong - Creates a VarLong
 func (pw *PacketWriter) CreateVarLong(val int64) []byte {
 	var buff []byte
 	for {
