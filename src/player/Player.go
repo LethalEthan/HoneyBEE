@@ -59,33 +59,33 @@ func GetPlayerByName(Name string) *PlayerObject {
 }
 
 //GCPlayer - Garbage Collect offline and expired players
-func GCPlayer() {
-	//--//
-	TT, err := time.ParseDuration("20m") //Duration to check for
-	if err != nil {
-		log.Error("Time didn't work")
-	}
-	TTL := int64(TT) //Duration -> int64 - simplifies checking
-	//--//
-	//iterate through map and check if player object should expire
-	//if PlayerObjectMap != nil {
-	for i, val := range PlayerObjectMap {
-		if val.Online != true {
-			Elapse := int64(time.Since(val.TOC)) //time.Time -> int64 - simplifies checking
-			log.Warning("Elapse: ", Elapse)
-			log.Warning("TTL: ", TTL)
-			if Elapse > TTL {
-				log.Debug("Longer than 15 mins")
-				delete(PlayerEntityMap, val.Name)
-				delete(PlayerObjectMap, i)
-				log.Debug("Player:", val.Name, "deleted from map")
-			}
-		} else {
-			log.Debug("No player to GC found in map")
-			break
-		}
-	}
-}
+// func GCPlayer() {
+// 	//--//
+// 	TT, err := time.ParseDuration("20m") //Duration to check for
+// 	if err != nil {
+// 		log.Error("Time didn't work")
+// 	}
+// 	TTL := int64(TT) //Duration -> int64 - simplifies checking
+// 	//--//
+// 	//iterate through map and check if player object should expire
+// 	//if PlayerObjectMap != nil {
+// 	for i, val := range PlayerObjectMap {
+// 		if val.Online != true {
+// 			Elapse := int64(time.Since(val.TOC)) //time.Time -> int64 - simplifies checking
+// 			log.Warning("Elapse: ", Elapse)
+// 			log.Warning("TTL: ", TTL)
+// 			if Elapse > TTL {
+// 				log.Debug("Longer than 15 mins")
+// 				delete(PlayerEntityMap, val.Name)
+// 				delete(PlayerObjectMap, i)
+// 				log.Debug("Player:", val.Name, "deleted from map")
+// 			}
+// 		} else {
+// 			log.Debug("No player to GC found in map")
+// 			break
+// 		}
+// 	}
+// }
 
 func TrackPlayerCount(D bool) {
 
@@ -133,4 +133,30 @@ func FindFreeID(C chan uint32) {
 			}
 		}
 	}
+}
+
+func GCPlayer() {
+	ticker := time.NewTicker(30 * time.Minute)
+	//shutdown = make(chan bool)
+	go func() {
+		for {
+			select {
+			// case <-S:
+			// 	ticker.Stop()
+			// 	println("Ticker stopped")
+			// 	return
+			case <-ticker.C:
+				for i, val := range PlayerObjectMap {
+					if val.Online != true {
+						delete(PlayerEntityMap, val.Name)
+						delete(PlayerObjectMap, i)
+						log.Debug("Player:", val.Name, "deleted from map")
+					} else {
+						log.Debug("No player to GC found in map")
+						break
+					}
+				}
+			}
+		}
+	}()
 }

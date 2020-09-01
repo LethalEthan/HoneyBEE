@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	publicKeyBytes     []byte            //Key stored in byte array for packet delivery
-	publicKey          *rsa.PublicKey    //PublicKey
-	privateKey         *rsa.PrivateKey   //PrivateKey
-	KeyLength          int               //Length of key array (should be 162)
-	Log                *logging.Logger   //Logger
+	publicKeyBytes []byte          //Key stored in byte array for packet delivery
+	publicKey      *rsa.PublicKey  //PublicKey
+	privateKey     *rsa.PrivateKey //PrivateKey
+	KeyLength      int             //Length of key array (should be 162)
+	//	Log                *logging.Logger   //Logger
 	ClientSharedSecret []byte            //Used for Authentication
 	ClientVerifyToken  []byte            //Used for Authentication
 	ServerVerifyToken  = make([]byte, 4) //Initialise a 4 element byte slice

@@ -2,8 +2,6 @@ package server
 
 import (
 	"Packet"
-	"crypto/rand"
-	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"player"
@@ -93,41 +91,10 @@ func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
 					{
 						//--Packet 0x01 S->C Start--//
 						//EncryptionResponse
-						Connection.KeepAlive()
-						Log.Debug("Login State, packetID 0x01")
-						Log.Debug("PacketSIZE: ", PH.packetSize)
-						if PH.packetSize > 260 {
+						ClientSharedSecret, err := HandleEncryptionResponse(&PH)
+						if err != nil {
 							CloseClientConnection(Connection)
 							return
-						}
-						ClientSharedSecretLen = 128           //Should always be 128 when encrypted
-						ClientSharedSecret = PH.packet[2:130] //Find the first 128 bytes in the whole byte array
-						ClientVerifyToken = PH.packet[132:]   //Find the second 128 bytes in whole byte array
-						Connection.KeepAlive()
-						//Decrypt Shared Secret
-						decryptSS, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientSharedSecret)
-						if err != nil {
-							fmt.Print(err)
-						}
-						ClientSharedSecret = decryptSS //Set the decrypted value
-						ClientSharedSecretLen = len(ClientSharedSecret)
-						//Basic check to see whether it's 16 bytes
-						if ClientSharedSecretLen != 16 {
-							Log.Warning("Shared Secret Length is NOT 16 bytes :(")
-						} else {
-							Log.Info("ClientSharedSecret Recieved Successfully")
-						}
-						//Decrypt Verify Token
-						decryptVT, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientVerifyToken)
-						if err != nil {
-							fmt.Print(err)
-						}
-						Connection.KeepAlive()
-						ClientVerifyTokenLen = len(decryptVT)
-						if ServerVerifyTokenLen != ClientVerifyTokenLen {
-							Log.Warning("Encryption Failed!")
-						} else {
-							Log.Info("Encryption Successful!")
 						}
 						var Auth string
 						//--Authentication Stuff--//
@@ -147,7 +114,7 @@ func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
 								} else { //If no errors cache uuid in map
 									PlayerMap[playername] = Auth
 								}
-							} else { //If no erros cache uuid in map
+							} else { //If no errors cache uuid in map
 								PlayerMap[playername] = Auth
 							}
 						}

@@ -22,7 +22,7 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 20)"
+	HoneyGOVersion = "1.0.0 (Build 21)"
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -52,6 +52,7 @@ func main() {
 		Log.Fatal(err.Error())
 		return
 	}
+	//chunk.BuildChunk(0, 0) //DEBUG: Remove me later
 	//--//
 	Log.Info("Server Network Listener Started on port", ServerPort)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())

@@ -4,11 +4,9 @@ HoneyGO is a Minecraft server written in GO, with help from [wiki.vg](https://wi
 
 This software is still being developed so expect bugs and issues now and then, also remember that feedback and disclosure of issues is welcomed but please don't send any hateful or spam issues :). HoneyGO as of now is considered pre-alpha it is very early in development and has only been released publicly on github since 25/4/2020
 
-**Disclaimer: All code is completely original and is not based off of Mojang's code, any PR's must not have any of Mojang's copyrighted code as it will not be accepted nor be encouraged because it would be illegal, please see the Terms and Conditions of Mojang for familiarisation. I am not in any way affiliated with Mojang, I'm just a kid who wants a fast non-laggy mc server :) and because of that this is a learning curve for me and I hope I inspire other people to get into programming and reverse engineering as I am having a lot of fun making this. \
-\
-All code is commented and is aimed at beginners with explanations on what some go functions do i.e goroutines and structs**
+**Disclaimer: All code is completely original and is not based off of Mojang's code, any PR's must not be based off of or have any of Mojang's copyrighted code as it will not be accepted nor be encouraged as it would be obviously illegal, please see the Terms and Conditions of Mojang for familiarisation. I am not in any way affiliated with Mojang, HoneyGO is not endorsed nor approved by Mojang.**
 
-**To people who want to contribute: If you would like to contribute to HoneyGO or HoneyComb you'll need to create a fork and submit a Pull Request (PR), The code will be reviewed and potentially be merged (no guarantees). I will also add your name to the contributors list**
+**To people who want to contribute: If you would like to contribute to HoneyGO or HoneyComb you'll need to create a fork and submit a Pull Request (PR), The code will be reviewed and potentially be merged (no guarantees). I will also add your name to the contributors list. Any PR's must use the same license**
 
 As of now we only have basic features to start off with but as development continues we will have more features along with a custom plugin system (HoneyComb, will be available later in the future) and perhaps a way to get forge support although that would be WAYY in the future and I'm not too sure how that would be implemented especially with licensing. Another thing that I want to work on is an easy way to link multiple HoneyGO servers together much like waterfall/bungee, this would be called HoneyPot.
 
@@ -27,34 +25,40 @@ Checklist:
 * [ ] Block/Entity Data
 * [ ] Actually logging in and being able to play to some degree
 * [ ] Bedrock Support
-* [ ] Server Configuration
+* [x] Server Configuration
 * [ ] HoneyPot (A proxy linking multiple HoneyGO servers muchlike waterfall/bungee)
 
 **Suggestions**
 
-If HoneyGO isn't what you needed you could look at some other projects that are popular and are recommended from me. The projects listed are actively developed and support modern-ish versions of Minecraft (1.12 - 1.15):
+If HoneyGO isn't what you needed you could look at some other projects that are popular and are recommended from me. The projects listed are actively developed and support modern-ish versions of Minecraft (1.12 - 1.16):
 
-Want a server with mods and plugins? Visit [Magma](https://magmafoundation.org/)
+Wanting a fast java based Minecraft server? Visit [Paper](https://papermc.io/) (Java)
 
-Wanting a fast java based Minecraft server? Visit [Paper](https://papermc.io/)
+Wanting a stable Java based Minecraft server? Visit [Spigot](https://www.spigotmc.org/) (Java)
 
-Wanting a stable Java based Minecraft server? Visit [Spigot](https://www.spigotmc.org/)
+Wanting a scalable, experimental server in C#? visit [Mincase](https://github.com/dotnetGame/MineCase) (C#)
 
-Wanting a fast, non-mojang based code, server? Visit [Glowstone](https://glowstone.net/)
+Wanting a server with mods and plugins? Visit [Magma](https://magmafoundation.org/)/[Mohist](https://mohist.red/) (Java)
 
-Wanting a fast Minecraft 1.8 - 1.12.2 server in C/C++? Visit [Cuberite](https://cuberite.org/)
+Wanting a fast, non-mojang based code, server? Visit [Glowstone](https://glowstone.net/) (Java)
 
-Wanting a Minecraft server with a stable, high level API? Visit [Prismarine](http://flying-squid.prismarine.js.org/#/)
+Wanting a fast Minecraft 1.8 - 1.12.2 server in C/C++? Visit [Cuberite](https://cuberite.org/) (C++)
 
-Wanting a paper server with some added gameplay features ? Visit [Purpur](https://github.com/pl3xgaming/Purpur)
+Wanting a Minecraft server with a stable, high level API? Visit [Prismarine](http://flying-squid.prismarine.js.org/#/) (Js)
 
-Wanting a high performance and highly efficient Minecraft server? Visit [Basin](https://github.com/basinserver/basin)
+Wanting a paper server with some added gameplay features ? Visit [Purpur](https://github.com/pl3xgaming/Purpur) (Java)
 
-Wanting an experimental Minecraft Server implementation in Rust? Visit [Feather](https://github.com/feather-rs/feather)
+Want to create your own server with an API other than bukkit? Visit [Minestom](https://github.com/Minestom/Minestom) (Java)
 
-Wanting a Minecraft server that supports the SpongeAPI? Visit [Sponge](https://www.spongepowered.org/) and [Lantern](https://github.com/LanternPowered/Lantern)
+Wanting an experimental Minecraft Server implementation in Rust? Visit [Feather](https://github.com/feather-rs/feather) (Rust)
 
-**For General use I suggest Paper it is stable, bukkit compatible, fast and is the go to standard for most servers.**
+Wanting a Minecraft server that supports the SpongeAPI? Visit [Sponge](https://www.spongepowered.org/) and [Lantern](https://github.com/LanternPowered/Lantern) (Java)
+
+Wanting a Frankenstein of Paper forks and enhancements from other repos? Visit [Yatopia](https://github.com/tr7zw/Yatopia) (Java)
+
+Wanting a high performance paper server with bleeding edge enhancements? Visit [Tuinity](https://github.com/Spottedleaf/Tuinity) (Java)
+
+**For General use I suggest Paper/Tuinity it is stable, bukkit compatible, fast and is the go to standard for most servers.**
 
 **\
 HoneyGO is still an experimental Minecraft Server (Only started development a few months ago) and with that could come major changes that may break/corrupt worlds (We'll try not to). HoneyGO at the moment is only suitable for a simple creative/lobby server as the terrain generation and entity AI is nowhere near completion and could take some time.**
