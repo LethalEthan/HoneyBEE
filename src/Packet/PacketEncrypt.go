@@ -1,6 +1,7 @@
 package Packet
 
 import (
+	"config"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -10,16 +11,16 @@ import (
 )
 
 var (
+	DEBUG          = true //Output debug info?
+	err            error  //error interface
+	Log            = logging.MustGetLogger("HoneyGO")
 	publicKeyBytes []byte          //Key stored in byte array for packet delivery
 	publicKey      *rsa.PublicKey  //PublicKey
 	privateKey     *rsa.PrivateKey //PrivateKey
-	KeyLength      int             //Length of key array (should be 162)
-	//	Log                *logging.Logger   //Logger
-	ClientSharedSecret []byte            //Used for Authentication
-	ClientVerifyToken  []byte            //Used for Authentication
-	ServerVerifyToken  = make([]byte, 4) //Initialise a 4 element byte slice
-	DEBUG              = true            //Output debug info?
-	err                error             //error interface
+	//KeyLength      int             //Length of key array (should be 162)
+	//ClientSharedSecret []byte            //Used for Authentication
+	//ClientVerifyToken  []byte            //Used for Authentication
+	//ServerVerifyToken  = make([]byte, 4) //Initialise a 4 element byte slice
 )
 
 const (
@@ -28,11 +29,34 @@ const (
 
 //KeyGen - Generates KeyChain
 func KeyGen() {
-	go keys()
+	SConfig = config.GetConfig()
+	keys()
 }
 
+func keys() {
+	var t time.Time
+	if SConfig.Server.DEBUG {
+		t = time.Now()
+	}
+	privateKey, err = rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		Log.Error(err.Error())
+	}
+	privateKey.Precompute()
+	publicKey = &privateKey.PublicKey
+	publicKeyBytes, err = x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	if err != nil {
+		panic(err)
+	}
+	if SConfig.Server.DEBUG {
+		Log.Info("Took Keys(): ", time.Since(t))
+	}
+	Log.Info("Key Generated!")
+}
+
+//--!!Not Used and will be removed later!!--//
 //CreateEncryptionRequest - Creates the packet Encryption Request and sends to the client
-func CreateEncryptionRequest(Connection *ClientConnection) /*, CH chan bool)*/ {
+/*func CreateEncryptionRequest(Connection *ClientConnection), CH chan bool) {
 	Connection.KeepAlive()
 	Log := logging.MustGetLogger("HoneyGO")
 	Log.Debug("Login State, packetID 0x00")
@@ -62,24 +86,7 @@ func CreateEncryptionRequest(Connection *ClientConnection) /*, CH chan bool)*/ {
 	SendData(Connection, writer)
 	Log.Debug("Encryption Request Sent")
 }
-
-func keys() {
-	t := time.Now()
-	privateKey, err = rsa.GenerateKey(rand.Reader, 1024)
-	if err != nil {
-		Log.Error(err.Error())
-	}
-	privateKey.Precompute()
-	publicKey = &privateKey.PublicKey
-	publicKeyBytes, err = x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-	if err != nil {
-		panic(err)
-	}
-	Log := logging.MustGetLogger("HoneyGO")
-	Log.Info("Took Keys(): ", time.Since(t))
-	Log.Info("Key Generated!")
-}
-
+*/
 //SendData - Sends the data to the client
 func SendData(Connection *ClientConnection, writer *PacketWriter) {
 	Connection.Conn.Write(writer.GetPacket())

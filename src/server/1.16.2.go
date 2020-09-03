@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
-	Log.Info("Connection handler for MC 1.15.2 initiated")
-	CurrentStatus = CreateStatusObject(578, "1.15.2")
+func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
+	Log.Info("Connection handler for MC 1.16.2 initiated")
+	CurrentStatus = CreateStatusObject(751, "1.16.2")
 	if publicKey == nil || privateKey == nil {
 		panic("Keys have been thanos snapped")
 	}
@@ -88,29 +88,14 @@ func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
 							CloseClientConnection(Connection)
 							return
 						}
-						var Auth string
 						//--Authentication Stuff--//
-						//Authenticate Player
-						//Check if playermap has any data -- UUID Caching
-						if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
-							Auth = val //Set auth to value
-						} else { //If uuid isn't found, get it
-							//2 attempts to get UUID
-							Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
-							if err != nil {
-								Log.Error("Authentication Failed, trying second time")
-								Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
-								if err != nil {
-									Log.Error("Authentication failed on second attempt, closing connection")
-									CloseClientConnection(Connection)
-								} else { //If no errors cache uuid in map
-									PlayerMap[playername] = Auth
-								}
-							} else { //If no errors cache uuid in map
-								PlayerMap[playername] = Auth
-							}
+						Auth, err := AuthPlayer(playername, ClientSharedSecret)
+						if err != nil {
+							Log.Error(err)
+							CloseClientConnection(Connection)
+						} else {
+							Log.Debug(playername, "[", Auth, "]")
 						}
-						Log.Debug(playername, "[", Auth, "]")
 						//--Packer 0x01 End--//
 
 						//--Packet 0x02 S->C Start--//

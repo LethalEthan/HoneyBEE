@@ -41,6 +41,7 @@ var (
 	GEID   uint32 = 2
 	Config *config.Config
 	DEBUG  bool
+	KC     = false
 )
 
 const (
@@ -65,8 +66,9 @@ type PacketHeader struct {
 
 type Version interface {
 	MC1_15_2(Conn *ClientConnection)
-	MC1_16_1()
-	MC1_16_2()
+	MC1_16(Conn *ClientConnection)
+	MC1_16_1(Conn *ClientConnection)
+	MC1_16_2(Conn *ClientConnection)
 }
 
 func Init() {
@@ -76,7 +78,9 @@ func Init() {
 	Config = config.GetConfig()
 	DEBUG = Config.Server.DEBUG
 	CurrentStatus = CreateStatusObject(578, "1.15.2")
+	player.Init()
 	go player.GCPlayer()
+	go ProtocolToVersionInit()
 }
 
 func (PH *PacketHeader) MC1_15_2(Conn *ClientConnection) {
@@ -85,15 +89,25 @@ func (PH *PacketHeader) MC1_15_2(Conn *ClientConnection) {
 	return
 }
 
-func (*PacketHeader) MC1_16_1() {
+func (PH *PacketHeader) MC1_16(Conn *ClientConnection) {
 
 }
 
-func (*PacketHeader) MC1_16_2() {
+func (PH *PacketHeader) MC1_16_1(Conn *ClientConnection) {
+	Log.Debug("1.16.1")
+	Handle_MC1_16_1(Conn, *PH)
+	return
+}
 
+func (*PacketHeader) MC1_16_2(Conn *ClientConnection) {
+	Log.Debug("1.16.2")
 }
 
 func HandleConnection(Connection *ClientConnection) {
+	if !KC {
+		GetKeyChain()
+		KC = true
+	}
 	Log.Info("Connection handler initiated")
 	//Løøps
 	PH := new(PacketHeader)
@@ -140,9 +154,17 @@ func HandleConnection(Connection *ClientConnection) {
 						pv.MC1_15_2(Connection)
 						return
 					case 735:
-						pv.MC1_16_1()
+						pv.MC1_16(Connection)
 					case 736:
-						pv.MC1_16_2()
+						pv.MC1_16_1(Connection)
+						return
+					case 751:
+						pv.MC1_16_2(Connection)
+						return
+					default:
+						Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- closing connection!")
+						CloseClientConnection(Connection)
+						return
 					}
 					Log.Debug("Bruhmo: ", pv)
 					Log.Debug("Bruh")
@@ -207,7 +229,7 @@ func getPacketData(Conn net.Conn) ([]byte, error) {
 	return ioutil.ReadAll(Conn)
 }
 
-//Server ClientConn -> Player ClientConn
+//Server ClientConn -> Player ClientConn - Will be removed later
 func TranslatePlayerStruct(Conn *ClientConnection) *player.ClientConnection {
 	PC := new(player.ClientConnection)
 	PC.Conn = Conn.Conn
@@ -216,7 +238,7 @@ func TranslatePlayerStruct(Conn *ClientConnection) *player.ClientConnection {
 	return PC
 }
 
-//Server ClientConn -> Packet ClientConn
+//Server ClientConn -> Packet ClientConn - Will be removed later
 func TranslatePacketStruct(Conn *ClientConnection) *Packet.ClientConnection {
 	PE := new(Packet.ClientConnection)
 	PE.Conn = Conn.Conn
@@ -250,7 +272,7 @@ func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
 	return packet, packetSize - 1, packetID, nil
 }
 
-//Authentication is in Auth.go
+//Authentication moved to Auth.go
 
 func Disconnect(Player string) {
 	Log.Debug("Disconnecting Player: ", Player)

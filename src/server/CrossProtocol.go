@@ -17,7 +17,31 @@ var (
 	PacketError     = errors.New("Packet Error")
 )
 
-//func
+//General
+
+//--Authentication Stuff--//
+//Authenticate Player
+//Check if playermap has any data -- UUID Caching
+func AuthPlayer(playername string, ClientSharedSecret []byte) (string, error) {
+	var Auth string
+	var err error
+	for i := 0; i <= 4; i++ {
+		if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
+			Auth = val //Set auth to value
+			return Auth, nil
+		} else { //If uuid isn't found, get it
+			//4 attempts to get UUID
+			Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
+			if err != nil {
+				Log.Error("Authentication Failed, trying again")
+			} else { //If no errors cache uuid in map
+				PlayerMap[playername] = Auth
+				return Auth, nil
+			}
+		}
+	}
+	return "", err
+}
 
 //HANDSHAKE
 

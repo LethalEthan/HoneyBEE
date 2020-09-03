@@ -40,6 +40,7 @@ const (
 	ChunkWidth         int   = 16
 	ChunkLength        int   = 16
 	ChunkHeight        int   = 256
+	ChunkVolume        int   = 65536
 	SectionHeight      int16 = 16
 	SectionWidth       int16 = 16
 	SectionLength      int16 = 16
@@ -133,9 +134,16 @@ func SendChunkPacket(Chunk *Chunk, BitMask VarInt, DAL int) {
 	CS.BitsPerBlock = 4
 }
 
-func BuildChunk(X int, Z int) {
+func BuildChunk(X int, Z int, BPB byte) {
 	//test := [10][4096]byte{}
 	//fmt.Print(test)
+	switch BPB {
+	case 4:
+		Log.Debug("BPB: 4")
+	case 8:
+		Log.Debug("BPB: 8")
+		ArraySize = ChunkVolume
+	}
 	ChunkData[X] = make([][]byte, 100)
 	ChunkData[X][Z] = make([]byte, 32768)
 	layer := []byte{}

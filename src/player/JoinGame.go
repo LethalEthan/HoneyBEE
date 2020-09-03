@@ -4,11 +4,7 @@ import (
 	"Packet"
 	"net"
 	"time"
-
-	logging "github.com/op/go-logging"
 )
-
-var log = logging.MustGetLogger("HoneyGO")
 
 const (
 	Nether    = -1

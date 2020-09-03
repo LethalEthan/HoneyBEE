@@ -3,5 +3,6 @@ server:
   port: ":25565" #Set the port
   debug: true #Wanna see the juicy info?
   timeout: 15 #In seconds
-#performance: #Change me!
-#  cpu: 8
+performance: #Change me!
+   cpu: 4
+   gcplayerinterval: 15

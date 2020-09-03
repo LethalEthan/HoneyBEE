@@ -1,6 +1,9 @@
 package Packet
 
-import "net"
+import (
+	config "config"
+	"net"
+)
 
 //Future Plans for improving packet system
 type UncompressedPacket interface {
@@ -16,7 +19,10 @@ type CompressedPacket interface {
 
 //Used PacketCreation
 type ClientConnection struct {
-	Conn   net.Conn
-	State  int
-	Closed bool
+	Conn      net.Conn
+	State     int
+	Closed    bool
+	Direction string
 }
+
+var SConfig = config.Config

@@ -3,11 +3,7 @@ package Packet
 import (
 	"encoding/binary"
 	"math"
-
-	logging "github.com/op/go-logging"
 )
-
-var Log = logging.MustGetLogger("HoneyGO")
 
 type PacketWriter struct {
 	Data       []byte

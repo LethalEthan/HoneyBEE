@@ -38,7 +38,7 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 			Log.Warning("No player mapped to connection, ignoring")
 		}
 	} else {
-		Log.Debug("Client Connection Created")
+		Log.Debug("Client Connection Created", &Conn)
 		Connection := new(ClientConnection)
 		Connection.Conn = Conn
 		Connection.State = State

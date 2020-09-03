@@ -23,7 +23,8 @@ type Config struct {
 		Timeout int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
 	} `yaml:"server"`
 	Performance struct {
-		CPU int `yaml:"cpu"`
+		CPU      int `yaml:"cpu"`
+		GCPlayer int `yaml:"gcplayerinterval"`
 	} `yaml:"performance"`
 }
 
