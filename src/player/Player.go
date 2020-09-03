@@ -11,8 +11,6 @@ var log = logging.MustGetLogger("HoneyGO")
 
 var SConfig = config.GetConfig()
 
-//import "time"
-
 //Information on player
 type PlayerObject struct {
 	Name     string
@@ -44,14 +42,15 @@ func InitPlayer(Name string, UUID string, GameMode uint8) (*PlayerObject, error)
 		P := PlayerObjectMap[val] //Set P to pre-existing value - Saves time and reuses previous EntityID
 		P.Online = true
 		OnlinePlayerMap[P.Name] = P.Online
+		PlayerCount++
 		return P, nil
 	} else { //Create Player
-		//P := new(PlayerObject)
 		EntityID := AssignEID(Name)
 		P := &PlayerObject{Name, UUID, EntityID, GameMode, true}
 		PlayerObjectMap[P.EntityID] = P    //Add EID/OBJ
 		PlayerEntityMap[P.Name] = EntityID //Add Name/EID
 		log.Warning("PlayerOBJ:", P)
+		PlayerCount++
 		return P, nil
 	}
 }
@@ -67,7 +66,7 @@ func GetPlayerByID(EID uint32) *PlayerObject {
 	return P
 }
 
-//GetPlayerByName - Gets PlayerObject from map by ID
+//GetPlayerByName - Gets PlayerObject from map by Name
 func GetPlayerByName(Name string) *PlayerObject {
 	P := PlayerEntityMap[Name]
 	log.Info("PlayerEntityMap returned: ", P)
@@ -82,15 +81,12 @@ func GCPlayer() {
 	} else {
 		GCInterval = time.Duration(SConfig.Performance.GCPlayer) * time.Minute
 	}
-
+	//CreateTicker
 	ticker := time.NewTicker(GCInterval)
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				if PlayerObjectMap == nil {
-					log.Info("PlayerObject not initialised")
-				}
 				for i, val := range PlayerObjectMap {
 					if val.Online != true {
 						delete(PlayerEntityMap, val.Name)
@@ -104,10 +100,6 @@ func GCPlayer() {
 			}
 		}
 	}()
-}
-
-func TrackPlayerCount(D bool) {
-
 }
 
 //Disconnect - Handles player disconnecting

@@ -3,7 +3,6 @@ package server
 import (
 	"Packet"
 	"encoding/json"
-	"fmt"
 	"player"
 	"time"
 )
@@ -23,14 +22,7 @@ func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
 			return
 		}
 		//DEBUG: output debug info
-		if DEBUG {
-			Log.Debug("Packet Size: ", PH.packetSize)
-			Log.Debug("Packet ID: ", PH.packetID, "State: ", Connection.State)
-			Log.Debugf("Packet Contains: %v\n", PH.packet)
-			Log.Debug("Protocol: ", PH.protocol)
-			Log.Debug("Direction: ", Connection.Direction) //TBD
-			fmt.Print("")
-		}
+		DisplayPacketInfo(PH, Connection)
 		//Create Packet Reader
 		reader := Packet.CreatePacketReader(PH.packet)
 		//Packet Handling

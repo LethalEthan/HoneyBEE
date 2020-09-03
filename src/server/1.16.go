@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
-	Log.Info("Connection handler for MC 1.16.2 initiated")
-	CurrentStatus = CreateStatusObject(751, "1.16.2")
+func Handle_MC1_16(Connection *ClientConnection, PH PacketHeader) {
+	Log.Info("Connection handler for MC 1.16 initiated")
+	CurrentStatus = CreateStatusObject(735, "1.16")
 	if publicKey == nil || privateKey == nil {
 		panic("Keys have been thanos snapped")
 	}
@@ -86,7 +86,7 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 							Log.Error(err)
 							CloseClientConnection(Connection)
 						} else {
-							Log.Debug(playername, "[", Auth, "]")
+							Log.Debug(playername, "["+Auth+"]")
 						}
 						//--Packer 0x01 End--//
 
@@ -96,23 +96,17 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 						writer.WriteString(Auth)
 						writer.WriteString(playername)
 						//UUID Cache
-						//DEBUG: REMOVE ME
-						//Log.Debug("PlayerMap: ", PlayerMap)
-						//Log.Debug("PlayerData:", PlayerMap[playername])
 						time.Sleep(5000000) //DEBUG:Add delay -- remove me later
 						SendData(Connection, writer)
 
-						///Entity ID Handling///
+						//--Entity ID Handling--//
 						PlayerConnMap[Connection.Conn] = playername //link connection to player
-						player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
+						player.InitPlayer(playername, Auth, 1)
 						player.GetPlayerByID(player.PlayerEntityMap[playername])
 						EID := player.PlayerEntityMap[playername]
 						ConnPlayerMap[EID] = Connection.Conn
-						//go player.GCPlayer() //DEBUG: REMOVE ME LATER
 						//--//
 						Connection.State = PLAY
-						//worldtime.
-						//C := make(chan bool)
 						PC := &player.ClientConnection{Connection.Conn, Connection.State, Connection.isClosed}
 						player.CreateGameJoin(PC, player.PlayerEntityMap[playername])
 						player.CreateSetDiff(PC)

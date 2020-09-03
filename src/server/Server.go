@@ -32,16 +32,15 @@ var (
 	GotDaKeys = false //Got dem keys?
 	//	ClientSharedSecretLen = 128                       //Initialise CSSL
 	//	ClientVerifyTokenLen  = 128                       //Initialise CVTL
-	serverID          = ""                        //this isn't used by mc anymore
-	ServerVerifyToken = make([]byte, 4)           //Initialise a 4 element byte slice of cake
-	PlayerMap         = make(map[string]string)   //Map Player to UUID
-	PlayerConnMap     = make(map[net.Conn]string) //Map Connection to Player
-	ConnPlayerMap     = make(map[uint32]net.Conn) //Map EID to Connection
-	//	EntityPlayerMap        = player.PlayerEntityMap    //= make(map[string]uint32)   //Map Player to EID
-	GEID   uint32 = 2
-	Config *config.Config
-	DEBUG  bool
-	KC     = false
+	serverID                 = ""                        //this isn't used by mc anymore
+	ServerVerifyToken        = make([]byte, 4)           //Initialise a 4 element byte slice of cake
+	PlayerMap                = make(map[string]string)   //Map Player to UUID
+	PlayerConnMap            = make(map[net.Conn]string) //Map Connection to Player
+	ConnPlayerMap            = make(map[uint32]net.Conn) //Map EID to Connection
+	GEID              uint32 = 2
+	Config            *config.Config
+	DEBUG             bool
+	KC                = false
 )
 
 const (
@@ -65,6 +64,7 @@ type PacketHeader struct {
 }
 
 type Version interface {
+	MCDEFAULT(Conn *ClientConnection)
 	MC1_15_2(Conn *ClientConnection)
 	MC1_16(Conn *ClientConnection)
 	MC1_16_1(Conn *ClientConnection)
@@ -81,6 +81,12 @@ func Init() {
 	player.Init()
 	go player.GCPlayer()
 	go ProtocolToVersionInit()
+}
+
+func (PH *PacketHeader) MCDEFAULT(Conn *ClientConnection) {
+	Log.Debug("Unsupported Version Handling")
+	HandleUnsupported(Conn, *PH)
+	return
 }
 
 func (PH *PacketHeader) MC1_15_2(Conn *ClientConnection) {
@@ -121,13 +127,7 @@ func HandleConnection(Connection *ClientConnection) {
 			return
 		}
 		//DEBUG: output debug info
-		if DEBUG {
-			Log.Debug("Packet Size: ", PH.packetSize)
-			Log.Debug("Packet ID: ", PH.packetID, "State: ", Connection.State)
-			Log.Debugf("Packet Contains: %v\n", PH.packet)
-			Log.Debug("Direction: ", Connection.Direction) //TBD
-			fmt.Print("")
-		}
+		DisplayPacketInfo(*PH, Connection)
 		//Create Packet Reader
 		reader := Packet.CreatePacketReader(PH.packet)
 		//Packet Handling
@@ -162,7 +162,8 @@ func HandleConnection(Connection *ClientConnection) {
 						pv.MC1_16_2(Connection)
 						return
 					default:
-						Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- closing connection!")
+						Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- sending status and closing connection!")
+						pv.MCDEFAULT(Connection)
 						CloseClientConnection(Connection)
 						return
 					}
@@ -229,23 +230,92 @@ func getPacketData(Conn net.Conn) ([]byte, error) {
 	return ioutil.ReadAll(Conn)
 }
 
-//Server ClientConn -> Player ClientConn - Will be removed later
-func TranslatePlayerStruct(Conn *ClientConnection) *player.ClientConnection {
-	PC := new(player.ClientConnection)
-	PC.Conn = Conn.Conn
-	PC.State = Conn.State
-	PC.Closed = Conn.isClosed
-	return PC
+func HandleUnsupported(Connection *ClientConnection, PH PacketHeader) {
+	Log.Info("Connection handler for Unsupported MC initiated")
+	CurrentStatus = CreateStatusObject(PH.protocol, "Unsupported")
+	if publicKey == nil || privateKey == nil {
+		panic("Keys have been thanos snapped")
+	}
+	for !Connection.isClosed {
+		var err error
+		PH.packet, PH.packetSize, PH.packetID, err = readPacketHeader(Connection)
+		if err != nil {
+			CloseClientConnection(Connection)
+			Log.Error("Connection Terminated: " + err.Error())
+			return
+		}
+		DisplayPacketInfo(PH, Connection)
+		//Create Packet Reader
+		reader := Packet.CreatePacketReader(PH.packet)
+		//Packet Handling
+		switch Connection.State {
+		case STATUS: //Handle Status Request
+			{
+				switch PH.packetID {
+				case 0x00:
+					{
+						//--Packet 0x00 S->C Start--// Request Status
+						Connection.KeepAlive()
+						writer := Packet.CreatePacketWriter(0x00)
+						marshaledStatus, err := json.Marshal(*CurrentStatus) //Sends status via json
+						if err != nil {
+							Log.Error(err.Error())
+							CloseClientConnection(Connection)
+							return
+						}
+						writer.WriteString(string(marshaledStatus))
+						SendData(Connection, writer)
+					}
+				case 0x01:
+					{
+						//--Packet 0x01 S->C Start--// Ping
+						Connection.KeepAlive()
+						writer := Packet.CreatePacketWriter(0x01)
+						Log.Debug("Status State, packetID 0x01")
+						mirror, _ := reader.ReadLong()
+						Log.Debug("Mirror:", mirror)
+						writer.WriteLong(mirror)
+						SendData(Connection, writer)
+						CloseClientConnection(Connection)
+						//--Packet 0x01 End--//
+					}
+				}
+			}
+		case LOGIN:
+			switch PH.packetID {
+			default:
+				{
+					CloseClientConnection(Connection)
+				}
+			}
+		case PLAY:
+			switch PH.packetID {
+			default:
+				{
+					CloseClientConnection(Connection)
+				}
+			}
+		}
+	}
 }
 
+//Server ClientConn -> Player ClientConn - Will be removed later
+// func TranslatePlayerStruct(Conn *ClientConnection) *player.ClientConnection {
+// 	PC := new(player.ClientConnection)
+// 	PC.Conn = Conn.Conn
+// 	PC.State = Conn.State
+// 	PC.Closed = Conn.isClosed
+// 	return PC
+// }
+
 //Server ClientConn -> Packet ClientConn - Will be removed later
-func TranslatePacketStruct(Conn *ClientConnection) *Packet.ClientConnection {
-	PE := new(Packet.ClientConnection)
-	PE.Conn = Conn.Conn
-	PE.State = Conn.State
-	PE.Closed = Conn.isClosed
-	return PE
-}
+// func TranslatePacketStruct(Conn *ClientConnection) *Packet.ClientConnection {
+// 	PE := new(Packet.ClientConnection)
+// 	PE.Conn = Conn.Conn
+// 	PE.State = Conn.State
+// 	PE.Closed = Conn.isClosed
+// 	return PE
+// }
 
 //readPacketHeader - Reads the packet Header for Packet ID and size info
 func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
@@ -272,6 +342,18 @@ func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
 	return packet, packetSize - 1, packetID, nil
 }
 
+func DisplayPacketInfo(PH PacketHeader, Conn *ClientConnection) {
+	//DEBUG: output debug info
+	if DEBUG {
+		Log.Debug("Packet Size: ", PH.packetSize)
+		Log.Debug("Packet ID: ", PH.packetID, "State: ", Conn.State)
+		Log.Debugf("Packet Contains: %v\n", PH.packet)
+		Log.Debug("Protocol: ", PH.protocol)
+		Log.Debug("Direction: ", Conn.Direction) //TBD
+		fmt.Print("\n")
+	}
+}
+
 //Authentication moved to Auth.go
 
 func Disconnect(Player string) {
@@ -279,9 +361,9 @@ func Disconnect(Player string) {
 	player.Disconnect(Player)
 	var p event.Event = event.Player(Player)
 	p.PlayerDisconnect()
-	// EID := player.PlayerEntityMap[Player]
-	// Tmp := ConnPlayerMap[EID]
-	// Tmp.Close()
+	EID := player.PlayerEntityMap[Player]
+	Tmp := ConnPlayerMap[EID]
+	Tmp.Close()
 	//P := player.GetPlayerByName(Player)
 	//event.PlayerDisconnect(Player)
 	//

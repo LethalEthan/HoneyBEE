@@ -25,4 +25,4 @@ type ClientConnection struct {
 	Direction string
 }
 
-var SConfig = config.Config
+var SConfig *config.Config
