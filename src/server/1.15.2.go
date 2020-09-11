@@ -75,34 +75,19 @@ func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
 					{
 						//--Packet 0x01 S->C Start--//
 						//EncryptionResponse
-						ClientSharedSecret, err := HandleEncryptionResponse(&PH)
+						ClientSharedSecret, err := HandleEncryptionResponse(PH)
 						if err != nil {
 							CloseClientConnection(Connection)
 							return
 						}
-						var Auth string
 						//--Authentication Stuff--//
-						//Authenticate Player
-						//Check if playermap has any data -- UUID Caching
-						if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
-							Auth = val //Set auth to value
-						} else { //If uuid isn't found, get it
-							//2 attempts to get UUID
-							Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
-							if err != nil {
-								Log.Error("Authentication Failed, trying second time")
-								Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
-								if err != nil {
-									Log.Error("Authentication failed on second attempt, closing connection")
-									CloseClientConnection(Connection)
-								} else { //If no errors cache uuid in map
-									PlayerMap[playername] = Auth
-								}
-							} else { //If no errors cache uuid in map
-								PlayerMap[playername] = Auth
-							}
+						Auth, err := AuthPlayer(playername, ClientSharedSecret)
+						if err != nil {
+							Log.Error(err)
+							CloseClientConnection(Connection)
+						} else {
+							Log.Debug(playername, "[", Auth, "]")
 						}
-						Log.Debug(playername, "[", Auth, "]")
 						//--Packer 0x01 End--//
 
 						//--Packet 0x02 S->C Start--//

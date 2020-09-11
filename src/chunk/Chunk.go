@@ -3,8 +3,11 @@ package chunk
 import (
 	"blocks"
 	"fmt"
+	"strconv"
+	"strings"
 
 	nibble "github.com/LethalEthan/Go-Nibble"
+	logging "github.com/op/go-logging"
 )
 
 type Location int64
@@ -19,18 +22,14 @@ type Chunk struct {
 	Modfied   bool
 }
 
-type CMap struct {
-	PX int
-	PZ int
-}
-
 var (
-	//TBD once everything is in place
-	//CLCX   = make(map[int]*Chunk)
-	//CLCY   = make(map[int]*Chunk)
 	Biomes = make([]byte, (SectionWidth * SectionLength))
 	//ChunkData - 2D slice [X][Z]
-	ChunkData = make([][][]byte, 512)
+	//ChunkData  = make([][][]int64, 512)
+	//ChunkData uses a string/Chunk map to store the byte arrays of blocks which
+	ChunkData = make(map[string]Chunk)
+	Log       = logging.MustGetLogger("HoneyGO")
+	COORDS    string
 )
 
 const (
@@ -134,30 +133,73 @@ func SendChunkPacket(Chunk *Chunk, BitMask VarInt, DAL int) {
 	CS.BitsPerBlock = 4
 }
 
+func COORDSToInts(COORDS string) (int64, int64) {
+	i := strings.Index(COORDS, ",")
+	//X = COORDS[:i]
+	X, _ := strconv.ParseInt(COORDS[:i], 10, 64)
+	Z, _ := strconv.ParseInt(COORDS[i+1:len(COORDS)], 10, 64)
+	return X, Z
+}
+
+func IntsToCOORDS(X int, Z int) string {
+	COORDS := strconv.Itoa(X) + "," + strconv.Itoa(Z)
+	return COORDS
+}
+
+//BuildChunk - WIP
 func BuildChunk(X int, Z int, BPB byte) {
-	//test := [10][4096]byte{}
-	//fmt.Print(test)
+	COORDS = strconv.Itoa(X) + "," + strconv.Itoa(Z)
+	fmt.Print(COORDS)
 	switch BPB {
 	case 4:
 		Log.Debug("BPB: 4")
+		C := new(Chunk)
+		C.Blocks = make([]byte, 32768)
+
+		ChunkData[COORDS] = *C
+	// 	ChunkData[X] = make([][]int64, 100)
+	// 	ChunkData[X][Z] = make([]int64, 256) //all the nibbles will be compacted into uint64
+	// 	//ChunkData[X][Z] =
+	// 	TStone := nibble.CreateNibbleMerged(1, 1) //2 stone
+	// 	var ChunkS int64
+	// 	ChunkS = int64(TStone)
+	// 	for i := 0; i < 64; i += 8 {
+	// 		ChunkS = ChunkS + int64(TStone)
+	// 		fmt.Printf("%064b", ChunkS)
+	// 	}
 	case 8:
-		Log.Debug("BPB: 8")
-		ArraySize = ChunkVolume
+		// Log.Debug("BPB: 8")
+		// ChunkData[X] = make([][]int64, 100)
+		// ChunkData[X][Z] = make([]int64, 100) //all the nibbles will be compacted into uint64
+		// var Stone int64 = 1
+		// var Compact int64
+		// //Define 8 stone blocks in 1 int64
+		// for i := 0; i < 64; i += 8 {
+		// 	Compact = Compact + Stone<<i
+		// }
+		// fmt.Printf("%064b", Compact)
+		// //Adds the data to the array
+		// for i := 0; i < len(ChunkData[X][Z]); i++ {
+		// 	ChunkData[X][Z][i] = Compact
+		// }
+		// fmt.Print("\n", ChunkData[X][Z])
+		//ArraySize := ChunkVolume
 	}
-	ChunkData[X] = make([][]byte, 100)
-	ChunkData[X][Z] = make([]byte, 32768)
-	layer := []byte{}
-	for i := 0; i < 65536; i++ {
-		layer = append(layer, 1)
-	}
+
+	//ChunkData[X] = make([][]int64, 100)
+	//ChunkData[X][Z] = make([]int64, 32768)
+	// layer := []byte{}
+	// for i := 0; i < 65536; i++ {
+	// 	layer = append(layer, 1)
+	// }
 	//print(layer)
-	fmt.Print(len(layer))
+	//fmt.Print(len(layer))
 	//layer := PackByteToNibble(ChunkData[X][Z])
-	layer = PackByteToNibble(layer)
-	ChunkData[X][Z] = layer
+	//layer = PackByteToNibble(layer)
+	//ChunkData[X][Z] = layer
 	//ChunkData[X][Y] = []byte{0, 0, 135, 90, 7, 4, 7, 44, 73, 10}
-	fmt.Print( /*ChunkData[X][Z],*/ "Length: ", len(ChunkData[X][Z]))
-	UnPackByteToNibble(ChunkData[X][Z])
+	//fmt.Print( /*ChunkData[X][Z],*/ "Length: ", len(ChunkData[X][Z]))
+	//UnPackByteToNibble(ChunkData[X][Z])
 }
 
 //PackByteToNibble - Packs bytes (8bits) in a chunk to nibbles (4bits)

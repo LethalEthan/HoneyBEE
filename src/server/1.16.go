@@ -75,7 +75,7 @@ func Handle_MC1_16(Connection *ClientConnection, PH PacketHeader) {
 					{
 						//--Packet 0x01 S->C Start--//
 						//EncryptionResponse
-						ClientSharedSecret, err := HandleEncryptionResponse(&PH)
+						ClientSharedSecret, err := HandleEncryptionResponse(PH)
 						if err != nil {
 							CloseClientConnection(Connection)
 							return

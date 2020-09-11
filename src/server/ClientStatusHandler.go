@@ -10,8 +10,8 @@ type ServerStatus struct {
 }
 
 type StatusVersion struct {
-	Name     string  `json:"name"`
-	Protocol int32   `json:"protocol"`
+	Name     string `json:"name"`
+	Protocol int32  `json:"protocol"`
 }
 
 type StatusPlayers struct {

@@ -3,8 +3,6 @@ package main
 import (
 	"Packet"
 	"config"
-	//	"fmt"
-
 	"net"
 	"os"
 	"os/signal"
@@ -14,7 +12,7 @@ import (
 	"syscall"
 	"time"
 	//	"worldtime"
-	//	_ "net/http/pprof"
+	//_ "net/http/pprof"
 	//	"net/http"
 	logging "github.com/op/go-logging"
 )
@@ -22,7 +20,7 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 23)"
+	HoneyGOVersion = "1.0.0 (Build 24)"
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -70,11 +68,9 @@ func main() {
 	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 	//this will be useful when multiple clients connect but with some slight added memory usage
 	Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
-	//server.OnStart()
-	//S := make(chan bool)
-	//go worldtime.WorldTime(S)
-	server.Init() //Initalise server
+	server.Init()   //Initalise server
 	go Shutdown()
+	//DebugOps()
 	//Accepts connection and creates new goroutine for the connection to be handled
 	//other goroutines are stemmed from HandleConnection
 	Log.Info("Accepting Connections")
@@ -102,6 +98,7 @@ func Shutdown() {
 		{
 			Log.Warning("Starting shutdown")
 			Run = false
+			time.Sleep(2000000000) //Let the loop finish before we do stuff
 			if netlisten != nil && Connection != nil {
 				//worldtime.Shutdown()
 				Connection.Close()
@@ -115,4 +112,12 @@ func Shutdown() {
 			os.Exit(0)
 		}
 	}
+}
+
+//DebugOps - Do stuff for debugging that runs on startup
+func DebugOps() {
+	// chunk.BuildChunk(0, 0, 8)
+	// T, S := chunk.COORDSToInts("-69,420")
+	// fmt.Print("\n", T, S)
+	// worker.CreateFlatStoneWorld()
 }

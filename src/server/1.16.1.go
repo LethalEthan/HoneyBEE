@@ -83,7 +83,7 @@ func Handle_MC1_16_1(Connection *ClientConnection, PH PacketHeader) {
 					{
 						//--Packet 0x01 S->C Start--//
 						//EncryptionResponse
-						ClientSharedSecret, err := HandleEncryptionResponse(&PH)
+						ClientSharedSecret, err := HandleEncryptionResponse(PH)
 						if err != nil {
 							CloseClientConnection(Connection)
 							return
@@ -103,10 +103,6 @@ func Handle_MC1_16_1(Connection *ClientConnection, PH PacketHeader) {
 						Log.Debug("Playername: ", playername)
 						writer.WriteString(Auth)
 						writer.WriteString(playername)
-						//UUID Cache
-						//DEBUG: REMOVE ME
-						//Log.Debug("PlayerMap: ", PlayerMap)
-						//Log.Debug("PlayerData:", PlayerMap[playername])
 						time.Sleep(5000000) //DEBUG:Add delay -- remove me later
 						SendData(Connection, writer)
 

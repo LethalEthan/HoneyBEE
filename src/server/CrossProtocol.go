@@ -4,8 +4,10 @@ import (
 	"Packet"
 	"crypto/rand"
 	"crypto/rsa"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	logging "github.com/op/go-logging"
 )
@@ -17,29 +19,32 @@ var (
 	PacketError     = errors.New("Packet Error")
 )
 
+type DisconnectChat struct {
+	Reason string `json:"text"`
+}
+
 //General
 
-//--Authentication Stuff--//
-//Authenticate Player
-//Check if playermap has any data -- UUID Caching
+//AuthPlayer - Authenticate players against mojang session servers
 func AuthPlayer(playername string, ClientSharedSecret []byte) (string, error) {
 	var Auth string
 	var err error
-	for i := 0; i <= 4; i++ {
-		if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
-			Auth = val //Set auth to value
+	if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
+		Auth = val //Set auth to value
+		return Auth, nil
+	}
+	for i := 0; i <= 3; i++ {
+		//4 attempts to get UUID
+		Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
+		if err != nil {
+			Log.Error("Authentication Failed, trying again")
+			time.Sleep(time.Second * 1)
+		} else { //If no errors cache uuid in map
+			PlayerMap[playername] = Auth
 			return Auth, nil
-		} else { //If uuid isn't found, get it
-			//4 attempts to get UUID
-			Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
-			if err != nil {
-				Log.Error("Authentication Failed, trying again")
-			} else { //If no errors cache uuid in map
-				PlayerMap[playername] = Auth
-				return Auth, nil
-			}
 		}
 	}
+	Log.Error("Authentication Failed, trying again - if Authentication fails more than 3 times you're most likely rate limited by mojang")
 	return "", err
 }
 
@@ -79,7 +84,7 @@ func CreateEncryptionRequest(Connection *ClientConnection) {
 	Log.Debug("Encryption Request Sent")
 }
 
-func HandleEncryptionResponse(PH *PacketHeader) ([]byte, error) {
+func HandleEncryptionResponse(PH PacketHeader) ([]byte, error) {
 	//EncryptionResponse
 	Log.Debug("Login State, packetID 0x01")
 	Log.Debug("PacketSIZE: ", PH.packetSize)
@@ -107,7 +112,7 @@ func HandleEncryptionResponse(PH *PacketHeader) ([]byte, error) {
 	//Decrypt Verify Token
 	ClientVerifyToken, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientVerifyToken)
 	if err != nil {
-		fmt.Print(err)
+		Log.Error(err)
 		Log.Debug("Decryption of ClientVerifyToken failed")
 		return nil, EncryptionError
 	}
@@ -127,4 +132,18 @@ func HandleEncryptionResponse(PH *PacketHeader) ([]byte, error) {
 		}
 	}
 	return ClientSharedSecret, nil
+}
+
+func SendLoginDisconnect(Connection *ClientConnection, Reason string) {
+	writer := Packet.CreatePacketWriter(0x00)
+	R := new(DisconnectChat)
+	R.Reason = Reason
+	marshaledDC, err := json.Marshal(*R) //Sends status via json
+	if err != nil {
+		Log.Error(err.Error())
+		CloseClientConnection(Connection)
+		return
+	}
+	writer.WriteString(string(marshaledDC))
+	SendData(Connection, writer)
 }
