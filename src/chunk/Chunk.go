@@ -12,14 +12,17 @@ import (
 
 type Location int64
 
+//Around 16kb
 type Chunk struct {
-	ChunkPosX int64
-	ChunkPosZ int64
-	Biomes    []byte
-	Blocks    []byte
-	NumBlocks uint16
-	NumSecs   uint8
-	Modfied   bool
+	ChunkPosX    int64
+	ChunkPosZ    int64
+	Biomes       []byte
+	Blocks       []byte // Replace with sections later
+	NumBlocks    uint16
+	NumSecs      uint8
+	Modfied      bool
+	BitsPerBlock byte
+	Repeat       byte //This flag states if the chunk follows a repeatable pattern such as a flat world to reduce the amount of bytes being used to signify the same amount of blocks -- To be implemented
 }
 
 var (
@@ -147,61 +150,31 @@ func IntsToCOORDS(X int, Z int) string {
 }
 
 //BuildChunk - WIP
-func BuildChunk(X int, Z int, BPB byte) {
+func BuildChunk(X int, Z int, BPB byte) Chunk {
 	COORDS = strconv.Itoa(X) + "," + strconv.Itoa(Z)
 	fmt.Print(COORDS)
 	switch BPB {
 	case 4:
 		Log.Debug("BPB: 4")
 		C := new(Chunk)
-		C.Blocks = make([]byte, 32768)
-
-		ChunkData[COORDS] = *C
-	// 	ChunkData[X] = make([][]int64, 100)
-	// 	ChunkData[X][Z] = make([]int64, 256) //all the nibbles will be compacted into uint64
-	// 	//ChunkData[X][Z] =
-	// 	TStone := nibble.CreateNibbleMerged(1, 1) //2 stone
-	// 	var ChunkS int64
-	// 	ChunkS = int64(TStone)
-	// 	for i := 0; i < 64; i += 8 {
-	// 		ChunkS = ChunkS + int64(TStone)
-	// 		fmt.Printf("%064b", ChunkS)
-	// 	}
+		C.NumBlocks = 4096
+		C.Blocks = make([]byte, 16384)
+		for i := 0; i < len(C.Blocks); i++ {
+			C.Blocks[i] = nibble.CreateNibbleMerged(1, 1)
+		}
+		return *C
 	case 8:
-		// Log.Debug("BPB: 8")
-		// ChunkData[X] = make([][]int64, 100)
-		// ChunkData[X][Z] = make([]int64, 100) //all the nibbles will be compacted into uint64
-		// var Stone int64 = 1
-		// var Compact int64
-		// //Define 8 stone blocks in 1 int64
-		// for i := 0; i < 64; i += 8 {
-		// 	Compact = Compact + Stone<<i
-		// }
-		// fmt.Printf("%064b", Compact)
-		// //Adds the data to the array
-		// for i := 0; i < len(ChunkData[X][Z]); i++ {
-		// 	ChunkData[X][Z][i] = Compact
-		// }
-		// fmt.Print("\n", ChunkData[X][Z])
-		//ArraySize := ChunkVolume
+		C := new(Chunk)
+		return *C
+	default:
+		C := new(Chunk)
+		return *C
 	}
-
-	//ChunkData[X] = make([][]int64, 100)
-	//ChunkData[X][Z] = make([]int64, 32768)
-	// layer := []byte{}
-	// for i := 0; i < 65536; i++ {
-	// 	layer = append(layer, 1)
-	// }
-	//print(layer)
-	//fmt.Print(len(layer))
-	//layer := PackByteToNibble(ChunkData[X][Z])
-	//layer = PackByteToNibble(layer)
-	//ChunkData[X][Z] = layer
-	//ChunkData[X][Y] = []byte{0, 0, 135, 90, 7, 4, 7, 44, 73, 10}
-	//fmt.Print( /*ChunkData[X][Z],*/ "Length: ", len(ChunkData[X][Z]))
-	//UnPackByteToNibble(ChunkData[X][Z])
 }
 
+///
+///   TO BE REMOVED, REPLACED BY NIBBLE PACKAGE
+///
 //PackByteToNibble - Packs bytes (8bits) in a chunk to nibbles (4bits)
 func PackByteToNibble(B []byte) []byte {
 	//Make Blank slice
@@ -210,7 +183,7 @@ func PackByteToNibble(B []byte) []byte {
 		M := nibble.CreateNibbleMerged(B[i], B[i+1]) //Create Nibbles
 		B2 = append(B2, M)                           //Append nibbles to byte array
 	}
-	B = nil //Set previoud array to nil
+	B = nil //Set previous array to nil
 	return B2
 }
 
@@ -227,4 +200,23 @@ func UnPackByteToNibble(B []byte) []byte {
 	}
 	B = nil //Set previous array to nil
 	return B2
+}
+
+///
+///
+///
+
+func CompactByteArrayToint64(BA []byte) []int64 {
+	//var ChunkS int64
+	var CA []int64
+	var Index int
+	//ChunkS = int64(TStone)
+	for j := 0; j < len(BA); j += 64 {
+		for i := 0; i <= 64; i += 8 {
+			CA[Index] = int64(BA[i+j] + BA[i+j+1] + BA[i+j+2] + BA[i+j+3] + BA[i+j+4] + BA[i+j+5] + BA[i+j+6] + BA[i+j+7])
+			//fmt.Printf("%064b", ChunkS)
+		}
+		Index++
+	}
+	return CA
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"Packet"
 	"config"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -11,6 +12,7 @@ import (
 	"server"
 	"syscall"
 	"time"
+	"world"
 	//	"worldtime"
 	//_ "net/http/pprof"
 	//	"net/http"
@@ -20,7 +22,7 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 24)"
+	HoneyGOVersion = "1.0.0 (Build 25)"
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -50,7 +52,6 @@ func main() {
 		Log.Fatal(err.Error())
 		return
 	}
-	//chunk.BuildChunk(0, 0) //DEBUG: Remove me later
 	//--//
 	Log.Info("Server Network Listener Started on port", ServerPort)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
@@ -120,4 +121,35 @@ func DebugOps() {
 	// T, S := chunk.COORDSToInts("-69,420")
 	// fmt.Print("\n", T, S)
 	// worker.CreateFlatStoneWorld()
+	CreateRegions()
+	Region := world.GetRegionByID("1,1")
+	// for i := 0; i < /*len(Fuck.Data)*/ 0; i++ {
+	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosX)
+	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosZ)
+	// 	runtime.GC()
+	// 	//time.Sleep(100000)
+	// }
+	C := world.GetChunkFromRegion(Region, 511, 511)
+	fmt.Print("\n", C.ChunkPosX, "\n", C.ChunkPosZ)
+	READ := false
+	if READ {
+		for j := 256; j <= 511; j++ {
+			for i := 256; i <= 511; i++ {
+				C := world.GetChunkFromRegion(Region, i, j)
+				fmt.Print(C.ChunkPosX, " ", C.ChunkPosZ, " ")
+			}
+		}
+	}
+}
+
+func CreateRegions() {
+	world.CreateRegion(0, 0) //Each around 5MB each
+
+	//go world.CreateRegion(0, 1)
+	world.CreateRegion(1, 1)
+	//go world.CreateRegion(0, 0)
+	// if val, tmp := world.RegionChunkMap.Get("0,0"); tmp {
+	// 	fmt.Print(val)
+	// }
+
 }
