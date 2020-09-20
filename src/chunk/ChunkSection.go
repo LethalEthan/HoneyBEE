@@ -37,11 +37,7 @@ func DirectPallete(Chunk *ChunkSection) {
 	}
 }
 
-func PrimaryBitMask() {
-
-}
-
-func GenChunkSection(BC int16) (*ChunkSection) {
+func GenChunkSection(BC int16) *ChunkSection {
 	CS := new(ChunkSection)
 	CS.BlockCount = BC
 	CS.BitsPerBlock = 8

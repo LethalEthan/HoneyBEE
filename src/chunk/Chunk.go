@@ -10,9 +10,9 @@ import (
 	logging "github.com/op/go-logging"
 )
 
-type Location int64
+type Location int64 //TBD
 
-//Around 16kb
+//Around 16kb, 64kb with 1 section filled with stone nibbles
 type Chunk struct {
 	ChunkPosX    int64
 	ChunkPosZ    int64
@@ -55,14 +55,6 @@ func CreateNewChunkSection() *ChunkSection { //*Chunk {
 	chunk := new(ChunkSection)
 	chunk.BlockCount = SectionVolume * 2
 	chunk.BitsPerBlock = 4
-	//chunk.Palette.PaletteLength = 16
-	// I := make([]int32, 64)
-	// //I[0:64] = 1
-	// for i := 0; i < len(I); i++ {
-	// 	I[i] = 1
-	// }
-	//VarTool.ParseVarIntFromArray(I)
-	//chunk.Palette.PalleteData = []VarInt{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	chunk.DataArrayLength = 256
 	chunk.DataArray = make([]int64, 256) //chunk.DataArrayLength)
 	chunk.DataArray = BuildDataArray(0, chunk)
@@ -87,6 +79,7 @@ func BuildDataArray(Index int, chunk *ChunkSection) []int64 {
 	return chunk.DataArray
 }
 
+//I've forgotten what this was meant to do
 func Getblocks() uint16 {
 	// C.NumBlocks = 16 * 16 * 16
 	return 4096
@@ -130,7 +123,7 @@ func SendChunkPacket(Chunk *Chunk, BitMask VarInt, DAL int) {
 	CP.ChunkZ = Chunk.ChunkPosZ
 	CP.FullChunk = true
 	CP.PBitMask = BitMask
-	//CP.HeightMaps = []int64{}
+	//CP.HeightMaps = []int64{} // Relies on NBT
 	CP.Size = VarInt(DAL)
 	CS := new(ChunkSection)
 	CS.BitsPerBlock = 4
@@ -138,7 +131,9 @@ func SendChunkPacket(Chunk *Chunk, BitMask VarInt, DAL int) {
 
 func COORDSToInts(COORDS string) (int64, int64) {
 	i := strings.Index(COORDS, ",")
-	//X = COORDS[:i]
+	if i < 0 {
+		panic("Index is less than 0, something went wrong")
+	}
 	X, _ := strconv.ParseInt(COORDS[:i], 10, 64)
 	Z, _ := strconv.ParseInt(COORDS[i+1:len(COORDS)], 10, 64)
 	return X, Z
@@ -149,7 +144,7 @@ func IntsToCOORDS(X int, Z int) string {
 	return COORDS
 }
 
-//BuildChunk - WIP
+//BuildChunk - WIP currently just flat stone
 func BuildChunk(X int, Z int, BPB byte) Chunk {
 	COORDS = strconv.Itoa(X) + "," + strconv.Itoa(Z)
 	fmt.Print(COORDS)
@@ -172,45 +167,10 @@ func BuildChunk(X int, Z int, BPB byte) Chunk {
 	}
 }
 
-///
-///   TO BE REMOVED, REPLACED BY NIBBLE PACKAGE
-///
-//PackByteToNibble - Packs bytes (8bits) in a chunk to nibbles (4bits)
-func PackByteToNibble(B []byte) []byte {
-	//Make Blank slice
-	B2 := make([]byte, 0)
-	for i := 0; i < len(B)-1; i += 2 {
-		M := nibble.CreateNibbleMerged(B[i], B[i+1]) //Create Nibbles
-		B2 = append(B2, M)                           //Append nibbles to byte array
-	}
-	B = nil //Set previous array to nil
-	return B2
-}
-
-func UnPackByteToNibble(B []byte) []byte {
-	//Create Blank slice
-	B2 := make([]byte, 0)
-	for i := 0; i < 32768; i++ {
-		//Read nibbles
-		M := nibble.ReadNibble1(B[i])
-		M2 := nibble.ReadNibble2(B[i])
-		//Append em
-		B2 = append(B2, M)
-		B2 = append(B2, M2)
-	}
-	B = nil //Set previous array to nil
-	return B2
-}
-
-///
-///
-///
-
 func CompactByteArrayToint64(BA []byte) []int64 {
 	//var ChunkS int64
 	var CA []int64
 	var Index int
-	//ChunkS = int64(TStone)
 	for j := 0; j < len(BA); j += 64 {
 		for i := 0; i <= 64; i += 8 {
 			CA[Index] = int64(BA[i+j] + BA[i+j+1] + BA[i+j+2] + BA[i+j+3] + BA[i+j+4] + BA[i+j+5] + BA[i+j+6] + BA[i+j+7])

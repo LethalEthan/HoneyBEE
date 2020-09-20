@@ -2,6 +2,8 @@ package world
 
 import (
 	"chunk"
+	"config"
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -12,9 +14,17 @@ import (
 	logging "github.com/op/go-logging"
 )
 
-var RegionMap = make(map[string]region)
-var mutex = &sync.RWMutex{} //This is mandatory because of the concurrent and parrallel nature of how HoneyGO works
-var Log = logging.MustGetLogger("HoneyGO")
+var (
+	RegionMap           = make(map[string]region)
+	mutex               = &sync.RWMutex{} //This is mandatory because of the concurrent and parrallel nature of how HoneyGO works
+	Log                 = logging.MustGetLogger("HoneyGO")
+	DEBUG               bool
+	DefaultFlatArray    []byte
+	UninitialisedRegion = new(region)
+	UninitialisedChunk  = new(chunk.Chunk)
+	RegionNotFound      = errors.New("404: Region not found :(")
+	ChunkOOB            = errors.New("Chunk Out Of Bounds")
+)
 
 type world struct {
 	name       string
@@ -23,29 +33,41 @@ type world struct {
 }
 
 type region struct {
-	ID string
+	ID   string
 	Data []chunk.Chunk //map[string]chunk.Chunk
 	//Lock &sync.Mutex{}
 }
 
 func Init() {
-	//TBD
+	Config := config.GetConfig()
+	if Config.Server.DEBUG {
+		DEBUG = true
+	}
+	DefaultFlatArray = make([]byte, 16384)
+	for i := 0; i < 16384; i++ {
+		DefaultFlatArray[i] = nibble.CreateNibbleMerged(1, 1)
+	}
 }
 
 func CreateRegion(X int64, Z int64) {
 	//Region is 256*256 Chunks
 	ID := strconv.Itoa(int(X)) + "," + strconv.Itoa(int(Z))
+	fmt.Print(ID)
 	Region := new(region)
 	Region.ID = ID
 	Region.Data = make([]chunk.Chunk, 65536)
 	Chunk := new(chunk.Chunk)
 	//
-	TNow := time.Now()
+	var TNow time.Time
+	if DEBUG {
+		TNow = time.Now()
+	}
 	Chunk.Blocks = make([]byte, 16384)
 	Chunk.BitsPerBlock = 4
-	for i := 0; i < 16384; i++ {
-		Chunk.Blocks[i] = nibble.CreateNibbleMerged(1, 1)
-	}
+	//for i := 0; i < 16384; i++ {
+	//Chunk.Blocks[i] = nibble.CreateNibbleMerged(1, 1)
+	//}
+	Chunk.Blocks = DefaultFlatArray //Only for testing purposes until proper world gen and custom gen is complete which will be far off
 	Chunk.NumBlocks = uint16(len(Chunk.Blocks) / int(Chunk.BitsPerBlock))
 	cx := X * 256
 	cz := Z * 256
@@ -64,9 +86,13 @@ func CreateRegion(X int64, Z int64) {
 	}
 	//RegionMap[ID] = *Region //Don't directly insert into map due to race concerns when the world generation pool is active
 	PutRegionInMap(*Region)
-	Elapse := time.Since(TNow)
-	fmt.Print("Finished")
-	fmt.Print("Time Taken: ", Elapse)
+	///
+	///Note: Find a way to store regions without strings as they cosume shit tonnes of ram in a map -\_0_0_/-
+	///
+	if DEBUG {
+		Elapse := time.Since(TNow)
+		fmt.Print("\nFinished creating: ", ID, " Time Taken: ", Elapse)
+	}
 }
 
 //PutRegionInMap - Safely puts regions into a map to be retrieved whenever
@@ -91,7 +117,7 @@ func WorldManager() {
 func World(ID uint16, Name string) {
 	World := new(world)
 	World.name = Name
-	//Seperate world into 4 sections and have them ran on different goroutines?
+	//Seperate world into 4 sections and have them run on different goroutines?
 	// XZP
 	// XZN
 	// ZXP
@@ -99,42 +125,50 @@ func World(ID uint16, Name string) {
 }
 
 //GetRegionByID - Retrieves Region by the ID safely
-func GetRegionByID(ID string) region {
+func GetRegionByID(ID string) (region, error) {
 	mutex.RLock()
 	R := RegionMap[ID]
 	mutex.RUnlock()
-	return R
+	if R.ID != "" {
+		return R, nil
+	}
+	return *UninitialisedRegion, RegionNotFound
 }
 
 //GetRegionByID - Retrieves Region by the X/Z ints safely
-func GetRegionByInt(X int, Z int) region {
+func GetRegionByInt(X int, Z int) (region, error) {
 	ID := strconv.Itoa(int(X)) + "," + strconv.Itoa(int(Z))
 	mutex.RLock()
 	R := RegionMap[ID]
 	mutex.RUnlock()
-	return R
+	//Simple check to see if it's initialised
+	if R.ID != "" {
+		return R, nil
+	}
+	return *UninitialisedRegion, RegionNotFound
+
 }
 
 //var RegionChunkCache = make(map[string]region.Data) -- WIP
 
 //GetChunkFromRegion - Gets the chunk from the region
-func GetChunkFromRegion(Region region, CX int, CZ int /*ChunkLoc string*/) chunk.Chunk {
+func GetChunkFromRegion(Region region, CX int, CZ int) (chunk.Chunk, error) {
 	//Each region contains 0~65536 chunks and each location is dependant on the region location
 	//i.e |Region 0,1 the X chunks are 0~255 and the Z chunks are 255~510
 	//So if we know the region location we can know all the possible chunk locations without ineffeciently trying to scan through them all
-	//fmt.Print(Region.ID)
 	X, Z := chunk.COORDSToInts(Region.ID)
-	ChunkLocationsX := X * 256
-	ChunkLocationsZ := Z * 256
-	CLZDelta := ChunkLocationsZ + 255
-	CLXDelta := ChunkLocationsX + 255
-	var T = 0
-	for i := CZ; i < int(CLZDelta); i++ {
-		T += 256
+	ChunkLocationsX := X * 256        //Min XChunk Co-ord
+	ChunkLocationsZ := Z * 256        //Min ZChunk Co-ord
+	CLZDelta := ChunkLocationsZ + 255 //Max ZChunk Co-ord
+	CLXDelta := ChunkLocationsX + 255 //Max XChunk Co-ord
+	if CX > int(CLXDelta) || CZ > int(CLZDelta) {
+		fmt.Print("Warning: Chunk OOB")
+		return *UninitialisedChunk, ChunkOOB
 	}
-	for i := CX; i < /*CX*/ int(CLXDelta); i++ {
-		T++
-	}
+	//Math
+	T := int(CLZDelta) - CZ
+	T = T * 256
+	T = T + (int(CLXDelta) - CX)
 	T = 65535 - T
-	return Region.Data[T]
+	return Region.Data[T], nil
 }

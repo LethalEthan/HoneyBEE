@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net"
 	"player"
+	"world"
 
 	logging "github.com/op/go-logging"
 )
@@ -44,9 +45,9 @@ var (
 )
 
 const (
-	MinecraftVersion               = "1.15.2" //Supported MC version
-	MinecraftProtocolVersion int32 = 578      //Supported MC protocol Version
-	ServerVerifyTokenLen           = 4        //Should always be 4 on notchian servers
+	PrimaryMinecraftVersion               = "1.15.2" //Primary Supported MC version
+	PrimaryMinecraftProtocolVersion int32 = 578      //Primary Supported MC protocol Version
+	ServerVerifyTokenLen                  = 4        //Should always be 4 on notchian servers
 )
 
 func GetKeyChain() {
@@ -79,6 +80,7 @@ func Init() {
 	DEBUG = Config.Server.DEBUG
 	CurrentStatus = CreateStatusObject(578, "1.15.2")
 	player.Init()
+	go world.Init()
 	go player.GCPlayer()
 	go ProtocolToVersionInit()
 }
@@ -167,8 +169,6 @@ func HandleConnection(Connection *ClientConnection) {
 						CloseClientConnection(Connection)
 						return
 					}
-					Log.Debug("Bruhmo: ", pv)
-					Log.Debug("Bruh")
 					return
 					//--Packet 0x00 End--//
 				}
@@ -285,6 +285,7 @@ func HandleUnsupported(Connection *ClientConnection, PH PacketHeader) {
 			switch PH.packetID {
 			default:
 				{
+					SendLoginDisconnect(Connection, "Unsupported Protocol, Available protocols are: 1.15.2+")
 					CloseClientConnection(Connection)
 				}
 			}
@@ -298,24 +299,6 @@ func HandleUnsupported(Connection *ClientConnection, PH PacketHeader) {
 		}
 	}
 }
-
-//Server ClientConn -> Player ClientConn - Will be removed later
-// func TranslatePlayerStruct(Conn *ClientConnection) *player.ClientConnection {
-// 	PC := new(player.ClientConnection)
-// 	PC.Conn = Conn.Conn
-// 	PC.State = Conn.State
-// 	PC.Closed = Conn.isClosed
-// 	return PC
-// }
-
-//Server ClientConn -> Packet ClientConn - Will be removed later
-// func TranslatePacketStruct(Conn *ClientConnection) *Packet.ClientConnection {
-// 	PE := new(Packet.ClientConnection)
-// 	PE.Conn = Conn.Conn
-// 	PE.State = Conn.State
-// 	PE.Closed = Conn.isClosed
-// 	return PE
-// }
 
 //readPacketHeader - Reads the packet Header for Packet ID and size info
 func readPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
@@ -354,7 +337,9 @@ func DisplayPacketInfo(PH PacketHeader, Conn *ClientConnection) {
 	}
 }
 
-//Authentication moved to Auth.go
+///
+///Authentication moved to Auth.go
+///
 
 func Disconnect(Player string) {
 	Log.Debug("Disconnecting Player: ", Player)
@@ -370,4 +355,6 @@ func Disconnect(Player string) {
 	// Tmp.Close()
 }
 
-//CreateEncryptionRequest moved to CrossProtocol.go
+///
+///CreateEncryptionRequest moved to CrossProtocol.go
+///

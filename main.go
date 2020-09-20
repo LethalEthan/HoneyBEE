@@ -22,7 +22,7 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 25)"
+	HoneyGOVersion = "1.0.0 (Build 26)"
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -122,20 +122,26 @@ func DebugOps() {
 	// fmt.Print("\n", T, S)
 	// worker.CreateFlatStoneWorld()
 	CreateRegions()
-	Region := world.GetRegionByID("1,1")
+	Region, err := world.GetRegionByID("1,1")
+	if err != nil {
+		panic("Region ikke fundet")
+	}
 	// for i := 0; i < /*len(Fuck.Data)*/ 0; i++ {
 	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosX)
 	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosZ)
 	// 	runtime.GC()
 	// 	//time.Sleep(100000)
 	// }
-	C := world.GetChunkFromRegion(Region, 511, 511)
-	fmt.Print("\n", C.ChunkPosX, "\n", C.ChunkPosZ)
+	//C := world.GetChunkFromRegion(Region, 290, 511)
+	//fmt.Print("\n", C.ChunkPosX, "\n", C.ChunkPosZ)
 	READ := false
 	if READ {
 		for j := 256; j <= 511; j++ {
 			for i := 256; i <= 511; i++ {
-				C := world.GetChunkFromRegion(Region, i, j)
+				C, err := world.GetChunkFromRegion(Region, i, j)
+				if err != nil {
+					panic(err)
+				}
 				fmt.Print(C.ChunkPosX, " ", C.ChunkPosZ, " ")
 			}
 		}
@@ -144,9 +150,23 @@ func DebugOps() {
 
 func CreateRegions() {
 	world.CreateRegion(0, 0) //Each around 5MB each
-
-	//go world.CreateRegion(0, 1)
+	world.CreateRegion(0, 1)
+	world.CreateRegion(1, 0)
 	world.CreateRegion(1, 1)
+	// for j := 0; j <= 8; j++ {
+	// 	for i := 0; i <= 8; i++ {
+	// 		go world.CreateRegion(int64(i), int64(j))
+	// 		runtime.GC()
+	// 	}
+	// }
+	//runtime.GC()
+	// for j := 0; j <= 20; j++ {
+	// 	for i := 0; i <= 20; i++ {
+	// 		R := world.GetRegionByInt(i, j)
+	// 		fmt.Print(R.ID)
+	// 	}
+	// }
+
 	//go world.CreateRegion(0, 0)
 	// if val, tmp := world.RegionChunkMap.Get("0,0"); tmp {
 	// 	fmt.Print(val)
