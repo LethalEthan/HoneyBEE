@@ -4,7 +4,6 @@ import (
 	"Packet"
 	"encoding/json"
 	"player"
-	"time"
 )
 
 func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
@@ -96,23 +95,17 @@ func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
 						writer.WriteString(Auth)
 						writer.WriteString(playername)
 						//UUID Cache
-						//DEBUG: REMOVE ME
-						//Log.Debug("PlayerMap: ", PlayerMap)
-						//Log.Debug("PlayerData:", PlayerMap[playername])
-						time.Sleep(5000000) //DEBUG:Add delay -- remove me later
+						//time.Sleep(5000000) //DEBUG:Add delay -- remove me later
 						SendData(Connection, writer)
 
 						///Entity ID Handling///
-						PlayerConnMap[Connection.Conn] = playername //link connection to player
+						SetPCMSafe(Connection.Conn, playername) //PlayerConnMap[Connection.Conn] = playername //link connection to player
 						player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
 						player.GetPlayerByID(player.PlayerEntityMap[playername])
-						EID := player.PlayerEntityMap[playername]
-						ConnPlayerMap[EID] = Connection.Conn
-						//go player.GCPlayer() //DEBUG: REMOVE ME LATER
+						EID, _ := player.GetPEMSafe(playername) //player.PlayerEntityMap[playername]
+						SetCPMSafe(EID, Connection.Conn)        //ConnPlayerMap[EID] = Connection.Conn
 						//--//
 						Connection.State = PLAY
-						//worldtime.
-						//C := make(chan bool)
 						PC := &player.ClientConnection{Connection.Conn, Connection.State, Connection.isClosed}
 						player.CreateGameJoin(PC, player.PlayerEntityMap[playername])
 						player.CreateSetDiff(PC)
@@ -120,8 +113,6 @@ func Handle_MC1_15_2(Connection *ClientConnection, PH PacketHeader) {
 						Log.Debug("END")
 						CloseClientConnection(Connection)
 						Disconnect(playername)
-						//time.Sleep(60000000)
-						//CloseClientConnection(Connection)
 						break
 					}
 				case 0x02:

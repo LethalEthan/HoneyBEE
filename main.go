@@ -2,6 +2,7 @@ package main
 
 import (
 	"Packet"
+	"blocks"
 	"config"
 	"fmt"
 	"net"
@@ -22,7 +23,8 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 26)"
+	HoneyGOVersion = "1.0.0 (Build 27)"
+	BVersion       = 27
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -117,6 +119,8 @@ func Shutdown() {
 
 //DebugOps - Do stuff for debugging that runs on startup
 func DebugOps() {
+	Block := blocks.GetBlockID(1)
+	fmt.Print(Block)
 	// chunk.BuildChunk(0, 0, 8)
 	// T, S := chunk.COORDSToInts("-69,420")
 	// fmt.Print("\n", T, S)
@@ -171,5 +175,4 @@ func CreateRegions() {
 	// if val, tmp := world.RegionChunkMap.Get("0,0"); tmp {
 	// 	fmt.Print(val)
 	// }
-
 }

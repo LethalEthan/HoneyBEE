@@ -1,14 +1,15 @@
 package blocks
 
 //Blocks is an id to block map
-var Blocks = [...]Block{
+//Doesn't include datavalues
+var Blocks = []Block{
 	0:   Air,
 	1:   Stone,
-	2:   Grass,
+	2:   Grass_Block,
 	3:   Dirt,
 	4:   Cobblestone,
-	5:   WoodenPlanks,
-	6:   Sapling,
+	5:   OakPlanks,
+	6:   OakSapling,
 	7:   Bedrock,
 	8:   Water,
 	9:   WaterStill,

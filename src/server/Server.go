@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net"
 	"player"
+	"sync"
 	"world"
 
 	logging "github.com/op/go-logging"
@@ -23,21 +24,22 @@ var (
 	publicKeyBytes []byte          //PublicKey in a byte array for packet delivery and Auth check
 	privateKey     *rsa.PrivateKey //PrivateKey
 	KeyLength      int             //Keylength used by Encryption Request
-	//	ClientSharedSecret []byte          //CSS
-	//	ClientVerifyToken  []byte          //CVT
-	playername    string          //For Authentication
-	Log           *logging.Logger //Pretty obvious
-	CurrentStatus *ServerStatus   //ServerStatus Object
+	playername     string          //For Authentication
+	Log            *logging.Logger //Pretty obvious
+	CurrentStatus  *ServerStatus   //ServerStatus Object
 	//Encryption stuff again
 	//DEBUG                 = true            //Output Debug info?
 	GotDaKeys = false //Got dem keys?
 	//	ClientSharedSecretLen = 128                       //Initialise CSSL
 	//	ClientVerifyTokenLen  = 128                       //Initialise CVTL
-	serverID                 = ""                        //this isn't used by mc anymore
-	ServerVerifyToken        = make([]byte, 4)           //Initialise a 4 element byte slice of cake
-	PlayerMap                = make(map[string]string)   //Map Player to UUID
+	serverID                 = ""                      //this isn't used by mc anymore
+	ServerVerifyToken        = make([]byte, 4)         //Initialise a 4 element byte slice of cake
+	PlayerMap                = make(map[string]string) //Map Player to UUID
+	PlayerMapMutex           = &sync.RWMutex{}
 	PlayerConnMap            = make(map[net.Conn]string) //Map Connection to Player
+	PlayerConnMutex          = &sync.RWMutex{}
 	ConnPlayerMap            = make(map[uint32]net.Conn) //Map EID to Connection
+	ConnPlayerMutex          = &sync.RWMutex{}
 	GEID              uint32 = 2
 	Config            *config.Config
 	DEBUG             bool
@@ -337,6 +339,45 @@ func DisplayPacketInfo(PH PacketHeader, Conn *ClientConnection) {
 	}
 }
 
+func GetPlayerMapSafe(key string) (string, bool) {
+	PlayerMapMutex.RLock()
+	P, B := PlayerMap[key]
+	PlayerMapMutex.RUnlock()
+	return P, B
+}
+
+func SetPlayerMapSafe(key string, value string) {
+	PlayerMapMutex.Lock()
+	PlayerMap[key] = value
+	PlayerMapMutex.Unlock()
+}
+
+func GetCPMSafe(key uint32) (net.Conn, bool) {
+	ConnPlayerMutex.RLock()
+	C, B := ConnPlayerMap[key]
+	ConnPlayerMutex.RUnlock()
+	return C, B
+}
+
+func SetCPMSafe(key uint32, value net.Conn) {
+	ConnPlayerMutex.Lock()
+	ConnPlayerMap[key] = value
+	ConnPlayerMutex.Unlock()
+}
+
+func GetPCMSafe(key net.Conn) (string, bool) {
+	PlayerConnMutex.Lock()
+	P, B := PlayerConnMap[key]
+	PlayerConnMutex.RUnlock()
+	return P, B
+}
+
+func SetPCMSafe(key net.Conn, value string) {
+	PlayerConnMutex.Lock()
+	PlayerConnMap[key] = value
+	PlayerConnMutex.Unlock()
+}
+
 ///
 ///Authentication moved to Auth.go
 ///
@@ -346,8 +387,8 @@ func Disconnect(Player string) {
 	player.Disconnect(Player)
 	var p event.Event = event.Player(Player)
 	p.PlayerDisconnect()
-	EID := player.PlayerEntityMap[Player]
-	Tmp := ConnPlayerMap[EID]
+	EID, _ := player.GetPEMSafe(Player) //PlayerEntityMap[Player]
+	Tmp, _ := GetCPMSafe(EID)           //ConnPlayerMap[EID]
 	Tmp.Close()
 	//P := player.GetPlayerByName(Player)
 	//event.PlayerDisconnect(Player)

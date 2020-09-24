@@ -99,12 +99,12 @@ func Handle_MC1_16(Connection *ClientConnection, PH PacketHeader) {
 						time.Sleep(5000000) //DEBUG:Add delay -- remove me later
 						SendData(Connection, writer)
 
-						//--Entity ID Handling--//
-						PlayerConnMap[Connection.Conn] = playername //link connection to player
-						player.InitPlayer(playername, Auth, 1)
+						///Entity ID Handling///
+						SetPCMSafe(Connection.Conn, playername) //PlayerConnMap[Connection.Conn] = playername //link connection to player
+						player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
 						player.GetPlayerByID(player.PlayerEntityMap[playername])
-						EID := player.PlayerEntityMap[playername]
-						ConnPlayerMap[EID] = Connection.Conn
+						EID, _ := player.GetPEMSafe(playername) //player.PlayerEntityMap[playername]
+						SetCPMSafe(EID, Connection.Conn)        //ConnPlayerMap[EID] = Connection.Conn
 						//--//
 						Connection.State = PLAY
 						PC := &player.ClientConnection{Connection.Conn, Connection.State, Connection.isClosed}

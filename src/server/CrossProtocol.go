@@ -29,7 +29,7 @@ type DisconnectChat struct {
 func AuthPlayer(playername string, ClientSharedSecret []byte) (string, error) {
 	var Auth string
 	var err error
-	if val, tmp := PlayerMap[playername]; tmp { //checks if map has the value
+	if val, tmp := GetPlayerMapSafe(playername); /*PlayerMap[playername]*/ tmp { //checks if map has the value
 		Auth = val //Set auth to value
 		return Auth, nil
 	}
@@ -40,7 +40,7 @@ func AuthPlayer(playername string, ClientSharedSecret []byte) (string, error) {
 			Log.Error("Authentication Failed, trying again")
 			time.Sleep(time.Second * 1)
 		} else { //If no errors cache uuid in map
-			PlayerMap[playername] = Auth
+			SetPlayerMapSafe(playername, Auth) //PlayerMap[playername] = Auth
 			return Auth, nil
 		}
 	}

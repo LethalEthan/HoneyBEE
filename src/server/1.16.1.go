@@ -107,12 +107,11 @@ func Handle_MC1_16_1(Connection *ClientConnection, PH PacketHeader) {
 						SendData(Connection, writer)
 
 						///Entity ID Handling///
-						PlayerConnMap[Connection.Conn] = playername //link connection to player
+						SetPCMSafe(Connection.Conn, playername) //PlayerConnMap[Connection.Conn] = playername //link connection to player
 						player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
 						player.GetPlayerByID(player.PlayerEntityMap[playername])
-						EID := player.PlayerEntityMap[playername]
-						ConnPlayerMap[EID] = Connection.Conn
-						//go player.GCPlayer() //DEBUG: REMOVE ME LATER
+						EID, _ := player.GetPEMSafe(playername) //player.PlayerEntityMap[playername]
+						SetCPMSafe(EID, Connection.Conn)        //ConnPlayerMap[EID] = Connection.Conn
 						//--//
 						Connection.State = PLAY
 						//worldtime.

@@ -22,7 +22,7 @@ type Chunk struct {
 	NumSecs      uint8
 	Modfied      bool
 	BitsPerBlock byte
-	Repeat       byte //This flag states if the chunk follows a repeatable pattern such as a flat world to reduce the amount of bytes being used to signify the same amount of blocks -- To be implemented
+	IsFlat       bool //This flag states if the chunk follows a repeatable pattern such as a flat world to reduce the amount of bytes being used to signify the same amount of blocks -- To be implemented
 }
 
 var (
@@ -53,11 +53,11 @@ const (
 //Note: Currently has a lot of debug and testing stuff, is not finalised
 func CreateNewChunkSection() *ChunkSection { //*Chunk {
 	chunk := new(ChunkSection)
-	chunk.BlockCount = SectionVolume * 2
+	chunk.BlockCount = SectionVolume
 	chunk.BitsPerBlock = 4
 	chunk.DataArrayLength = 256
 	chunk.DataArray = make([]int64, 256) //chunk.DataArrayLength)
-	chunk.DataArray = BuildDataArray(0, chunk)
+	chunk.DataArray = BuildCSDataArray(0, chunk)
 	for i := 0; i < 256; i++ {
 		chunk.DataArray[i] = chunk.DataArray[0]
 	}
@@ -66,17 +66,17 @@ func CreateNewChunkSection() *ChunkSection { //*Chunk {
 }
 
 //Very WIP
-func BuildDataArray(Index int, chunk *ChunkSection) []int64 {
+func BuildCSDataArray(Index int, chunksec *ChunkSection) []int64 {
 	var t int
 	t = 60
 	for i := 0; i < 16; i++ {
-		chunk.DataArray[Index] |= 1 << t
+		chunksec.DataArray[Index] |= 1 << t
 		//chunk.DataArray[Index] = 1 << t
 		t = t - 4
 		fmt.Print("\n")
-		fmt.Printf("%064b", chunk.DataArray[Index])
+		fmt.Printf("%064b", chunksec.DataArray[Index])
 	}
-	return chunk.DataArray
+	return chunksec.DataArray
 }
 
 //I've forgotten what this was meant to do

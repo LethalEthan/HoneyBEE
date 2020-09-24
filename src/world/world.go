@@ -52,7 +52,6 @@ func Init() {
 func CreateRegion(X int64, Z int64) {
 	//Region is 256*256 Chunks
 	ID := strconv.Itoa(int(X)) + "," + strconv.Itoa(int(Z))
-	fmt.Print(ID)
 	Region := new(region)
 	Region.ID = ID
 	Region.Data = make([]chunk.Chunk, 65536)
