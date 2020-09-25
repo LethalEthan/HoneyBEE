@@ -214,3 +214,20 @@ func InitItemID() map[float32]string {
 // 	I := ItemID[ID]
 // 	log.Info("Block: ", I)
 // }
+
+type Item struct {
+	Name  string
+	ID    uint16
+	Count byte
+	//tag
+}
+
+type ItemEntity struct {
+	Age         int16
+	Health      byte
+	PickupDelay int16    //this probably will be removed as it depends on ticks
+	Owner       string   //used by the give command, will be available to use with honeycomb so plugins can tailor items to a specific players
+	Owners      []string //Declare multiple players that can pick up this item such as a team of players
+	Thrower     string
+	ItemS       Item
+}

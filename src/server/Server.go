@@ -72,6 +72,7 @@ type Version interface {
 	MC1_16(Conn *ClientConnection)
 	MC1_16_1(Conn *ClientConnection)
 	MC1_16_2(Conn *ClientConnection)
+	MC1_16_3(Conn *ClientConnection)
 }
 
 func Init() {
@@ -100,7 +101,9 @@ func (PH *PacketHeader) MC1_15_2(Conn *ClientConnection) {
 }
 
 func (PH *PacketHeader) MC1_16(Conn *ClientConnection) {
-
+	Log.Debug("1.16")
+	Handle_MC1_16(Conn, *PH)
+	return
 }
 
 func (PH *PacketHeader) MC1_16_1(Conn *ClientConnection) {
@@ -109,8 +112,16 @@ func (PH *PacketHeader) MC1_16_1(Conn *ClientConnection) {
 	return
 }
 
-func (*PacketHeader) MC1_16_2(Conn *ClientConnection) {
+func (PH *PacketHeader) MC1_16_2(Conn *ClientConnection) {
 	Log.Debug("1.16.2")
+	Handle_MC1_16_2(Conn, *PH)
+	return
+}
+
+func (PH *PacketHeader) MC1_16_3(Conn *ClientConnection) {
+	Log.Debug("1.16.3")
+	Handle_MC1_16_3(Conn, *PH)
+	return
 }
 
 func HandleConnection(Connection *ClientConnection) {
