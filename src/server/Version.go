@@ -1,8 +1,9 @@
 package server
 
+//ProtocolToVer - protocol/version map
 var ProtocolToVer map[int32]string
 
-//Only release protocols atm
+//ProtocolToVersionInit - Initialise protocol/version map
 func ProtocolToVersionInit() {
 	ProtocolToVer = map[int32]string{
 		107: "1.9",

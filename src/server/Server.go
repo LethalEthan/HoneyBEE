@@ -211,7 +211,6 @@ func HandleConnection(Connection *ClientConnection) {
 						}
 						writer.WriteString(string(marshaledStatus))
 						SendData(Connection, writer)
-						break
 					}
 				case 0x01:
 					{
@@ -224,7 +223,6 @@ func HandleConnection(Connection *ClientConnection) {
 						writer.WriteLong(mirror)
 						SendData(Connection, writer)
 						CloseClientConnection(Connection)
-						break
 						//--Packet 0x01 End--//
 					}
 				}
@@ -377,7 +375,7 @@ func SetCPMSafe(key uint32, value net.Conn) {
 }
 
 func GetPCMSafe(key net.Conn) (string, bool) {
-	PlayerConnMutex.Lock()
+	PlayerConnMutex.RLock()
 	P, B := PlayerConnMap[key]
 	PlayerConnMutex.RUnlock()
 	return P, B

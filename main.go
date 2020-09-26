@@ -3,6 +3,7 @@ package main
 import (
 	"Packet"
 	"blocks"
+	"bufio"
 	"config"
 	"fmt"
 	"net"
@@ -23,8 +24,8 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 27)"
-	BVersion       = 27
+	HoneyGOVersion = "1.0.0 (Build 28)"
+	BVersion       = 28
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -64,14 +65,15 @@ func main() {
 		Log.Info("Setting GOMAXPROCS to config")
 		runtime.GOMAXPROCS(conf.Performance.CPU)
 	}
-	if runtime.NumCPU() < 2 || conf.Performance.CPU < 2 && conf.Performance.CPU != 0 {
-		Log.Critical("Number of CPU's is less than 2 this could impact performance as this is a heavily threaded application")
+	if runtime.NumCPU() < 2 || conf.Performance.CPU <= 2 && conf.Performance.CPU != 0 {
+		Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 	}
 	Log.Info("Generating Key Chain")
 	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 	//this will be useful when multiple clients connect but with some slight added memory usage
 	Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
 	server.Init()   //Initalise server
+	go Console()
 	go Shutdown()
 	//DebugOps()
 	//Accepts connection and creates new goroutine for the connection to be handled
@@ -93,8 +95,10 @@ func main() {
 	}
 }
 
+var shutdown = make(chan os.Signal, 1)
+
 func Shutdown() {
-	shutdown := make(chan os.Signal, 1)
+	//shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	select {
 	case <-shutdown:
@@ -175,4 +179,20 @@ func CreateRegions() {
 	// if val, tmp := world.RegionChunkMap.Get("0,0"); tmp {
 	// 	fmt.Print(val)
 	// }
+}
+
+func Console() {
+	Log := logging.MustGetLogger("HoneyGO")
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		switch scanner.Text() {
+		case "help":
+			Log.Warning("There is no help atm :(")
+			Log.Warning("This is a simple, quick and dirty way of doing commands, a proper thing is being made bts")
+		case "shutdown":
+			shutdown <- os.Interrupt
+		default:
+			Log.Warning("Unknown command")
+		}
+	}
 }

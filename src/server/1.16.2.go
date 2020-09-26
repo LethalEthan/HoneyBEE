@@ -121,17 +121,14 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 						Disconnect(playername)
 						//time.Sleep(60000000)
 						//CloseClientConnection(Connection)
-						break
 					}
 				case 0x02:
 					{
 						Log.Debug("Login State, packet 0x02")
-						break
 					}
 				case 0x05:
 					{
 						Log.Debug("Packet 0x05")
-						break
 					}
 				}
 			}
@@ -142,32 +139,26 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 				case 0x00:
 					{
 						Log.Debug("Play State, packet 0x00")
-						break
 					}
 				case 0x01:
 					{
 						Log.Debug("Play State, Packet 0x01")
-						break
 					}
 				case 0x02:
 					{
 						Log.Debug("Play State, Packet 0x02")
-						break
 					}
 				case 0x03:
 					{
 						Log.Debug("Play State, Packet 0x03")
-						break
 					}
 				case 0x04:
 					{
 						Log.Debug("Play State, Packet 0x04")
-						break
 					}
 				case 0x05:
 					{
 						Log.Debug("Play State, Packet 0x05")
-						break
 					}
 				default:
 					for {
