@@ -4,7 +4,6 @@ import (
 	"Packet"
 	"encoding/json"
 	"player"
-	"time"
 )
 
 func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
@@ -22,7 +21,9 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 			return
 		}
 		//DEBUG: output debug info
-		DisplayPacketInfo(PH, Connection)
+		if DEBUG {
+			DisplayPacketInfo(PH, Connection)
+		}
 		//Create Packet Reader
 		reader := Packet.CreatePacketReader(PH.packet)
 		//Packet Handling
@@ -66,6 +67,7 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 					{
 						//--Packet 0x00 C->S Start--// Login Start (Player Username)
 						Log.Debug("Login State, packetID 0x00")
+						mememode(Connection)
 						Connection.KeepAlive()
 						playername, _ = reader.ReadString()
 						//--Packet 0x01 S->C --// Encryption Request
@@ -77,6 +79,8 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 						//EncryptionResponse
 						ClientSharedSecret, err := HandleEncryptionResponse(PH)
 						if err != nil {
+							Log.Error(err)
+							SendLoginDisconnect(Connection, "Authentication Failure")
 							CloseClientConnection(Connection)
 							return
 						}
@@ -84,6 +88,7 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 						Auth, err := AuthPlayer(playername, ClientSharedSecret)
 						if err != nil {
 							Log.Error(err)
+							SendLoginDisconnect(Connection, "Authentication Failure")
 							CloseClientConnection(Connection)
 						} else {
 							Log.Debug(playername, "[", Auth, "]")
@@ -95,11 +100,6 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 						Log.Debug("Playername: ", playername)
 						writer.WriteString(Auth)
 						writer.WriteString(playername)
-						//UUID Cache
-						//DEBUG: REMOVE ME
-						//Log.Debug("PlayerMap: ", PlayerMap)
-						//Log.Debug("PlayerData:", PlayerMap[playername])
-						time.Sleep(5000000) //DEBUG:Add delay -- remove me later
 						SendData(Connection, writer)
 
 						///Entity ID Handling///
@@ -110,8 +110,6 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 						SetCPMSafe(EID, Connection.Conn)        //ConnPlayerMap[EID] = Connection.Conn
 						//--//
 						Connection.State = PLAY
-						//worldtime.
-						//C := make(chan bool)
 						PC := &player.ClientConnection{Connection.Conn, Connection.State, Connection.isClosed}
 						player.CreateGameJoin(PC, player.PlayerEntityMap[playername])
 						player.CreateSetDiff(PC)
@@ -119,8 +117,6 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 						Log.Debug("END")
 						CloseClientConnection(Connection)
 						Disconnect(playername)
-						//time.Sleep(60000000)
-						//CloseClientConnection(Connection)
 					}
 				case 0x02:
 					{

@@ -32,4 +32,5 @@ func ProtocolToVersionInit() {
 		751: "1.16.2",
 		753: "1.16.3",
 	}
+	return
 }

@@ -146,4 +146,5 @@ func SendLoginDisconnect(Connection *ClientConnection, Reason string) {
 	}
 	writer.WriteString(string(marshaledDC))
 	SendData(Connection, writer)
+	CloseClientConnection(Connection)
 }
