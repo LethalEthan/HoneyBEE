@@ -4,12 +4,11 @@ import (
 	"Packet"
 	"crypto/rand"
 	"crypto/rsa"
-	"encoding/json"
 	"errors"
-	"fmt"
+	"player"
 	"time"
 
-	logging "github.com/op/go-logging"
+	"github.com/pquerna/ffjson/ffjson"
 )
 
 //Protocol things that haven't changed functionally but the protocol ID may have been changed
@@ -37,7 +36,7 @@ func AuthPlayer(playername string, ClientSharedSecret []byte) (string, error) {
 		//4 attempts to get UUID
 		Auth, err = Authenticate(playername, serverID, ClientSharedSecret, publicKeyBytes)
 		if err != nil {
-			Log.Error("Authentication Failed, trying again")
+			Log.Error(err /*"Authentication Failed, trying again"*/)
 			time.Sleep(time.Second * 1)
 		} else { //If no errors cache uuid in map
 			SetPlayerMapSafe(playername, Auth) //PlayerMap[playername] = Auth
@@ -53,14 +52,29 @@ func AuthPlayer(playername string, ClientSharedSecret []byte) (string, error) {
 //STATUS
 
 //LOGIN
+//SendLoginDisconnect - Packet 0x00 State: LOGIN
+func SendLoginDisconnect(Connection *ClientConnection, Reason string) {
+	Log.Debug("Login State, packetID 0x00")
+	writer := Packet.CreatePacketWriter(0x00)
+	R := new(DisconnectChat)
+	R.Reason = Reason
+	marshaledDC, err := ffjson.Marshal(R) //Sends status via json
+	if err != nil {
+		Log.Error(err.Error())
+		CloseClientConnection(Connection)
+		return
+	}
+	writer.WriteString(string(marshaledDC))
+	SendData(Connection, writer)
+	CloseClientConnection(Connection)
+}
+
+//CreateEncryptionRequest - Packet 0x01 State: LOGIN
 func CreateEncryptionRequest(Connection *ClientConnection) {
 	Connection.KeepAlive()
-	Log := logging.MustGetLogger("HoneyGO")
-	Log.Debug("Login State, packetID 0x00")
-
-	//Encryption Request
-	//--Packet 0x01 S->C Start --//
-	Log.Debug("Login State, packetID 0x01 Start")
+	if DEBUG {
+		Log.Debug("Login State, packetID 0x01 Start")
+	}
 	KeyLength = len(publicKeyBytes)
 	//KeyLength Checks
 	if KeyLength > 162 {
@@ -84,20 +98,21 @@ func CreateEncryptionRequest(Connection *ClientConnection) {
 	Log.Debug("Encryption Request Sent")
 }
 
-func HandleEncryptionResponse(PH PacketHeader) ([]byte, error) {
+//HandleEncryptionResponse - Packet 0x02 State: LOGIN
+func HandleEncryptionResponse(PH PacketHeader, Connection *ClientConnection) ([]byte, error) {
 	//EncryptionResponse
 	Log.Debug("Login State, packetID 0x01")
 	Log.Debug("PacketSIZE: ", PH.packetSize)
 	if PH.packetSize > 260 {
 		return nil, PacketError
 	}
-	//ClientSharedSecretLen = 128           //Should always be 128 when encrypted
+	//--//
 	ClientSharedSecret := PH.packet[2:130] //Find the first 128 bytes in the whole byte array
 	ClientVerifyToken := PH.packet[132:]   //Find the second 128 bytes in whole byte array
 	//Decrypt Shared Secret
 	ClientSharedSecret, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientSharedSecret)
 	if err != nil {
-		fmt.Print(err)
+		Log.Error(err)
 		Log.Debug("Decryption of ClientSharedSecret failed")
 		return nil, EncryptionError
 	}
@@ -109,6 +124,7 @@ func HandleEncryptionResponse(PH PacketHeader) ([]byte, error) {
 	} else {
 		Log.Info("ClientSharedSecret Recieved Successfully")
 	}
+	//--//
 	//Decrypt Verify Token
 	ClientVerifyToken, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, ClientVerifyToken)
 	if err != nil {
@@ -125,26 +141,48 @@ func HandleEncryptionResponse(PH PacketHeader) ([]byte, error) {
 		Log.Info("Encryption Successful!")
 	}
 	//Compare each byte check
-	for i := 0; i < 4; i++ {
+	for i := 0; i < len(ServerVerifyToken); i++ {
 		if ServerVerifyToken[i] != ClientVerifyToken[i] {
 			Log.Warning("Incorrect byte in CVT!")
 			return nil, EncryptionError
 		}
 	}
-	return ClientSharedSecret, nil
-}
-
-func SendLoginDisconnect(Connection *ClientConnection, Reason string) {
-	writer := Packet.CreatePacketWriter(0x00)
-	R := new(DisconnectChat)
-	R.Reason = Reason
-	marshaledDC, err := json.Marshal(*R) //Sends status via json
+	//--//
+	//--Packet 0x01 S->C Start--//
+	//--Authentication--//
+	Auth, err := AuthPlayer(playername, ClientSharedSecret)
 	if err != nil {
-		Log.Error(err.Error())
+		Log.Error(err)
+		SendLoginDisconnect(Connection, "Authentication Failure")
 		CloseClientConnection(Connection)
-		return
+	} else {
+		Log.Debug(playername, "[", Auth, "]")
 	}
-	writer.WriteString(string(marshaledDC))
+	//--Packer 0x01 End--//
+
+	//--Packet 0x02 S->C Start--//
+	writer := Packet.CreatePacketWriter(0x02)
+	Log.Debug("Playername: ", playername)
+	writer.WriteString(Auth)
+	writer.WriteString(playername)
+	//time.Sleep(5000000) //DEBUG:Add delay -- remove me later
 	SendData(Connection, writer)
+
+	///Entity ID Handling///
+	SetPCMSafe(Connection.Conn, playername) //PlayerConnMap[Connection.Conn] = playername //link connection to player
+	player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
+	PO, _ := player.GetPEMSafe(playername)
+	player.GetPlayerByID(PO)                //player.PlayerEntityMap[playername])
+	EID, _ := player.GetPEMSafe(playername) //player.PlayerEntityMap[playername]
+	SetCPMSafe(EID, Connection.Conn)        //ConnPlayerMap[EID] = Connection.Conn
+	//--//
+	Connection.State = PLAY
+	PC := &player.ClientConnection{Connection.Conn, Connection.State, Connection.isClosed}
+	player.CreateGameJoin(PC, PO) //player.PlayerEntityMap[playername])
+	player.CreateSetDiff(PC)
+	player.CreatePlayerAbilities(PC)
+	Log.Debug("END")
 	CloseClientConnection(Connection)
+	Disconnect(playername)
+	return ClientSharedSecret, nil
 }

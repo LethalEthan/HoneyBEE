@@ -2,8 +2,8 @@ package server
 
 import (
 	"Packet"
-	"encoding/json"
-	"player"
+
+	"github.com/pquerna/ffjson/ffjson"
 )
 
 func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
@@ -36,7 +36,7 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 						//--Packet 0x00 S->C Start--// Request Status
 						Connection.KeepAlive()
 						writer := Packet.CreatePacketWriter(0x00)
-						marshaledStatus, err := json.Marshal(*CurrentStatus) //Sends status via json
+						marshaledStatus, err := ffjson.Marshal(CurrentStatus) //Sends status via json
 						if err != nil {
 							Log.Error(err.Error())
 							CloseClientConnection(Connection)
@@ -67,7 +67,6 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 					{
 						//--Packet 0x00 C->S Start--// Login Start (Player Username)
 						Log.Debug("Login State, packetID 0x00")
-						mememode(Connection)
 						Connection.KeepAlive()
 						playername, _ = reader.ReadString()
 						//--Packet 0x01 S->C --// Encryption Request
@@ -77,46 +76,8 @@ func Handle_MC1_16_2(Connection *ClientConnection, PH PacketHeader) {
 					{
 						//--Packet 0x01 S->C Start--//
 						//EncryptionResponse
-						ClientSharedSecret, err := HandleEncryptionResponse(PH)
-						if err != nil {
-							Log.Error(err)
-							SendLoginDisconnect(Connection, "Authentication Failure")
-							CloseClientConnection(Connection)
-							return
-						}
-						//--Authentication Stuff--//
-						Auth, err := AuthPlayer(playername, ClientSharedSecret)
-						if err != nil {
-							Log.Error(err)
-							SendLoginDisconnect(Connection, "Authentication Failure")
-							CloseClientConnection(Connection)
-						} else {
-							Log.Debug(playername, "[", Auth, "]")
-						}
-						//--Packer 0x01 End--//
-
-						//--Packet 0x02 S->C Start--//
-						writer := Packet.CreatePacketWriter(0x02)
-						Log.Debug("Playername: ", playername)
-						writer.WriteString(Auth)
-						writer.WriteString(playername)
-						SendData(Connection, writer)
-
-						///Entity ID Handling///
-						SetPCMSafe(Connection.Conn, playername) //PlayerConnMap[Connection.Conn] = playername //link connection to player
-						player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
-						player.GetPlayerByID(player.PlayerEntityMap[playername])
-						EID, _ := player.GetPEMSafe(playername) //player.PlayerEntityMap[playername]
-						SetCPMSafe(EID, Connection.Conn)        //ConnPlayerMap[EID] = Connection.Conn
-						//--//
-						Connection.State = PLAY
-						PC := &player.ClientConnection{Connection.Conn, Connection.State, Connection.isClosed}
-						player.CreateGameJoin(PC, player.PlayerEntityMap[playername])
-						player.CreateSetDiff(PC)
-						player.CreatePlayerAbilities(PC)
-						Log.Debug("END")
-						CloseClientConnection(Connection)
-						Disconnect(playername)
+						//ClientSharedSecret, err :=
+						HandleEncryptionResponse(PH, Connection)
 					}
 				case 0x02:
 					{

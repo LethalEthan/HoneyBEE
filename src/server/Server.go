@@ -5,7 +5,6 @@ import (
 	"VarTool"
 	config "config"
 	"crypto/rsa"
-	"encoding/json"
 	"event"
 	"fmt"
 	"io/ioutil"
@@ -15,6 +14,7 @@ import (
 	"world"
 
 	logging "github.com/op/go-logging"
+	"github.com/pquerna/ffjson/ffjson"
 )
 
 //Define used variables
@@ -91,6 +91,7 @@ func Init() {
 	if DEBUG {
 		Log.Debug("Server initialised")
 	}
+	run = true
 }
 
 func ServerReload() {
@@ -236,9 +237,9 @@ func HandleConnection(Connection *ClientConnection) {
 						//--Packet 0x00 S->C Start--//
 						Connection.KeepAlive()
 						writer := Packet.CreatePacketWriter(0x00)
-						marshaledStatus, err := json.Marshal(*CurrentStatus) //Sends status via json
+						marshaledStatus, err := ffjson.Marshal(CurrentStatus) //Sends status via json
 						if err != nil {
-							Log.Error(err.Error())
+							Log.Error(err)
 							CloseClientConnection(Connection)
 							return
 						}
@@ -301,7 +302,7 @@ func HandleUnsupported(Connection *ClientConnection, PH PacketHeader) {
 						//--Packet 0x00 S->C Start--// Request Status
 						Connection.KeepAlive()
 						writer := Packet.CreatePacketWriter(0x00)
-						marshaledStatus, err := json.Marshal(*CurrentStatus) //Sends status via json
+						marshaledStatus, err := ffjson.Marshal(CurrentStatus) //Sends status via json
 						if err != nil {
 							Log.Error(err.Error())
 							CloseClientConnection(Connection)

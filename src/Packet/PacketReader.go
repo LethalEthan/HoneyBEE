@@ -2,9 +2,11 @@ package Packet
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math"
+	"strconv"
 )
 
 type PacketReader struct {
@@ -228,7 +230,11 @@ func (pr *PacketReader) ReadString() (string, error) {
 	}
 
 	if stringSize < 0 {
-		return "", fmt.Errorf("string size of %d invalid", stringSize)
+		return "", errors.New("string size of %d invalid" + strconv.Itoa(int(stringSize)))
+	}
+
+	if int64(stringSize) >= pr.end || int64(stringSize)+pr.seek >= pr.end {
+		return "", io.EOF
 	}
 
 	stringVal := string(pr.data[pr.seek : pr.seek+int64(stringSize)])
