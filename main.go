@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"server"
+	"sync"
 	"syscall"
 	"time"
 	"world"
@@ -24,8 +25,8 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 28)"
-	BVersion       = 28
+	HoneyGOVersion = "1.0.0 (Build 29)"
+	BVersion       = 29
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -33,6 +34,7 @@ var (
 	netlisten      net.Listener
 	err            error
 	Run            bool
+	RunMutex       = sync.Mutex{}
 )
 
 func main() {
@@ -83,7 +85,7 @@ func main() {
 	// 	fmt.Println(http.ListenAndServe("localhost:6060", nil))
 	// }()
 	//chunk.CreateNewChunkSection()
-	for Run {
+	for /*Run*/ GetRun() {
 		Connection, err = netlisten.Accept()
 		if err != nil && Run == true {
 			Log.Error(err.Error())
@@ -104,8 +106,9 @@ func Shutdown() {
 	case <-shutdown:
 		{
 			Log.Warning("Starting shutdown")
-			Run = false
-			time.Sleep(2000000000) //Let the loop finish before we do stuff
+			SetRun(false)
+			server.SetRun(false)
+			//time.Sleep(2000000000) //Let the loop finish before we do stuff
 			if netlisten != nil && Connection != nil {
 				//worldtime.Shutdown()
 				Connection.Close()
@@ -191,8 +194,31 @@ func Console() {
 			Log.Warning("This is a simple, quick and dirty way of doing commands, a proper thing is being made bts")
 		case "shutdown":
 			shutdown <- os.Interrupt
+		case "stop":
+			shutdown <- os.Interrupt
+		case "reload":
+			SetRun(false)
+			server.SetRun(false)
+			config.ConfigReload()
+			server.GCPShutdown <- true
+			server.ServerReload()
+			server.SetRun(true)
+			SetRun(true)
 		default:
 			Log.Warning("Unknown command")
 		}
 	}
+}
+
+func GetRun() bool {
+	RunMutex.Lock()
+	R := Run
+	RunMutex.Unlock()
+	return R
+}
+
+func SetRun(v bool) {
+	RunMutex.Lock()
+	Run = v
+	RunMutex.Unlock()
 }

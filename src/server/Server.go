@@ -75,6 +75,8 @@ type Version interface {
 	MC1_16_3(Conn *ClientConnection)
 }
 
+var GCPShutdown = make(chan bool)
+
 func Init() {
 	if !GotDaKeys {
 		GetKeyChain()
@@ -83,9 +85,24 @@ func Init() {
 	DEBUG = Config.Server.DEBUG
 	CurrentStatus = CreateStatusObject(578, "1.15.2")
 	player.Init()
+	ProtocolToVersionInit()
 	go world.Init()
-	go player.GCPlayer()
-	go ProtocolToVersionInit()
+	go player.GCPlayer(GCPShutdown)
+	if DEBUG {
+		Log.Debug("Server initialised")
+	}
+}
+
+func ServerReload() {
+	Config = config.GetConfig()
+	DEBUG = Config.Server.DEBUG
+	player.Init()
+	go world.Init()
+	GCPShutdown <- true
+	go player.GCPlayer(GCPShutdown)
+	if DEBUG {
+		Log.Debug("Server initialised")
+	}
 }
 
 func (PH *PacketHeader) MCDEFAULT(Conn *ClientConnection) {
@@ -124,6 +141,22 @@ func (PH *PacketHeader) MC1_16_3(Conn *ClientConnection) {
 	return
 }
 
+var run bool
+var runmutex = sync.Mutex{}
+
+func GetRun() bool {
+	runmutex.Lock()
+	r := run
+	runmutex.Unlock()
+	return r
+}
+
+func SetRun(v bool) {
+	runmutex.Lock()
+	run = v
+	runmutex.Unlock()
+}
+
 func HandleConnection(Connection *ClientConnection) {
 	if !KC {
 		GetKeyChain()
@@ -132,7 +165,7 @@ func HandleConnection(Connection *ClientConnection) {
 	Log.Info("Connection handler initiated")
 	//Løøps
 	PH := new(PacketHeader)
-	for !Connection.isClosed {
+	for !Connection.isClosed && GetRun() {
 		//packet, packetSize, packetID, err := readPacketHeader(Connection)
 		var err error
 		PH.packet, PH.packetSize, PH.packetID, err = readPacketHeader(Connection)

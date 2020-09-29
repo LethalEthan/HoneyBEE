@@ -17,10 +17,14 @@ var (
 // Config struct for HoneyGO config
 type Config struct {
 	Server struct {
-		Host    string `yaml:"host"`    //IP Address to bind the Server to -- TBD
-		Port    string `yaml:"port"`    //TCP Port to bind the Server to
-		DEBUG   bool   `yaml:"debug"`   //Output DEBUG info -- TO BE LINKED
-		Timeout int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
+		Host     string `yaml:"host"`    //IP Address to bind the Server to -- TBD
+		Port     string `yaml:"port"`    //TCP Port to bind the Server to
+		DEBUG    bool   `yaml:"debug"`   //Output DEBUG info -- TO BE LINKED
+		Timeout  int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
+		Protocol struct {
+			AvailableProtocols  []int32 `yaml:"available-protocols"`
+			BlockPlayersOnLogin bool    `yaml:"block-players-on-login"`
+		}
 	} `yaml:"server"`
 	Performance struct {
 		CPU      int `yaml:"cpu"`
@@ -60,10 +64,11 @@ func ValidateConfigPath(path string) error {
 	return nil
 }
 
+var configPath string
+
 //ParseFlags - will create and parse the CLI flags and return the path to be used
 func ParseFlags() (string, error) {
-	var configPath string
-
+	//var configPath string
 	//Set up a CLI flag "-config" to allow users to supply the configuration file - defaults to config.yml
 	flag.StringVar(&configPath, "config", "./config.yml", "path to config file")
 	//Parse the flags
@@ -100,4 +105,14 @@ func GetConfig() *Config {
 
 func GetSPort() string {
 	return ConfigR.Server.Port
+}
+
+func ConfigReload() {
+	ConfigR, err := NewConfig(configPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if ConfigR.Server.DEBUG {
+		log.Debug("cfg: ", ConfigR)
+	}
 }
