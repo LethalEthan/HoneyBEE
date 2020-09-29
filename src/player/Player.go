@@ -82,7 +82,7 @@ func GetPlayerByName(Name string) *PlayerObject {
 }
 
 //GCPlayer - Garbage Collect offline and expired players
-func GCPlayer() {
+func GCPlayer(GCP chan bool) {
 	if SConfig.Performance.GCPlayer == 0 { //Nothing Set
 		GCInterval = 15 * time.Minute //Default to 15 minutes
 	} else {
@@ -111,6 +111,16 @@ func GCPlayer() {
 					PlayerObjectMutex.RLock() //Relock for when loop reads
 				}
 				PlayerObjectMutex.RUnlock() //make sure that map is unlocked
+			case <-GCP:
+				if <-GCP {
+					Log := logging.MustGetLogger("HoneyGO")
+					Log.Warning("Stopping GCPlayer")
+					ticker.Stop()
+					//Cleanup
+					ticker = nil
+					Log = nil
+					return
+				}
 			}
 		}
 	}()
@@ -161,7 +171,7 @@ func FindFreeID(C chan uint32) {
 func GetPOMSafe(key uint32) (*PlayerObject, bool) {
 	PlayerObjectMutex.RLock()
 	P, B := PlayerObjectMap[key]
-	PlayerEntityMutex.RUnlock()
+	PlayerObjectMutex.RUnlock()
 	return P, B
 }
 
