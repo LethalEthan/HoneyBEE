@@ -35,11 +35,11 @@ var (
 	serverID                 = ""                      //this isn't used by mc anymore
 	ServerVerifyToken        = make([]byte, 4)         //Initialise a 4 element byte slice of cake
 	PlayerMap                = make(map[string]string) //Map Player to UUID
-	PlayerMapMutex           = &sync.RWMutex{}
+	PlayerMapMutex           = sync.RWMutex{}
 	PlayerConnMap            = make(map[net.Conn]string) //Map Connection to Player
-	PlayerConnMutex          = &sync.RWMutex{}
+	PlayerConnMutex          = sync.RWMutex{}
 	ConnPlayerMap            = make(map[uint32]net.Conn) //Map EID to Connection
-	ConnPlayerMutex          = &sync.RWMutex{}
+	ConnPlayerMutex          = sync.RWMutex{}
 	GEID              uint32 = 2
 	Config            *config.Config
 	DEBUG             bool
@@ -64,6 +64,7 @@ type PacketHeader struct {
 	packetSize int32
 	packetID   int32
 	protocol   int32
+	ClientConn *ClientConnection
 }
 
 type Version interface {
@@ -102,7 +103,7 @@ func ServerReload() {
 	GCPShutdown <- true
 	go player.GCPlayer(GCPShutdown)
 	if DEBUG {
-		Log.Debug("Server initialised")
+		Log.Debug("Server re-initialised")
 	}
 }
 
@@ -192,8 +193,6 @@ func HandleConnection(Connection *ClientConnection) {
 						Log.Error(err.Error())
 					}
 					Connection.KeepAlive()
-					//Proto, _ := reader.ReadVarInt()
-					//Log.Debug("Protocol:", Proto)
 					Connection.State = int(Hpacket.NextState)
 					PH.protocol = Hpacket.ProtocolVersion
 					var pv Version

@@ -25,8 +25,8 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 30)"
-	BVersion       = 30
+	HoneyGOVersion = "1.0.0 (Build 31)"
+	BVersion       = 31
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -133,10 +133,11 @@ func DebugOps() {
 	// fmt.Print("\n", T, S)
 	// worker.CreateFlatStoneWorld()
 	CreateRegions()
-	Region, err := world.GetRegionByID("1,1")
-	if err != nil {
+	Region, bool, err := world.GetRegionByInt(1, 1)
+	if err != nil || bool != true {
 		panic("Region ikke fundet")
 	}
+	fmt.Print(Region.ID, "\n")
 	// for i := 0; i < /*len(Fuck.Data)*/ 0; i++ {
 	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosX)
 	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosZ)

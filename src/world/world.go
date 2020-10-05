@@ -5,7 +5,6 @@ import (
 	"config"
 	"errors"
 	"fmt"
-	"strconv"
 	"sync"
 	//"sync"
 	"time"
@@ -15,7 +14,7 @@ import (
 )
 
 var (
-	RegionMap           = make(map[string]region)
+	RegionMap           = make(map[RegionID]region)
 	mutex               = &sync.RWMutex{} //This is mandatory because of the concurrent and parrallel nature of how HoneyGO works
 	Log                 = logging.MustGetLogger("HoneyGO")
 	DEBUG               bool
@@ -33,9 +32,14 @@ type world struct {
 }
 
 type region struct {
-	ID   string
+	ID   RegionID      //string
 	Data []chunk.Chunk //map[string]chunk.Chunk
 	//Lock &sync.Mutex{}
+}
+
+type RegionID struct {
+	X int64
+	Z int64
 }
 
 func Init() {
@@ -51,9 +55,12 @@ func Init() {
 
 func CreateRegion(X int64, Z int64) {
 	//Region is 256*256 Chunks
-	ID := strconv.Itoa(int(X)) + "," + strconv.Itoa(int(Z))
+	//ID := strconv.Itoa(int(X)) + "," + strconv.Itoa(int(Z))
 	Region := new(region)
-	Region.ID = ID
+	RID := new(RegionID)
+	RID.X = X
+	RID.Z = Z
+	Region.ID = *RID
 	Region.Data = make([]chunk.Chunk, 65536)
 	Chunk := new(chunk.Chunk)
 	//
@@ -90,7 +97,7 @@ func CreateRegion(X int64, Z int64) {
 	///
 	if DEBUG {
 		Elapse := time.Since(TNow)
-		fmt.Print("\nFinished creating: ", ID, " Time Taken: ", Elapse)
+		fmt.Print("\nFinished creating: ", RID, " Time Taken: ", Elapse)
 	}
 }
 
@@ -124,27 +131,29 @@ func World(ID uint16, Name string) {
 }
 
 //GetRegionByID - Retrieves Region by the ID safely
-func GetRegionByID(ID string) (region, error) {
+func GetRegionByID(ID RegionID) (region, bool, error) {
 	mutex.RLock()
-	R := RegionMap[ID]
+	R, bool := RegionMap[ID]
 	mutex.RUnlock()
-	if R.ID != "" {
-		return R, nil
+	if bool {
+		return R, bool, nil
 	}
-	return *UninitialisedRegion, RegionNotFound
+	return *UninitialisedRegion, bool, RegionNotFound
 }
 
 //GetRegionByID - Retrieves Region by the X/Z ints safely
-func GetRegionByInt(X int, Z int) (region, error) {
-	ID := strconv.Itoa(int(X)) + "," + strconv.Itoa(int(Z))
+func GetRegionByInt(X int64, Z int64) (region, bool, error) {
+	ID := new(RegionID)
+	ID.X = X
+	ID.Z = Z
 	mutex.RLock()
-	R := RegionMap[ID]
+	R, bool := RegionMap[*ID]
 	mutex.RUnlock()
 	//Simple check to see if it's initialised
-	if R.ID != "" {
-		return R, nil
+	if bool {
+		return R, bool, nil
 	}
-	return *UninitialisedRegion, RegionNotFound
+	return *UninitialisedRegion, bool, RegionNotFound
 
 }
 
@@ -155,17 +164,18 @@ func GetChunkFromRegion(Region region, CX int, CZ int) (chunk.Chunk, error) {
 	//Each region contains 0~65536 chunks and each location is dependant on the region location
 	//i.e |Region 0,1 the X chunks are 0~255 and the Z chunks are 255~510
 	//So if we know the region location we can know all the possible chunk locations without ineffeciently trying to scan through them all
-	X, Z := chunk.COORDSToInts(Region.ID)
-	ChunkLocationsX := X * 256        //Min XChunk Co-ord
-	ChunkLocationsZ := Z * 256        //Min ZChunk Co-ord
-	CLZDelta := ChunkLocationsZ + 255 //Max ZChunk Co-ord
-	CLXDelta := ChunkLocationsX + 255 //Max XChunk Co-ord
+	// X := Region.ID.X
+	// Z := Region.ID.Z
+	ChunkLocationsX := Region.ID.X * 256 //Min XChunk Co-ord
+	ChunkLocationsZ := Region.ID.Z * 256 //Min ZChunk Co-ord
+	CLZDelta := ChunkLocationsZ + 255    //Max ZChunk Co-ord
+	CLXDelta := ChunkLocationsX + 255    //Max XChunk Co-ord
 	if CX > int(CLXDelta) || CZ > int(CLZDelta) {
 		fmt.Print("Warning: Chunk OOB")
 		return *UninitialisedChunk, ChunkOOB
 	}
 	//Math
-	T := int(CLZDelta) - CZ
+	T := int(CLZDelta) - CZ //50
 	T = T * 256
 	T = T + (int(CLXDelta) - CX)
 	T = 65535 - T

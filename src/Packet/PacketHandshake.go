@@ -21,12 +21,12 @@ func HandshakePacketCreate(length int32, reader *PacketReader) (*HandshakePacket
 	//Notchian Servers don't use this info
 	p.ServerAddress, err = reader.ReadString()
 	if err != nil {
-		return nil, err
+		p.ServerAddress = ""
 	}
 	//Notchian Servers don't use this info
 	p.ServerPort, err = reader.ReadUnsignedShort()
 	if err != nil {
-		return nil, err
+		p.ServerPort = 25565
 	}
 	//1, status | 2, login
 	p.NextState, err = reader.ReadVarInt()
