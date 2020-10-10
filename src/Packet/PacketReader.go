@@ -229,7 +229,7 @@ func (pr *PacketReader) ReadString() (string, error) {
 	if stringSize < 0 {
 		return "", errors.New("string size of %d invalid" + strconv.Itoa(int(stringSize)))
 	}
-	if int64(stringSize) >= pr.end || int64(stringSize)+pr.seek >= pr.end {
+	if int64(stringSize) >= pr.end || int64(stringSize)+pr.seek > pr.end {
 		return "", io.EOF
 	}
 	//Read the string
@@ -262,7 +262,7 @@ func (pr *PacketReader) ReadVarInt() (int32, error) {
 		if numRead > 5 {
 			return 0, fmt.Errorf("varint was over five bytes without termination")
 		}
-		//
+		//if Byte and 128 == 0
 		if Byte&0x80 == 0 {
 			break
 		}
@@ -305,6 +305,7 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 	return result, nil
 }
 
+//ReadArray - Returns the array (slice) of the packet data
 func (pr *PacketReader) ReadArray() ([]byte, error) {
 	return pr.data, nil
 }

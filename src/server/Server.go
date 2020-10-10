@@ -44,6 +44,7 @@ var (
 	Config            *config.Config
 	DEBUG             bool
 	KC                = false
+	pv                Version
 )
 
 const (
@@ -188,14 +189,14 @@ func HandleConnection(Connection *ClientConnection) {
 				{
 					//--Packet 0x00 S->C Start--//
 					Hpacket, err := Packet.HandshakePacketCreate(PH.packetSize, reader)
-					if err != nil {
+					if err != nil || Hpacket == nil {
 						CloseClientConnection(Connection) //You have been terminated
 						Log.Error(err.Error())
 					}
 					Connection.KeepAlive()
 					Connection.State = int(Hpacket.NextState)
 					PH.protocol = Hpacket.ProtocolVersion
-					var pv Version
+					//var pv Version
 					pv = PH
 					switch Hpacket.ProtocolVersion {
 					case 578:
@@ -235,15 +236,20 @@ func HandleConnection(Connection *ClientConnection) {
 					{
 						//--Packet 0x00 S->C Start--//
 						Connection.KeepAlive()
-						writer := Packet.CreatePacketWriter(0x00)
-						marshaledStatus, err := ffjson.Marshal(CurrentStatus) //Sends status via json
-						if err != nil {
-							Log.Error(err)
+						if PH.packetSize == 1 {
+							writer := Packet.CreatePacketWriter(0x00)
+							marshaledStatus, err := ffjson.Marshal(CurrentStatus) //Sends status via json
+							if err != nil {
+								Log.Error(err)
+								CloseClientConnection(Connection)
+								return
+							}
+							writer.WriteString(string(marshaledStatus))
+							SendData(Connection, writer)
+						} else {
 							CloseClientConnection(Connection)
 							return
 						}
-						writer.WriteString(string(marshaledStatus))
-						SendData(Connection, writer)
 					}
 				case 0x01:
 					{

@@ -25,8 +25,8 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 31)"
-	BVersion       = 31
+	HoneyGOVersion = "1.0.0 (Build 32)"
+	BVersion       = 32
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -111,11 +111,15 @@ func Shutdown() {
 			//time.Sleep(2000000000) //Let the loop finish before we do stuff
 			if netlisten != nil && Connection != nil {
 				//worldtime.Shutdown()
-				Connection.Close()
-				Log.Info("Connection Closed")
-				netlisten.Close()
-				Log.Info("Net Listen Closed")
-				//worldtime.Shutdown()
+				SetRun(false)
+				server.SetRun(false)
+				server.GCPShutdown <- true
+				time.Sleep(1000000)
+				// netlisten.Close()
+				// Log.Info("Net Listen Closed")
+				// Connection.Close()
+				// Log.Info("Connection Closed")
+				// worldtime.Shutdown()
 				os.Exit(0)
 			}
 			//worldtime.Shutdown()

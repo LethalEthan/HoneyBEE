@@ -16,7 +16,7 @@ type ClientConnection struct {
 }
 
 var ClientConnectionMap = make(map[string]*ClientConnection)
-var ClientConnectionMutex = &sync.RWMutex{}
+var ClientConnectionMutex = sync.RWMutex{}
 
 //CreateClientConnection - Creates a client Connection, checks whether Connection previously existed and Restores the Connection and terminates due to a suspected failure
 func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
@@ -29,20 +29,24 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 	if ConnectionExists {
 		Log.Debug("Client Connection Restored, closing")
 		tmp.Conn.Close()
-		tmp.Conn = Conn
-		tmp.Conn.Close()
-		ClientConnectionMutex.Lock()
-		ClientConnectionMap[RemoteAddress] = tmp
-		ClientConnectionMutex.Unlock()
+		Conn.Close()
+		//tmp.Conn = Conn
+		//tmp.Conn.Close()
+		// ClientConnectionMutex.Lock()
+		// ClientConnectionMap[RemoteAddress] = tmp
+		// ClientConnectionMutex.Unlock()
+		//Check PCM for players~connection
 		if val, PCM := GetPCMSafe(tmp.Conn); /*PlayerConnMap[tmp.Conn]*/ PCM {
 			Log.Warning("PCM: Deleted:, ", val)
 			PlayerConnMutex.Lock()
 			delete(PlayerConnMap, tmp.Conn)
 			PlayerConnMutex.Unlock()
-			//delete(ConnPlayerMap, tmp.Conn)
 			go Disconnect(val)
 		} else {
 			Log.Warning("No player mapped to connection, ignoring")
+			PlayerConnMutex.Lock()
+			delete(PlayerConnMap, tmp.Conn)
+			PlayerConnMutex.Unlock()
 		}
 	} else {
 		Log.Debug("Client Connection Created", &Conn)
@@ -53,7 +57,8 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 		ClientConnectionMap[RemoteAddress] = Connection
 		ClientConnectionMutex.Unlock()
 	}
-
+	ClientConnectionMutex.RLock()
+	defer ClientConnectionMutex.RUnlock()
 	return ClientConnectionMap[RemoteAddress]
 }
 
@@ -61,11 +66,12 @@ func CreateClientConnection(Conn net.Conn, State int) *ClientConnection {
 func CloseClientConnection(Connection *ClientConnection) {
 	Log.Debug("Client Connection destroyed")
 	RemoteAddress := strings.Split(Connection.Conn.RemoteAddr().String(), ":")[0]
-	Connection.Conn.Close()
 	Connection.isClosed = true
+	Connection.Conn.Close()
 	ClientConnectionMutex.Lock()
 	delete(ClientConnectionMap, RemoteAddress)
 	ClientConnectionMutex.Unlock()
+	//Check PlayerConnectionMap
 	if val, PCM := GetPCMSafe(Connection.Conn); /*PlayerConnMap[Connection.Conn]*/ PCM {
 		Log.Warning("PCM: Deleted:, ", val)
 		PlayerConnMutex.Lock()
@@ -75,6 +81,7 @@ func CloseClientConnection(Connection *ClientConnection) {
 	} else {
 		Log.Warning("No player mapped to connection, ignoring")
 	}
+	Connection = nil
 }
 
 //KeepAlive - Extends the deadline before the Connection is closed
