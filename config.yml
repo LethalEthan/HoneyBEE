@@ -5,4 +5,5 @@ server:
   timeout: 15 #In seconds
 performance: #Change me!
    cpu: 4
-   gcplayerinterval: 15
+   gc-player-interval: 15
+   gc-percent: 200

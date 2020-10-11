@@ -27,8 +27,9 @@ type Config struct {
 		}
 	} `yaml:"server"`
 	Performance struct {
-		CPU      int `yaml:"cpu"`
-		GCPlayer int `yaml:"gcplayerinterval"`
+		CPU       int `yaml:"cpu"`
+		GCPlayer  int `yaml:"gc-player-interval"`
+		GCPercent int `yaml:"gc-percent"`
 	} `yaml:"performance"`
 }
 

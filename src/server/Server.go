@@ -80,6 +80,7 @@ type Version interface {
 var GCPShutdown = make(chan bool)
 
 func Init() {
+	Log.Debug("Server initialising")
 	if !GotDaKeys {
 		GetKeyChain()
 	}

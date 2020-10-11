@@ -85,10 +85,18 @@ func CreateRegion(X int64, Z int64) {
 			Chunk.ChunkPosZ = cz
 			Region.Data[Index] = *Chunk
 			Index++
-			cx++
+			if cx < 0 {
+				cx--
+			} else {
+				cx++
+			}
 		}
 		cx = X * 256 //reset down to the original number
-		cz++
+		if cz < 0 {
+			cz--
+		} else {
+			cz++
+		}
 	}
 	//RegionMap[ID] = *Region //Don't directly insert into map due to race concerns when the world generation pool is active
 	PutRegionInMap(*Region)
@@ -166,18 +174,44 @@ func GetChunkFromRegion(Region region, CX int, CZ int) (chunk.Chunk, error) {
 	//So if we know the region location we can know all the possible chunk locations without ineffeciently trying to scan through them all
 	// X := Region.ID.X
 	// Z := Region.ID.Z
-	ChunkLocationsX := Region.ID.X * 256 //Min XChunk Co-ord
-	ChunkLocationsZ := Region.ID.Z * 256 //Min ZChunk Co-ord
-	CLZDelta := ChunkLocationsZ + 255    //Max ZChunk Co-ord
-	CLXDelta := ChunkLocationsX + 255    //Max XChunk Co-ord
-	if CX > int(CLXDelta) || CZ > int(CLZDelta) {
+	TNow := time.Now()
+	var ChunkLocationsX int64
+	var ChunkLocationsZ int64
+	//Make negative numbers positive so the logic still works
+	if Region.ID.X < 0 { //If X is negative
+		ChunkLocationsX = Region.ID.X * -256 //Min XChunk Co-ord
+		CX = CX * -1
+	} else {
+		ChunkLocationsX = Region.ID.X * 256 //Min XChunk Co-ord
+	}
+	if Region.ID.Z < 0 {
+		ChunkLocationsZ = Region.ID.Z * -256 //Min ZChunk Co-ord
+		CZ = CZ * -1
+	} else {
+		ChunkLocationsZ = Region.ID.Z * 256 //Min ZChunk Co-ord
+	}
+	CLZDelta := ChunkLocationsZ + 255 //Max ZChunk Co-ord
+	CLXDelta := ChunkLocationsX + 255 //Max XChunk Co-ord
+	if CX > int(CLXDelta) || CZ > int(CLZDelta) || CX < int(ChunkLocationsX) || CZ < int(ChunkLocationsX) {
 		fmt.Print("Warning: Chunk OOB")
 		return *UninitialisedChunk, ChunkOOB
 	}
 	//Math
-	T := int(CLZDelta) - CZ //50
+	T := int(CLZDelta) - CZ
 	T = T * 256
 	T = T + (int(CLXDelta) - CX)
 	T = 65535 - T
+	Elapse := time.Since(TNow)
+	if DEBUG {
+		fmt.Print("\nGetChunkFromRegionTook: ", Elapse)
+	}
 	return Region.Data[T], nil
+}
+
+func GetChunkRangeFromRegion(Region region) (int64, int64, int64, int64) {
+	MinCX := Region.ID.X * 256
+	MinCZ := Region.ID.Z * 256
+	MaxCX := MinCX + 255
+	MaxCZ := MinCZ + 255
+	return MinCX, MinCZ, MaxCX, MaxCZ
 }

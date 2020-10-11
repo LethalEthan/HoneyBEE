@@ -25,8 +25,8 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.0 (Build 32)"
-	BVersion       = 32
+	HoneyGOVersion = "1.0.0 (Build 33)"
+	BVersion       = 33
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -35,11 +35,11 @@ var (
 	err            error
 	Run            bool
 	RunMutex       = sync.Mutex{}
+	mem            runtime.MemStats
 )
 
 func main() {
 	//Hello from HoneyGO
-	debug.SetGCPercent(30)
 	//Logger Creation Start
 	B1 := logging.NewLogBackend(os.Stderr, "", 0)       //New Backend
 	B1Format := logging.NewBackendFormatter(B1, format) //Set Format
@@ -51,7 +51,14 @@ func main() {
 	Log.Info("HoneyGO ", HoneyGOVersion, " starting...")
 	Run = true
 	conf := config.ConfigStart()
+	if conf.Performance.GCPercent == 0 {
+		Log.Warning("GCPercent is 0!, GC will only activate via playerGC")
+	}
+	debug.SetGCPercent(conf.Performance.GCPercent)
 	ServerPort = conf.Server.Port
+	if ServerPort == "" {
+		Log.Warning("Server port not defined!")
+	}
 	netlisten, err = net.Listen("tcp", ServerPort)
 	if err != nil {
 		Log.Fatal(err.Error())
@@ -67,7 +74,7 @@ func main() {
 		Log.Info("Setting GOMAXPROCS to config")
 		runtime.GOMAXPROCS(conf.Performance.CPU)
 	}
-	if runtime.NumCPU() < 2 || conf.Performance.CPU <= 2 && conf.Performance.CPU != 0 {
+	if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 2 {
 		Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 	}
 	Log.Info("Generating Key Chain")
@@ -108,21 +115,17 @@ func Shutdown() {
 			Log.Warning("Starting shutdown")
 			SetRun(false)
 			server.SetRun(false)
-			//time.Sleep(2000000000) //Let the loop finish before we do stuff
-			if netlisten != nil && Connection != nil {
-				//worldtime.Shutdown()
-				SetRun(false)
-				server.SetRun(false)
-				server.GCPShutdown <- true
-				time.Sleep(1000000)
-				// netlisten.Close()
-				// Log.Info("Net Listen Closed")
-				// Connection.Close()
-				// Log.Info("Connection Closed")
-				// worldtime.Shutdown()
-				os.Exit(0)
+			server.GCPShutdown <- true
+			server.ClientConnectionMutex.Lock()
+			Log.Debug(server.ClientConnectionMap)
+			DEBUG := true
+			if DEBUG {
+				printDebugStats(mem)
 			}
-			//worldtime.Shutdown()
+			// netlisten.Close()
+			// Log.Info("Net Listen Closed")
+			// Connection.Close()
+			// Log.Info("Connection Closed")
 			os.Exit(0)
 		}
 	}
@@ -137,11 +140,27 @@ func DebugOps() {
 	// fmt.Print("\n", T, S)
 	// worker.CreateFlatStoneWorld()
 	CreateRegions()
-	Region, bool, err := world.GetRegionByInt(1, 1)
+	//TESTING -1,-1
+	Region, bool, err := world.GetRegionByInt(1, -1)
 	if err != nil || bool != true {
 		panic("Region ikke fundet")
 	}
-	fmt.Print(Region.ID, "\n")
+	fmt.Print("\n", Region.ID, "\n")
+	C, err := world.GetChunkFromRegion(Region, 511, -511)
+	if err != nil {
+		Log.Error(err)
+		fmt.Print("ERROR")
+	}
+	fmt.Print("\n", len(Region.Data))
+	fmt.Print("\n", C.ChunkPosX, ",", C.ChunkPosZ)
+	//--//
+	//Testing -1,1
+	testregion(-1, 1, -500, 500)
+	//Testing 1,-1
+	testregion(1, -1, 500, -500)
+	//Error Check
+	Log.Warning("this region is meant to fail")
+	testregion(1, 1, -1000, -1000)
 	// for i := 0; i < /*len(Fuck.Data)*/ 0; i++ {
 	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosX)
 	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosZ)
@@ -165,6 +184,9 @@ func DebugOps() {
 }
 
 func CreateRegions() {
+	world.CreateRegion(-1, -1)
+	world.CreateRegion(-1, 1)
+	world.CreateRegion(1, -1)
 	world.CreateRegion(0, 0) //Each around 5MB each
 	world.CreateRegion(0, 1)
 	world.CreateRegion(1, 0)
@@ -209,10 +231,30 @@ func Console() {
 			server.ServerReload()
 			server.SetRun(true)
 			SetRun(true)
+		case "GC":
+			runtime.GC()
+		case "mem":
+			printDebugStats(mem)
 		default:
 			Log.Warning("Unknown command")
 		}
 	}
+}
+
+func printDebugStats(mem runtime.MemStats) {
+
+	runtime.ReadMemStats(&mem)
+
+	fmt.Println("mem.Alloc:", mem.Alloc)
+
+	fmt.Println("mem.TotalAlloc:", mem.TotalAlloc)
+
+	fmt.Println("mem.HeapAlloc:", mem.HeapAlloc)
+
+	fmt.Println("mem.NumGC:", mem.NumGC)
+
+	fmt.Println("-----")
+
 }
 
 func GetRun() bool {
@@ -226,4 +268,21 @@ func SetRun(v bool) {
 	RunMutex.Lock()
 	Run = v
 	RunMutex.Unlock()
+}
+
+func testregion(X int64, Z int64, CX int, CZ int) {
+	//TESTING -1,-1
+	Region, bool, err := world.GetRegionByInt(X, Z)
+	if err != nil || bool != true {
+		panic("Region ikke fundet")
+	}
+	fmt.Print("\n", Region.ID, "\n")
+	C, err := world.GetChunkFromRegion(Region, CX, CZ)
+	if err != nil {
+		Log.Error(err)
+		fmt.Print("ERROR")
+	}
+	fmt.Print("\n", len(Region.Data))
+	fmt.Print("\n", C.ChunkPosX, ",", C.ChunkPosZ, "\n")
+	//--//
 }

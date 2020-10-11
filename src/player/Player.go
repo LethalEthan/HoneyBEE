@@ -2,6 +2,7 @@ package player
 
 import (
 	config "config"
+	"runtime"
 	"sync"
 	"time"
 
@@ -111,6 +112,7 @@ func GCPlayer(GCP chan bool) {
 					PlayerObjectMutex.RLock() //Relock for when loop reads
 				}
 				PlayerObjectMutex.RUnlock() //make sure that map is unlocked
+				runtime.GC()                //run a GC
 			case <-GCP:
 				if <-GCP {
 					Log := logging.MustGetLogger("HoneyGO")
