@@ -2,6 +2,7 @@ package Packet
 
 import (
 	config "config"
+	"fmt"
 	"net"
 )
 
@@ -26,3 +27,15 @@ type ClientConnection struct {
 }
 
 var SConfig *config.Config
+
+type PaxI interface {
+	Test()
+}
+
+func (HP HandshakePacket) Test() {
+	fmt.Print(HP)
+}
+
+func (PH PacketHeader) Length() {
+	fmt.Print(PH.packetSize)
+}
