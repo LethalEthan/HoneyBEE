@@ -32,19 +32,20 @@ var (
 	GotDaKeys = false //Got dem keys?
 	//	ClientSharedSecretLen = 128                       //Initialise CSSL
 	//	ClientVerifyTokenLen  = 128                       //Initialise CVTL
-	serverID                 = ""                      //this isn't used by mc anymore
-	ServerVerifyToken        = make([]byte, 4)         //Initialise a 4 element byte slice of cake
-	PlayerMap                = make(map[string]string) //Map Player to UUID
-	PlayerMapMutex           = sync.RWMutex{}
-	PlayerConnMap            = make(map[net.Conn]string) //Map Connection to Player
-	PlayerConnMutex          = sync.RWMutex{}
-	ConnPlayerMap            = make(map[uint32]net.Conn) //Map EID to Connection
-	ConnPlayerMutex          = sync.RWMutex{}
-	GEID              uint32 = 2
-	Config            *config.Config
-	DEBUG             bool
-	KC                = false
-	pv                Version
+	serverID                  = ""                      //this isn't used by mc anymore
+	ServerVerifyToken         = make([]byte, 4)         //Initialise a 4 element byte slice of cake
+	PlayerMap                 = make(map[string]string) //Map Player to UUID
+	PlayerMapMutex            = sync.RWMutex{}
+	PlayerConnMap             = make(map[net.Conn]string) //Map Connection to Player
+	PlayerConnMutex           = sync.RWMutex{}
+	ConnPlayerMap             = make(map[uint32]net.Conn) //Map EID to Connection
+	ConnPlayerMutex           = sync.RWMutex{}
+	GEID               uint32 = 2
+	Config             *config.Config
+	DEBUG              bool
+	KC                 = false
+	pv                 Version
+	AvailableProtocols []int32
 )
 
 const (
@@ -86,6 +87,9 @@ func Init() {
 	}
 	Config = config.GetConfig()
 	DEBUG = Config.Server.DEBUG
+	if len(Config.Server.Protocol.AvailableProtocols) != 0 || Config.Server.Protocol.AvailableProtocols != nil {
+		AvailableProtocols = Config.Server.Protocol.AvailableProtocols
+	}
 	CurrentStatus = CreateStatusObject(578, "1.15.2")
 	player.Init()
 	ProtocolToVersionInit()
@@ -197,7 +201,7 @@ func HandleConnection(Connection *ClientConnection) {
 					Connection.KeepAlive()
 					Connection.State = int(Hpacket.NextState)
 					PH.protocol = Hpacket.ProtocolVersion
-					//var pv Version
+					//var pv Version //fix the interface thing later
 					pv = PH
 					switch Hpacket.ProtocolVersion {
 					case 578:
@@ -210,6 +214,9 @@ func HandleConnection(Connection *ClientConnection) {
 						return
 					case 751:
 						pv.MC1_16_2(Connection)
+						return
+					case 753:
+						pv.MC1_16_3(Connection)
 						return
 					default:
 						Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- sending status and closing connection!")
@@ -266,6 +273,11 @@ func HandleConnection(Connection *ClientConnection) {
 						//--Packet 0x01 End--//
 					}
 				}
+			}
+		default:
+			{
+				Log.Critical("Unkown packet: ", PH.packet, "PHSize: ", PH.packetSize)
+				Log.Critical("Contains: ", PH.packet)
 			}
 		}
 	}
@@ -388,40 +400,40 @@ func DisplayPacketInfo(PH PacketHeader, Conn *ClientConnection) {
 	}
 }
 
-func GetPlayerMapSafe(key string) (string, bool) {
+func GetPlayerMap(key string) (string, bool) {
 	PlayerMapMutex.RLock()
 	P, B := PlayerMap[key]
 	PlayerMapMutex.RUnlock()
 	return P, B
 }
 
-func SetPlayerMapSafe(key string, value string) {
+func SetPlayerMap(key string, value string) {
 	PlayerMapMutex.Lock()
 	PlayerMap[key] = value
 	PlayerMapMutex.Unlock()
 }
 
-func GetCPMSafe(key uint32) (net.Conn, bool) {
+func GetCPM(key uint32) (net.Conn, bool) {
 	ConnPlayerMutex.RLock()
 	C, B := ConnPlayerMap[key]
 	ConnPlayerMutex.RUnlock()
 	return C, B
 }
 
-func SetCPMSafe(key uint32, value net.Conn) {
+func SetCPM(key uint32, value net.Conn) {
 	ConnPlayerMutex.Lock()
 	ConnPlayerMap[key] = value
 	ConnPlayerMutex.Unlock()
 }
 
-func GetPCMSafe(key net.Conn) (string, bool) {
+func GetPCM(key net.Conn) (string, bool) {
 	PlayerConnMutex.RLock()
 	P, B := PlayerConnMap[key]
 	PlayerConnMutex.RUnlock()
 	return P, B
 }
 
-func SetPCMSafe(key net.Conn, value string) {
+func SetPCM(key net.Conn, value string) {
 	PlayerConnMutex.Lock()
 	PlayerConnMap[key] = value
 	PlayerConnMutex.Unlock()
@@ -436,8 +448,8 @@ func Disconnect(Player string) {
 	player.Disconnect(Player)
 	var p event.Event = event.Player(Player)
 	p.PlayerDisconnect()
-	EID, _ := player.GetPEMSafe(Player) //PlayerEntityMap[Player]
-	Tmp, _ := GetCPMSafe(EID)           //ConnPlayerMap[EID]
+	EID, _ := player.GetPEM(Player) //PlayerEntityMap[Player]
+	Tmp, _ := GetCPM(EID)           //ConnPlayerMap[EID]
 	Tmp.Close()
 	//P := player.GetPlayerByName(Player)
 	//event.PlayerDisconnect(Player)

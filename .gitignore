@@ -4,6 +4,10 @@
 *.dll
 *.so
 *.dylib
+*.old
+*.nrn
+*.fuk
+*.txt
 
 # Test binary, built with `go test -c`
 *.test
@@ -19,3 +23,5 @@ pkg/
 src/github.com/
 src/golang.org/
 src/gopkg.in/
+src/google.golang.org/
+src/go.uber.org/

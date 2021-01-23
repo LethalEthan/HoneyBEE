@@ -71,7 +71,7 @@ func main() {
 		Log.Info("Setting GOMAXPROCS to all available logical CPU's")
 		runtime.GOMAXPROCS(runtime.NumCPU()) //Set it to the value of how many cores
 	} else {
-		Log.Info("Setting GOMAXPROCS to config")
+		Log.Info("Setting GOMAXPROCS to config: ", conf.Performance.CPU)
 		runtime.GOMAXPROCS(conf.Performance.CPU)
 	}
 	if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 2 {
@@ -88,10 +88,17 @@ func main() {
 	//Accepts connection and creates new goroutine for the connection to be handled
 	//other goroutines are stemmed from HandleConnection
 	Log.Info("Accepting Connections")
+	//ConTO, err := net.Dial("tcp", "192.168.0.42:25565")
 	// go func() {
 	// 	fmt.Println(http.ListenAndServe("localhost:6060", nil))
 	// }()
 	//chunk.CreateNewChunkSection()
+	//var ConnTO net.Conn
+	if conf.DEBUGOPTS.PacketAnal {
+		Log.Warning("MITM Proxy mode enable")
+		//ConnTO = ConnTO
+		// go server.AnalProbe(Client net.Conn, Server net.Conn)(ConnTO)
+	}
 	for /*Run*/ GetRun() {
 		Connection, err = netlisten.Accept()
 		if err != nil && Run == true {
@@ -100,10 +107,18 @@ func main() {
 		}
 		Connection.SetDeadline(time.Now().Add(time.Duration(1000000000 * conf.Server.Timeout)))
 		Log.Debug("Handshake Process Initiated")
+		// if conf.DEBUGOPTS.PacketAnal {
+		// 	ConnTO, err := net.Dial("tcp", conf.DEBUGOPTS.PacketAnalAddress)
+		// 	if err != nil {
+		// 		Log.Error("Couldn't connect to server defined in config, packet-anal-address: ", conf.DEBUGOPTS.PacketAnalAddress)
+		// 	}
+		// 	server.AnalProbe(Connection, ConnTO)
+		// } else {
 		go server.HandleConnection(server.CreateClientConnection(Connection, server.HANDSHAKE))
 	}
 }
 
+//
 var shutdown = make(chan os.Signal, 1)
 
 func Shutdown() {
@@ -115,7 +130,10 @@ func Shutdown() {
 			Log.Warning("Starting shutdown")
 			SetRun(false)
 			server.SetRun(false)
-			server.GCPShutdown <- true
+			conf := config.GetConfig()
+			if conf.Performance.EnableGCPlayer {
+				server.GCPShutdown <- true
+			}
 			server.ClientConnectionMutex.Lock()
 			Log.Debug(server.ClientConnectionMap)
 			DEBUG := true

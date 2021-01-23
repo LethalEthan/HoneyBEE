@@ -136,3 +136,10 @@ func (pw *PacketWriter) CreateVarLong(val int64) []byte {
 	}
 	return buff
 }
+
+//
+// func (pw *PacketWriter) UseInterface(i interface{}) {
+// 	switch i.(type) {
+// 	case:
+// 	}
+// }

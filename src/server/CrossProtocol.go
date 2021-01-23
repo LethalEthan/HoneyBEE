@@ -28,7 +28,7 @@ type DisconnectChat struct {
 func AuthPlayer(playername string, ClientSharedSecret []byte) (string, error) {
 	var Auth string
 	var err error
-	if val, tmp := GetPlayerMapSafe(playername); /*PlayerMap[playername]*/ tmp { //checks if map has the value
+	if val, tmp := GetPlayerMap(playername); /*PlayerMap[playername]*/ tmp { //checks if map has the value
 		Auth = val //Set auth to value
 		return Auth, nil
 	}
@@ -39,7 +39,7 @@ func AuthPlayer(playername string, ClientSharedSecret []byte) (string, error) {
 			Log.Error(err /*"Authentication Failed, trying again"*/)
 			time.Sleep(time.Second * 1)
 		} else { //If no errors cache uuid in map
-			SetPlayerMapSafe(playername, Auth) //PlayerMap[playername] = Auth
+			SetPlayerMap(playername, Auth) //PlayerMap[playername] = Auth
 			return Auth, nil
 		}
 	}
@@ -169,13 +169,16 @@ func HandleEncryptionResponse(PH PacketHeader, Connection *ClientConnection) ([]
 	SendData(Connection, writer)
 
 	///Entity ID Handling///
-	SetPCMSafe(Connection.Conn, playername) //PlayerConnMap[Connection.Conn] = playername //link connection to player
+	SetPCM(Connection.Conn, playername) //PlayerConnMap[Connection.Conn] = playername //link connection to player
 	player.InitPlayer(playername, Auth /*, player.PlayerEntityMap[playername]*/, 1)
-	PO, _ := player.GetPEMSafe(playername)
-	player.GetPlayerByID(PO)                //player.PlayerEntityMap[playername])
-	EID, _ := player.GetPEMSafe(playername) //player.PlayerEntityMap[playername]
-	SetCPMSafe(EID, Connection.Conn)        //ConnPlayerMap[EID] = Connection.Conn
+	PO, _ := player.GetPEM(playername)
+	player.GetPlayerByID(PO)            //player.PlayerEntityMap[playername])
+	EID, _ := player.GetPEM(playername) //player.PlayerEntityMap[playername]
+	SetCPM(EID, Connection.Conn)        //ConnPlayerMap[EID] = Connection.Conn
 	//--//
+	CloseClientConnection(Connection)
+	Disconnect(playername)
+	/* Not enough play logic done so it's not needed for now
 	Connection.State = PLAY
 	PC := &player.ClientConnection{Connection.Conn, Connection.State, Connection.isClosed}
 	player.CreateGameJoin(PC, PO) //player.PlayerEntityMap[playername])
@@ -183,6 +186,6 @@ func HandleEncryptionResponse(PH PacketHeader, Connection *ClientConnection) ([]
 	player.CreatePlayerAbilities(PC)
 	Log.Debug("END")
 	CloseClientConnection(Connection)
-	Disconnect(playername)
+	Disconnect(playername)*/
 	return ClientSharedSecret, nil
 }

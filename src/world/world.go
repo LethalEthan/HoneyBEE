@@ -178,6 +178,7 @@ func GetChunkFromRegion(Region region, CX int, CZ int) (chunk.Chunk, error) {
 	var ChunkLocationsX int64
 	var ChunkLocationsZ int64
 	//Make negative numbers positive so the logic still works
+	//INVESTIGATE: NOT the number to clear the sign bit
 	if Region.ID.X < 0 { //If X is negative
 		ChunkLocationsX = Region.ID.X * -256 //Min XChunk Co-ord
 		CX = CX * -1
@@ -197,11 +198,11 @@ func GetChunkFromRegion(Region region, CX int, CZ int) (chunk.Chunk, error) {
 		return *UninitialisedChunk, ChunkOOB
 	}
 	//Math
-	T := int(CLZDelta) - CZ
-	T = T * 256
-	T = T + (int(CLXDelta) - CX)
-	T = 65535 - T
-	Elapse := time.Since(TNow)
+	T := int(CLZDelta) - CZ      //Minus the Z chunk we try find outta the max possible Zchunk
+	T = T * 256                  //Z increments every 256 chunks since each region goes by 256*256 and starts incrementing with X then increments Z for every 256 chunks
+	T = T + (int(CLXDelta) - CX) //Minus the X chunk we try find outta the max possible Xchunk then add to var T (position in array)
+	T = 65535 - T                //Take away the position of the chunk from the max length of the array
+	Elapse := time.Since(TNow)   //calculates the time it took to find the chunk (all timeings will be linked later on so optimisations can be made)
 	if DEBUG {
 		fmt.Print("\nGetChunkFromRegionTook: ", Elapse)
 	}

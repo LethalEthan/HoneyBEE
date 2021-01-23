@@ -1,9 +1,16 @@
 server:
   host: "127.0.0.1" #currently doesn't do shit
-  port: ":25565" #Set the port
+  port: ":25570" #Set the port
   debug: true #Wanna see the juicy info?
   timeout: 15 #In seconds
+  protocol:
+    AvailableProtocols: []
+    BlockPlayersOnLogin: false
 performance: #Change me!
-   cpu: 4
+   cpu: 8
+   enable-gc-player: false
    gc-player-interval: 15
    gc-percent: 200
+debug-opts:
+    packet-anal: false #switches HoneyGO into a MITM proxy that captures and decodes packets
+    packet-anal-address: "192.168.0.42:25565" #Server address that HoneyGO probes

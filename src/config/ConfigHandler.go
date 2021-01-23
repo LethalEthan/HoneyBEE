@@ -24,13 +24,18 @@ type Config struct {
 		Protocol struct {
 			AvailableProtocols  []int32 `yaml:"available-protocols"`
 			BlockPlayersOnLogin bool    `yaml:"block-players-on-login"`
-		}
+		} `yaml:"protocol"`
 	} `yaml:"server"`
 	Performance struct {
-		CPU       int `yaml:"cpu"`
-		GCPlayer  int `yaml:"gc-player-interval"`
-		GCPercent int `yaml:"gc-percent"`
+		CPU            int  `yaml:"cpu"`
+		EnableGCPlayer bool `yaml:"enable-gc-player"`
+		GCPlayer       int  `yaml:"gc-player-interval"`
+		GCPercent      int  `yaml:"gc-percent"`
 	} `yaml:"performance"`
+	DEBUGOPTS struct {
+		PacketAnal        bool   `yaml:"packet-anal"`
+		PacketAnalAddress string `yaml:"packet-anal-address"`
+	} `yaml:"debug-opts"`
 }
 
 // NewConfig returns a new decoded Config struct

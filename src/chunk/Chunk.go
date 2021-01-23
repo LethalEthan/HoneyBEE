@@ -145,13 +145,15 @@ func IntsToCOORDS(X int, Z int) string {
 }
 
 //BuildChunk - WIP currently just flat stone
-func BuildChunk(X int, Z int, BPB byte) Chunk {
-	COORDS = strconv.Itoa(X) + "," + strconv.Itoa(Z)
-	fmt.Print(COORDS)
+func BuildChunk(X int64, Z int64, BPB byte) Chunk {
+	// COORDS = strconv.Itoa(X) + "," + strconv.Itoa(Z)
+	// fmt.Print(COORDS)
 	switch BPB {
 	case 4:
 		Log.Debug("BPB: 4")
 		C := new(Chunk)
+		C.ChunkPosX = X
+		C.ChunkPosZ = Z
 		C.NumBlocks = 4096
 		C.Blocks = make([]byte, 16384)
 		for i := 0; i < len(C.Blocks); i++ {
@@ -171,6 +173,9 @@ func CompactByteArrayToint64(BA []byte) []int64 {
 	//var ChunkS int64
 	var CA []int64
 	var Index int
+	if len(BA)%8 > 1 {
+		panic("CBATI")
+	}
 	for j := 0; j < len(BA); j += 64 {
 		for i := 0; i <= 64; i += 8 {
 			CA[Index] = int64(BA[i+j] + BA[i+j+1] + BA[i+j+2] + BA[i+j+3] + BA[i+j+4] + BA[i+j+5] + BA[i+j+6] + BA[i+j+7])
