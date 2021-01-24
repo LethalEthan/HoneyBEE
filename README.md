@@ -2,6 +2,8 @@
 
 HoneyGO is a Minecraft server written in GO, with help from [wiki.vg](https://wiki.vg) (Huge thanks to them and I suggest helping them out with a donation for the awesome resources that they publish for free <3).
 
+Join my discord for support and to ask questions :) [here](https://discord.gg/rBm2U5TJNx)
+
 This software is still being developed so expect bugs and issues now and then, also remember that feedback and disclosure of issues is welcomed but please don't send any hateful or spam issues :). HoneyGO as of now is considered pre-alpha it is very early in development and has only been released publicly on github since 25/4/2020
 
 **Disclaimer: All code is completely original and is not based off of Mojang's code, any PR's must not be based off of or have any of Mojang's copyrighted code as it will not be accepted nor be encouraged as it would be obviously illegal, please see the Terms and Conditions of Mojang for familiarisation. I am not in any way affiliated with Mojang, HoneyGO is not endorsed nor approved by Mojang.**
@@ -54,9 +56,9 @@ Wanting an experimental Minecraft Server implementation in Rust? Visit [Feather]
 
 Wanting a Minecraft server that supports the SpongeAPI? Visit [Sponge](https://www.spongepowered.org/) and [Lantern](https://github.com/LanternPowered/Lantern) (Java)
 
-Wanting a Frankenstein of Paper forks and enhancements from other repos? Visit [Yatopia](https://github.com/tr7zw/Yatopia) (Java)
+Wanting a Frankenstein of Paper forks and enhancements from other repos (not reccomended)? Visit [Yatopia](https://github.com/tr7zw/Yatopia) (Java)
 
-Wanting a high performance paper server with bleeding edge enhancements? Visit [Tuinity](https://github.com/Spottedleaf/Tuinity) (Java)
+Wanting a high performance paper-fork server with bleeding edge enhancements (now with a re-written lighting engine)? Visit [Tuinity](https://github.com/Spottedleaf/Tuinity) (Java)
 
 **For General use I suggest Paper/Tuinity it is stable, bukkit compatible, fast and is the go to standard for most servers.**
 
