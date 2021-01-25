@@ -3,6 +3,7 @@ package server
 import (
 	"jsonstruct"
 	"sync"
+	"utils"
 )
 
 type ServerStatus struct {
@@ -24,13 +25,21 @@ type StatusPlayers struct {
 }
 
 var (
-	//Use a cache so we don't have to do any uneccesary allocations
-	StatusCache = make(map[int32]ServerStatus)
-	StatusMutex = sync.RWMutex{}
+	//StatusCache - Use a cache so we don't have to do any uneccesary allocations
+	StatusCache     = make(map[int32]ServerStatus)
+	StatusMutex     = sync.RWMutex{}
+	StatusSemaphore = utils.CreateSemaphore(10) //allow 8 concurrent connections to the StatusCache
 )
 
 //CreateStatusObject - Create the server status object
 func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string) *ServerStatus {
+	//Limit the range of protocols to prevent the cache being flooded by false requests in attempt to crash the server maliciously
+	if MinecraftProtocolVersion > 1200 || MinecraftProtocolVersion < 500 {
+		Log.Info("Protocol OOB, setting to 1.15.2!")
+		MinecraftProtocolVersion = PrimaryMinecraftProtocolVersion
+		MinecraftVersion = PrimaryMinecraftVersion
+	}
+	StatusSemaphore.SetData(StatusCache)
 	SC, bool := CheckStatusCache(MinecraftProtocolVersion, MinecraftVersion)
 	if bool == true && SC != nil {
 		return SC
@@ -51,18 +60,23 @@ func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string)
 }
 
 func PutStatusInCache(SS ServerStatus, MCP int32) {
+	StatusSemaphore.FlushSemaphore() //FlushSemaphore so new data can served
 	StatusMutex.Lock()
 	StatusCache[MCP] = SS
 	StatusMutex.Unlock()
+	StatusSemaphore.SetData(StatusCache) //Set new data
 }
 
 func CheckStatusCache(MCP int32, MCV string) (*ServerStatus, bool) {
-	StatusMutex.RLock()
-	SS, B := StatusCache[MCP]
-	StatusMutex.RUnlock()
+	SC := StatusSemaphore.GetData()
+	MB := SC.(map[int32]ServerStatus)
+	//StatusMutex.RLock()
+	SS, B := MB[MCP]
+	//StatusMutex.RUnlock()
 	if B != true {
 		return nil, false
 	}
+
 	if SS.Players.OnlinePlayers != OPlayers || SS.Players.MaxPlayers != MPlayers {
 		//SS := CreateStatusObject(MCP, MCV)
 		return nil, false

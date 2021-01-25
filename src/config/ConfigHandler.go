@@ -11,7 +11,7 @@ import (
 
 var (
 	log     = logging.MustGetLogger("HoneyGO")
-	ConfigR *Config
+	GConfig *Config
 )
 
 // Config struct for HoneyGO config
@@ -98,7 +98,7 @@ func ConfigStart() *Config {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ConfigR = cfg
+	GConfig = cfg
 	if cfg.Server.DEBUG {
 		log.Debug("cfg: ", cfg)
 	}
@@ -106,19 +106,19 @@ func ConfigStart() *Config {
 }
 
 func GetConfig() *Config {
-	return ConfigR
+	return GConfig
 }
 
 func GetSPort() string {
-	return ConfigR.Server.Port
+	return GConfig.Server.Port
 }
 
 func ConfigReload() {
-	ConfigR, err := NewConfig(configPath)
+	GConfig, err := NewConfig(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if ConfigR.Server.DEBUG {
-		log.Debug("cfg: ", ConfigR)
+	if GConfig.Server.DEBUG {
+		log.Debug("cfg: ", GConfig)
 	}
 }

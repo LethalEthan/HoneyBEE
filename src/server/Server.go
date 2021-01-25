@@ -32,25 +32,25 @@ var (
 	GotDaKeys = false //Got dem keys?
 	//	ClientSharedSecretLen = 128                       //Initialise CSSL
 	//	ClientVerifyTokenLen  = 128                       //Initialise CVTL
-	serverID                  = ""                      //this isn't used by mc anymore
-	ServerVerifyToken         = make([]byte, 4)         //Initialise a 4 element byte slice of cake
-	PlayerMap                 = make(map[string]string) //Map Player to UUID
-	PlayerMapMutex            = sync.RWMutex{}
-	PlayerConnMap             = make(map[net.Conn]string) //Map Connection to Player
-	PlayerConnMutex           = sync.RWMutex{}
-	ConnPlayerMap             = make(map[uint32]net.Conn) //Map EID to Connection
-	ConnPlayerMutex           = sync.RWMutex{}
-	GEID               uint32 = 2
-	Config             *config.Config
-	DEBUG              bool
-	KC                 = false
-	pv                 Version
+	serverID                 = ""                      //this isn't used by mc anymore
+	ServerVerifyToken        = make([]byte, 4)         //Initialise a 4 element byte slice of cake
+	PlayerMap                = make(map[string]string) //Map Player to UUID
+	PlayerMapMutex           = sync.RWMutex{}
+	PlayerConnMap            = make(map[net.Conn]string) //Map Connection to Player
+	PlayerConnMutex          = sync.RWMutex{}
+	ConnPlayerMap            = make(map[uint32]net.Conn) //Map EID to Connection
+	ConnPlayerMutex          = sync.RWMutex{}
+	GEID              uint32 = 2
+	Config            *config.Config
+	DEBUG             bool
+	KC                = false
+	//	pv                 Version
 	AvailableProtocols []int32
 )
 
 const (
-	PrimaryMinecraftVersion               = "1.15.2" //Primary Supported MC version
-	PrimaryMinecraftProtocolVersion int32 = 578      //Primary Supported MC protocol Version
+	PrimaryMinecraftVersion               = "1.16.3" //Primary Supported MC version
+	PrimaryMinecraftProtocolVersion int32 = 753      //Primary Supported MC protocol Version
 	ServerVerifyTokenLen                  = 4        //Should always be 4 on notchian servers
 )
 
@@ -69,14 +69,14 @@ type PacketHeader struct {
 	ClientConn *ClientConnection
 }
 
-type Version interface {
+/*type Version interface {
 	MCDEFAULT(Conn *ClientConnection)
 	MC1_15_2(Conn *ClientConnection)
 	MC1_16(Conn *ClientConnection)
 	MC1_16_1(Conn *ClientConnection)
 	MC1_16_2(Conn *ClientConnection)
 	MC1_16_3(Conn *ClientConnection)
-}
+}*/
 
 var GCPShutdown = make(chan bool)
 
@@ -90,7 +90,8 @@ func Init() {
 	if len(Config.Server.Protocol.AvailableProtocols) != 0 || Config.Server.Protocol.AvailableProtocols != nil {
 		AvailableProtocols = Config.Server.Protocol.AvailableProtocols
 	}
-	CurrentStatus = CreateStatusObject(578, "1.15.2")
+	StatusSemaphore.SetData(StatusCache)
+	CurrentStatus = CreateStatusObject(PrimaryMinecraftProtocolVersion, PrimaryMinecraftVersion)
 	player.Init()
 	ProtocolToVersionInit()
 	go world.Init()
@@ -113,40 +114,29 @@ func ServerReload() {
 	}
 }
 
-func (PH *PacketHeader) MCDEFAULT(Conn *ClientConnection) {
-	Log.Debug("Unsupported Version Handling")
-	HandleUnsupported(Conn, *PH)
-	return
-}
-
-func (PH *PacketHeader) MC1_15_2(Conn *ClientConnection) {
-	Log.Debug("1.15.2")
-	Handle_MC1_15_2(Conn, *PH)
-	return
-}
-
-func (PH *PacketHeader) MC1_16(Conn *ClientConnection) {
-	Log.Debug("1.16")
-	Handle_MC1_16(Conn, *PH)
-	return
-}
-
-func (PH *PacketHeader) MC1_16_1(Conn *ClientConnection) {
-	Log.Debug("1.16.1")
-	Handle_MC1_16_1(Conn, *PH)
-	return
-}
-
-func (PH *PacketHeader) MC1_16_2(Conn *ClientConnection) {
-	Log.Debug("1.16.2")
-	Handle_MC1_16_2(Conn, *PH)
-	return
-}
-
-func (PH *PacketHeader) MC1_16_3(Conn *ClientConnection) {
-	Log.Debug("1.16.3")
-	Handle_MC1_16_3(Conn, *PH)
-	return
+func (PH PacketHeader) MapVersion(Conn *ClientConnection) {
+	switch PH.protocol {
+	case 578:
+		Handle_MC1_15_2(Conn, PH)
+		return
+	case 735:
+		Handle_MC1_16(Conn, PH)
+		return
+	case 736:
+		Handle_MC1_16_1(Conn, PH)
+		return
+	case 751:
+		Handle_MC1_16_2(Conn, PH)
+		return
+	case 753:
+		Handle_MC1_16_3(Conn, PH)
+		return
+	default:
+		Log.Warning("Unsupported protocol:", PH.protocol, "("+ProtocolToVer[PH.protocol]+")", "- sending status and closing connection!")
+		HandleUnsupported(Conn, PH)
+		CloseClientConnection(Conn)
+		return
+	}
 }
 
 var run bool
@@ -201,29 +191,29 @@ func HandleConnection(Connection *ClientConnection) {
 					Connection.KeepAlive()
 					Connection.State = int(Hpacket.NextState)
 					PH.protocol = Hpacket.ProtocolVersion
-					//var pv Version //fix the interface thing later
-					pv = PH
-					switch Hpacket.ProtocolVersion {
-					case 578:
-						pv.MC1_15_2(Connection)
-						return
-					case 735:
-						pv.MC1_16(Connection)
-					case 736:
-						pv.MC1_16_1(Connection)
-						return
-					case 751:
-						pv.MC1_16_2(Connection)
-						return
-					case 753:
-						pv.MC1_16_3(Connection)
-						return
-					default:
-						Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- sending status and closing connection!")
-						pv.MCDEFAULT(Connection)
-						CloseClientConnection(Connection)
-						return
-					}
+					PH.MapVersion(Connection)
+					/*
+						switch Hpacket.ProtocolVersion {
+						case 578:
+							pv.MC1_15_2(Connection)
+							return
+						case 735:
+							pv.MC1_16(Connection)
+						case 736:
+							pv.MC1_16_1(Connection)
+							return
+						case 751:
+							pv.MC1_16_2(Connection)
+							return
+						case 753:
+							pv.MC1_16_3(Connection)
+							return
+						default:
+							Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- sending status and closing connection!")
+							pv.MCDEFAULT(Connection)
+							CloseClientConnection(Connection)
+							return
+						}*/
 					return
 					//--Packet 0x00 End--//
 				}
