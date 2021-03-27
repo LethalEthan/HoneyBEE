@@ -56,7 +56,9 @@ Wanting an experimental Minecraft Server implementation in Rust? Visit [Feather]
 
 Wanting a Minecraft server that supports the SpongeAPI? Visit [Sponge](https://www.spongepowered.org/) and [Lantern](https://github.com/LanternPowered/Lantern) (Java)
 
-Wanting a Frankenstein of Paper forks and enhancements from other repos (not reccomended)? Visit [Yatopia](https://github.com/tr7zw/Yatopia) (Java)
+Wanting a high performance minecraft server written in golang, soley made for PvP? [gogs](https://github.com/GambitLLC/gogs) (GO)
+
+Wanting a Frankenstein of Paper forks and enhancements from other repos (not reccomended) Visit [Yatopia](https://github.com/tr7zw/Yatopia) (Java)
 
 Wanting a high performance paper-fork server with bleeding edge enhancements (now with a re-written lighting engine)? Visit [Tuinity](https://github.com/Spottedleaf/Tuinity) (Java)
 
