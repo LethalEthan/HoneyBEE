@@ -1,7 +1,9 @@
 package VarTool //A tool to help decode and encode Variable Integer values used by minecrafts' protocol
 //Right now this is a massive mess of spaget code
 import (
+	"bufio"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
 )
@@ -79,6 +81,35 @@ func ParseVarIntFromConnection(conn net.Conn) (int32, error) {
 	return result, nil
 }
 
+func ByteDecodeVarInt(b []byte) (int32, error) {
+	var result int32
+	var numRead uint32
+	if len(b) > 5 {
+		return 0, nil
+	}
+	//buff := make([]byte, 1)
+	i := 0
+	for {
+		// _, err := conn.Read(buff)
+		// if err != nil {
+		// 	return 0, err
+		// }
+		val := int32((b[i] & 0x7F))
+		result |= (val << (7 * numRead))
+
+		numRead++
+		i++
+		if numRead > 5 {
+			return 0, fmt.Errorf("varint was over five bytes without termination")
+		}
+
+		if b[0]&0x80 == 0 {
+			break
+		}
+	}
+	return result, nil
+}
+
 func ParseVarLongFromConnection(conn net.Conn) (int64, error) {
 	var result int64
 	var numRead uint64
@@ -143,6 +174,35 @@ func EncodeVarLong(v int64) (vi []byte) {
 		}
 	}
 	return
+}
+
+func ReadVarIntFromBufIO(ClientConn bufio.Reader) (int32, error) {
+	buff := make([]byte, 1)
+	var result int32
+	var numRead byte
+	var err error
+	err = nil
+	for {
+		buff[0], err = ClientConn.ReadByte()
+		if err != nil {
+			err = errors.New("Error reading")
+			return 0, err
+		}
+		err = nil
+		val := int32((buff[0] & 0x7F))
+		result |= (val << (7 * numRead))
+
+		numRead++
+
+		if numRead > 5 {
+			return 0, fmt.Errorf("varint was over five bytes without termination")
+		}
+
+		if buff[0]&0x80 == 0 {
+			break
+		}
+	}
+	return result, nil
 }
 
 // func (v *VarInt) Decode(r DecodeReader) error {

@@ -17,6 +17,7 @@ import (
 	"time"
 	"utils"
 	"world"
+
 	//	"worldtime"
 	//_ "net/http/pprof"
 	//	"net/http"
@@ -26,8 +27,8 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.1 (Build 35)"
-	BVersion       = 35
+	HoneyGOVersion = "1.0.1 (Build 36)"
+	BVersion       = 36
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -39,7 +40,7 @@ var (
 	mem            runtime.MemStats
 )
 
-func main() {
+func init() {
 	//Hello from HoneyGO
 	//Logger Creation Start
 	B1 := logging.NewLogBackend(os.Stderr, "", 0)       //New Backend
@@ -51,6 +52,11 @@ func main() {
 	//Logger Creation END
 	Log.Info("HoneyGO ", HoneyGOVersion, " starting...")
 	fmt.Print(utils.Ascii, utils.Ascii2, "\n")
+	//Remove unused Ascii strings for less memory cosumption
+	utils.Ascii = ""
+	utils.Ascii2 = ""
+	runtime.GC()
+	//
 	Run = true
 	conf := config.ConfigStart()
 	if conf.Performance.GCPercent == 0 {
@@ -83,13 +89,16 @@ func main() {
 	//NOTE: goroutines are light weight threads that can be reused with the same stack created before,
 	//this will be useful when multiple clients connect but with some slight added memory usage
 	Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
-	server.Init()   //Initalise server
+	if conf.DEBUGOPTS.PacketAnal {
+		Log.Warning("Packet Analysis enabled, server will not be initialised")
+	} else {
+		server.Init() //Initalise server
+	}
 	go Console()
 	go Shutdown()
 	//DebugOps()
 	//Accepts connection and creates new goroutine for the connection to be handled
 	//other goroutines are stemmed from HandleConnection
-	Log.Info("Accepting Connections")
 	//ConTO, err := net.Dial("tcp", "192.168.0.42:25565")
 	// go func() {
 	// 	fmt.Println(http.ListenAndServe("localhost:6060", nil))
@@ -98,10 +107,12 @@ func main() {
 	//var ConnTO net.Conn
 	if conf.DEBUGOPTS.PacketAnal {
 		Log.Warning("MITM Proxy mode enable")
-		//ConnTO = ConnTO
-		// go server.AnalProbe(Client net.Conn, Server net.Conn)(ConnTO)
 	}
-	for /*Run*/ GetRun() {
+}
+
+func main() {
+	Log.Info("Accepting Connections")
+	for GetRun() {
 		Connection, err = netlisten.Accept()
 		if err != nil && Run == true {
 			Log.Error(err.Error())
@@ -109,22 +120,18 @@ func main() {
 		}
 		Connection.SetDeadline(time.Now().Add(time.Duration(1000000000 * conf.Server.Timeout)))
 		Log.Debug("Handshake Process Initiated")
-		// if conf.DEBUGOPTS.PacketAnal {
-		// 	ConnTO, err := net.Dial("tcp", conf.DEBUGOPTS.PacketAnalAddress)
-		// 	if err != nil {
-		// 		Log.Error("Couldn't connect to server defined in config, packet-anal-address: ", conf.DEBUGOPTS.PacketAnalAddress)
-		// 	}
-		// 	server.AnalProbe(Connection, ConnTO)
-		// } else {
-		go server.HandleConnection(server.CreateClientConnection(Connection, server.HANDSHAKE))
+		if conf.DEBUGOPTS.PacketAnal {
+			server.AnalProbe(Connection, conf.DEBUGOPTS.PacketAnalAddress)
+		} else {
+			go server.HandleConnection(server.CreateClientConnection(Connection, server.HANDSHAKE))
+		}
 	}
 }
 
-//
 var shutdown = make(chan os.Signal, 1)
 
+//Shutdown - listens for sigterm and exits
 func Shutdown() {
-	//shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	select {
 	case <-shutdown:
@@ -133,19 +140,15 @@ func Shutdown() {
 			SetRun(false)
 			server.SetRun(false)
 			conf := config.GetConfig()
-			if conf.Performance.EnableGCPlayer {
+			if conf.Performance.EnableGCPlayer { //Don't send on an unintialised channel otherwise it will deadlock
 				server.GCPShutdown <- true
 			}
 			server.ClientConnectionMutex.Lock()
-			Log.Debug(server.ClientConnectionMap)
+			Log.Debug(server.ClientConnectionMap) //Check if any connections are still active in the map, there shouldn't be any left over
 			DEBUG := true
 			if DEBUG {
 				printDebugStats(mem)
 			}
-			// netlisten.Close()
-			// Log.Info("Net Listen Closed")
-			// Connection.Close()
-			// Log.Info("Connection Closed")
 			os.Exit(0)
 		}
 	}
@@ -238,7 +241,7 @@ func Console() {
 		switch scanner.Text() {
 		case "help":
 			Log.Warning("There is no help atm :(")
-			Log.Warning("This is a simple, quick and dirty way of doing commands, a proper thing is being made bts")
+			Log.Warning("This is a simple, quick and dirty way of doing commands, a proper thing is being made later")
 		case "shutdown":
 			shutdown <- os.Interrupt
 		case "stop":
@@ -253,8 +256,11 @@ func Console() {
 			SetRun(true)
 		case "GC":
 			runtime.GC()
+			Log.Info("GC invoked")
 		case "mem":
 			printDebugStats(mem)
+		case "SSM":
+			Log.Debug(server.StatusCache)
 		default:
 			Log.Warning("Unknown command")
 		}
@@ -304,5 +310,4 @@ func testregion(X int64, Z int64, CX int, CZ int) {
 	}
 	fmt.Print("\n", len(Region.Data))
 	fmt.Print("\n", C.ChunkPosX, ",", C.ChunkPosZ, "\n")
-	//--//
 }

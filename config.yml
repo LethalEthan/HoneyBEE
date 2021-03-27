@@ -5,12 +5,13 @@ server:
   timeout: 15 #In seconds
   protocol:
     AvailableProtocols: []
-    BlockPlayersOnLogin: false
+    block-players-on-login: true
 performance: #Change me!
    cpu: 8
-   enable-gc-player: false
+   enable-gc-player: true
    gc-player-interval: 15
    gc-percent: 200
 debug-opts:
     packet-anal: false #switches HoneyGO into a MITM proxy that captures and decodes packets
-    packet-anal-address: "192.168.0.42:25565" #Server address that HoneyGO probes
+    packet-anal-address: "192.168.0.42:25580" #Server address that HoneyGO probes
+    maintenance: true

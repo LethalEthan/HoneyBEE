@@ -23,7 +23,7 @@ func (pw *PacketWriter) GetPacket() []byte {
 	return append(pw.CreateVarLong(int64(pw.packetSize)), pw.Data...)
 }
 
-func (pw *PacketWriter) appendByteSlice(Data []byte) {
+func (pw *PacketWriter) AppendByteSlice(Data []byte) {
 	pw.Data = append(pw.Data, Data...)
 
 	pw.packetSize += int32(len(Data))
@@ -45,7 +45,7 @@ func (pw *PacketWriter) WriteByte(val int8) {
 
 //WriteUnsignedByte - Write Unsigned Byte to packet (uint8)
 func (pw *PacketWriter) WriteUnsignedByte(val byte) {
-	pw.appendByteSlice([]byte{val})
+	pw.AppendByteSlice([]byte{val})
 }
 
 //WriteShort - Write Short to packet (int16)
@@ -58,7 +58,7 @@ func (pw *PacketWriter) WriteUnsignedShort(val uint16) {
 	buff := make([]byte, 2)
 	binary.BigEndian.PutUint16(buff, val)
 
-	pw.appendByteSlice(buff)
+	pw.AppendByteSlice(buff)
 }
 
 //WriteInt - Write Integer to packet (int32)
@@ -71,7 +71,7 @@ func (pw *PacketWriter) writeUnsignedInt(val uint32) {
 	buff := make([]byte, 4)
 	binary.BigEndian.PutUint32(buff, val)
 
-	pw.appendByteSlice(buff)
+	pw.AppendByteSlice(buff)
 }
 
 //WriteLong - Write Long to packet (int64)
@@ -84,7 +84,7 @@ func (pw *PacketWriter) writeUnsignedLong(val uint64) {
 	buff := make([]byte, 8)
 	binary.BigEndian.PutUint64(buff, val)
 
-	pw.appendByteSlice(buff)
+	pw.AppendByteSlice(buff)
 }
 
 //WriteFloat - Write Float to packet (float32)
@@ -99,13 +99,13 @@ func (pw *PacketWriter) WriteDouble(val float64) {
 
 //WriteArray - Write an array of bytes ([]byte)
 func (pw *PacketWriter) WriteArray(val []byte) {
-	pw.appendByteSlice(val)
+	pw.AppendByteSlice(val)
 }
 
 //WriteString - Write String to packet (string)
 func (pw *PacketWriter) WriteString(val string) {
 	pw.WriteVarInt(int32(len(val)))
-	pw.appendByteSlice([]byte(val))
+	pw.AppendByteSlice([]byte(val))
 }
 
 //WriteVarInt - Write VarInt to packet (int32)
@@ -117,7 +117,7 @@ func (pw *PacketWriter) WriteVarInt(val int32) {
 func (pw *PacketWriter) WriteVarLong(val int64) {
 	//tt := pw.CreateVarLong(val)
 	//Log.Debug("!!!!: ", tt)
-	pw.appendByteSlice(pw.CreateVarLong(val))
+	pw.AppendByteSlice(pw.CreateVarLong(val))
 }
 
 //CreateVarLong - Creates a VarLong

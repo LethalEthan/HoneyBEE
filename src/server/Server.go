@@ -5,7 +5,6 @@ import (
 	"VarTool"
 	config "config"
 	"crypto/rsa"
-	"event"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -46,6 +45,11 @@ var (
 	KC                = false
 	//	pv                 Version
 	AvailableProtocols []int32
+	//Run control
+	run         bool
+	runmutex    = sync.Mutex{}
+	GCPShutdown = make(chan bool)
+	MMODE       bool //Maintenance mode
 )
 
 const (
@@ -53,13 +57,6 @@ const (
 	PrimaryMinecraftProtocolVersion int32 = 753      //Primary Supported MC protocol Version
 	ServerVerifyTokenLen                  = 4        //Should always be 4 on notchian servers
 )
-
-func GetKeyChain() {
-	privateKey = Packet.GetPrivateKey()
-	publicKeyBytes = Packet.GetPublicKeyBytes()
-	publicKey = Packet.GetPublicKey()
-	GotDaKeys = true
-}
 
 type PacketHeader struct {
 	packet     []byte
@@ -76,11 +73,11 @@ type PacketHeader struct {
 	MC1_16_1(Conn *ClientConnection)
 	MC1_16_2(Conn *ClientConnection)
 	MC1_16_3(Conn *ClientConnection)
-}*/
+}
 
-var GCPShutdown = make(chan bool)
+var GCPShutdown = make(chan bool)*/
 
-func Init() {
+func Init() { //this can't be the standard go function init since the logger isn't initialised by the time it's called
 	Log.Debug("Server initialising")
 	if !GotDaKeys {
 		GetKeyChain()
@@ -90,7 +87,8 @@ func Init() {
 	if len(Config.Server.Protocol.AvailableProtocols) != 0 || Config.Server.Protocol.AvailableProtocols != nil {
 		AvailableProtocols = Config.Server.Protocol.AvailableProtocols
 	}
-	StatusSemaphore.SetData(StatusCache)
+	StatusSemaphore.Start()
+	StatusSemaphore.FlushAndSetSemaphore(StatusCache)
 	CurrentStatus = CreateStatusObject(PrimaryMinecraftProtocolVersion, PrimaryMinecraftVersion)
 	player.Init()
 	ProtocolToVersionInit()
@@ -133,27 +131,13 @@ func (PH PacketHeader) MapVersion(Conn *ClientConnection) {
 		return
 	default:
 		Log.Warning("Unsupported protocol:", PH.protocol, "("+ProtocolToVer[PH.protocol]+")", "- sending status and closing connection!")
-		HandleUnsupported(Conn, PH)
+		HandleUnsupported(Conn, PH, false)
 		CloseClientConnection(Conn)
 		return
 	}
 }
 
-var run bool
-var runmutex = sync.Mutex{}
-
-func GetRun() bool {
-	runmutex.Lock()
-	r := run
-	runmutex.Unlock()
-	return r
-}
-
-func SetRun(v bool) {
-	runmutex.Lock()
-	run = v
-	runmutex.Unlock()
-}
+//Get/Set moved to GetSet.go
 
 func HandleConnection(Connection *ClientConnection) {
 	if !KC {
@@ -163,113 +147,123 @@ func HandleConnection(Connection *ClientConnection) {
 	Log.Info("Connection handler initiated")
 	//Løøps
 	PH := new(PacketHeader)
-	for !Connection.isClosed && GetRun() {
-		//packet, packetSize, packetID, err := readPacketHeader(Connection)
-		var err error
-		PH.packet, PH.packetSize, PH.packetID, err = readPacketHeader(Connection)
-		if err != nil {
-			CloseClientConnection(Connection)
-			Log.Error("Connection Terminated: " + err.Error())
-			return
-		}
-		//DEBUG: output debug info
-		DisplayPacketInfo(*PH, Connection)
-		//Create Packet Reader
-		reader := Packet.CreatePacketReader(PH.packet)
-		//Packet Handling
-		switch Connection.State {
-		case HANDSHAKE: //Handle Handshake
-			switch PH.packetID {
-			case 0x00:
-				{
-					//--Packet 0x00 S->C Start--//
-					Hpacket, err := Packet.HandshakePacketCreate(PH.packetSize, reader)
-					if err != nil || Hpacket == nil {
-						CloseClientConnection(Connection) //You have been terminated
-						Log.Error(err.Error())
-					}
-					Connection.KeepAlive()
-					Connection.State = int(Hpacket.NextState)
-					PH.protocol = Hpacket.ProtocolVersion
-					PH.MapVersion(Connection)
-					/*
-						switch Hpacket.ProtocolVersion {
-						case 578:
-							pv.MC1_15_2(Connection)
-							return
-						case 735:
-							pv.MC1_16(Connection)
-						case 736:
-							pv.MC1_16_1(Connection)
-							return
-						case 751:
-							pv.MC1_16_2(Connection)
-							return
-						case 753:
-							pv.MC1_16_3(Connection)
-							return
-						default:
-							Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- sending status and closing connection!")
-							pv.MCDEFAULT(Connection)
-							CloseClientConnection(Connection)
-							return
-						}*/
-					return
-					//--Packet 0x00 End--//
-				}
-			case 0xFE:
-				{
-					//--Packet 0xFE Legacy Ping Request --//
-					Log.Warning("Legacy Ping Request received! - Terminated")
-					CloseClientConnection(Connection)
-					return
-					//--Packet 0xFE End--//
-				}
+	if Connection != nil {
+		for !Connection.isClosed && GetRun() {
+			//packet, packetSize, packetID, err := readPacketHeader(Connection)
+			var err error
+			PH.packet, PH.packetSize, PH.packetID, err = readPacketHeader(Connection)
+			if err != nil {
+				CloseClientConnection(Connection)
+				Log.Error("Connection Terminated: " + err.Error())
+				return
 			}
-
-		case STATUS: //Handle Status Request
-			{
+			//DEBUG: output debug info
+			DisplayPacketInfo(*PH, Connection)
+			//Create Packet Reader
+			reader := Packet.CreatePacketReader(PH.packet)
+			//Packet Handling
+			switch Connection.State {
+			case HANDSHAKE: //Handle Handshake
 				switch PH.packetID {
 				case 0x00:
 					{
 						//--Packet 0x00 S->C Start--//
+						Hpacket, err := Packet.HandshakePacketCreate(PH.packetSize, reader)
+						if err != nil || Hpacket == nil {
+							CloseClientConnection(Connection) //You have been terminated
+							Log.Error(err.Error())
+						}
 						Connection.KeepAlive()
-						if PH.packetSize == 1 {
-							writer := Packet.CreatePacketWriter(0x00)
-							marshaledStatus, err := ffjson.Marshal(CurrentStatus) //Sends status via json
-							if err != nil {
-								Log.Error(err)
+						Connection.State = int(Hpacket.NextState)
+						PH.protocol = Hpacket.ProtocolVersion
+						if Config.Server.Protocol.BlockPlayersOnLogin {
+							MMODE = true
+							HandleUnsupported(Connection, *PH, true)
+						} else {
+							PH.MapVersion(Connection)
+						}
+						//PH.MapVersion(Connection) //ADD ME BACK
+						/*
+							switch Hpacket.ProtocolVersion {
+							case 578:
+								pv.MC1_15_2(Connection)
+								return
+							case 735:
+								pv.MC1_16(Connection)
+							case 736:
+								pv.MC1_16_1(Connection)
+								return
+							case 751:
+								pv.MC1_16_2(Connection)
+								return
+							case 753:
+								pv.MC1_16_3(Connection)
+								return
+							default:
+								Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- sending status and closing connection!")
+								pv.MCDEFAULT(Connection)
+								CloseClientConnection(Connection)
+								return
+							}*/
+						return
+						//--Packet 0x00 End--//
+					}
+				case 0xFE:
+					{
+						//--Packet 0xFE Legacy Ping Request --//
+						Log.Warning("Legacy Ping Request received! - Terminated")
+						CloseClientConnection(Connection)
+						return
+						//--Packet 0xFE End--//
+					}
+				}
+
+			case STATUS: //Handle Status Request
+				{
+					switch PH.packetID {
+					case 0x00:
+						{
+							//--Packet 0x00 S->C Start--//
+							Connection.KeepAlive()
+							if PH.packetSize == 1 {
+								writer := Packet.CreatePacketWriter(0x00)
+								marshaledStatus, err := ffjson.Marshal(CurrentStatus) //Sends status via json
+								if err != nil {
+									Log.Error(err)
+									CloseClientConnection(Connection)
+									return
+								}
+								writer.WriteString(string(marshaledStatus))
+								SendData(Connection, writer)
+							} else {
 								CloseClientConnection(Connection)
 								return
 							}
-							writer.WriteString(string(marshaledStatus))
+						}
+					case 0x01:
+						{
+							//--Packet 0x01 S->C Start--//
+							Connection.KeepAlive()
+							writer := Packet.CreatePacketWriter(0x01)
+							Log.Debug("Status State, packetID 0x01")
+							mirror, _ := reader.ReadLong()
+							Log.Debug("Mirror:", mirror)
+							writer.WriteLong(mirror)
 							SendData(Connection, writer)
-						} else {
 							CloseClientConnection(Connection)
-							return
+							//--Packet 0x01 End--//
 						}
 					}
-				case 0x01:
-					{
-						//--Packet 0x01 S->C Start--//
-						Connection.KeepAlive()
-						writer := Packet.CreatePacketWriter(0x01)
-						Log.Debug("Status State, packetID 0x01")
-						mirror, _ := reader.ReadLong()
-						Log.Debug("Mirror:", mirror)
-						writer.WriteLong(mirror)
-						SendData(Connection, writer)
-						CloseClientConnection(Connection)
-						//--Packet 0x01 End--//
-					}
+				}
+			default:
+				{
+					Log.Critical("Unkown packet: ", PH.packet, "PHSize: ", PH.packetSize)
+					Log.Critical("Contains: ", PH.packet)
 				}
 			}
-		default:
-			{
-				Log.Critical("Unkown packet: ", PH.packet, "PHSize: ", PH.packetSize)
-				Log.Critical("Contains: ", PH.packet)
-			}
 		}
+	} else {
+		Log.Error("Connection pointer is null, skipping!")
 	}
 }
 
@@ -283,9 +277,13 @@ func getPacketData(Conn net.Conn) ([]byte, error) {
 	return ioutil.ReadAll(Conn)
 }
 
-func HandleUnsupported(Connection *ClientConnection, PH PacketHeader) {
+func HandleUnsupported(Connection *ClientConnection, PH PacketHeader, MMODE bool) {
 	Log.Info("Connection handler for Unsupported MC initiated")
-	CurrentStatus = CreateStatusObject(PH.protocol, "Unsupported")
+	if MMODE != true {
+		CurrentStatus = CreateStatusObject(PH.protocol, "Unsupported")
+	} else {
+		CurrentStatus = CreateStatusObject(PH.protocol, "Maintenance!")
+	}
 	if publicKey == nil || privateKey == nil {
 		panic("Keys have been thanos snapped")
 	}
@@ -338,7 +336,11 @@ func HandleUnsupported(Connection *ClientConnection, PH PacketHeader) {
 			switch PH.packetID {
 			default:
 				{
-					SendLoginDisconnect(Connection, "Unsupported Protocol, Available protocols are: 1.15.2+")
+					if MMODE != true {
+						SendLoginDisconnect(Connection, "Unsupported Protocol, Available protocols are: 1.15.2+")
+					} else {
+						SendLoginDisconnect(Connection, "Maintenance Mode active!")
+					}
 					CloseClientConnection(Connection)
 				}
 			}
@@ -390,54 +392,19 @@ func DisplayPacketInfo(PH PacketHeader, Conn *ClientConnection) {
 	}
 }
 
-func GetPlayerMap(key string) (string, bool) {
-	PlayerMapMutex.RLock()
-	P, B := PlayerMap[key]
-	PlayerMapMutex.RUnlock()
-	return P, B
-}
-
-func SetPlayerMap(key string, value string) {
-	PlayerMapMutex.Lock()
-	PlayerMap[key] = value
-	PlayerMapMutex.Unlock()
-}
-
-func GetCPM(key uint32) (net.Conn, bool) {
-	ConnPlayerMutex.RLock()
-	C, B := ConnPlayerMap[key]
-	ConnPlayerMutex.RUnlock()
-	return C, B
-}
-
-func SetCPM(key uint32, value net.Conn) {
-	ConnPlayerMutex.Lock()
-	ConnPlayerMap[key] = value
-	ConnPlayerMutex.Unlock()
-}
-
-func GetPCM(key net.Conn) (string, bool) {
-	PlayerConnMutex.RLock()
-	P, B := PlayerConnMap[key]
-	PlayerConnMutex.RUnlock()
-	return P, B
-}
-
-func SetPCM(key net.Conn, value string) {
-	PlayerConnMutex.Lock()
-	PlayerConnMap[key] = value
-	PlayerConnMutex.Unlock()
-}
+///
+/// Get/Set functions that urilise mutexes moved to GetSet.go
+///
 
 ///
-///Authentication moved to Auth.go
+/// Authentication moved to Auth.go
 ///
 
 func Disconnect(Player string) {
 	Log.Debug("Disconnecting Player: ", Player)
 	player.Disconnect(Player)
-	var p event.Event = event.Player(Player)
-	p.PlayerDisconnect()
+	// var p event.Event = event.Player(Player)
+	// p.PlayerDisconnect()
 	EID, _ := player.GetPEM(Player) //PlayerEntityMap[Player]
 	Tmp, _ := GetCPM(EID)           //ConnPlayerMap[EID]
 	Tmp.Close()
@@ -448,5 +415,5 @@ func Disconnect(Player string) {
 }
 
 ///
-///CreateEncryptionRequest moved to CrossProtocol.go
+/// CreateEncryptionRequest moved to CrossProtocol.go
 ///

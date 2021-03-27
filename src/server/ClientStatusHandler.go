@@ -1,6 +1,7 @@
 package server
 
 import (
+	"config"
 	"jsonstruct"
 	"sync"
 	"utils"
@@ -28,7 +29,7 @@ var (
 	//StatusCache - Use a cache so we don't have to do any uneccesary allocations
 	StatusCache     = make(map[int32]ServerStatus)
 	StatusMutex     = sync.RWMutex{}
-	StatusSemaphore = utils.CreateSemaphore(10) //allow 8 concurrent connections to the StatusCache
+	StatusSemaphore = utils.CreateSemaphore(10) //allow 10 concurrent connections to the StatusCache
 )
 
 //CreateStatusObject - Create the server status object
@@ -39,7 +40,7 @@ func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string)
 		MinecraftProtocolVersion = PrimaryMinecraftProtocolVersion
 		MinecraftVersion = PrimaryMinecraftVersion
 	}
-	StatusSemaphore.SetData(StatusCache)
+	//StatusSemaphore.SetData(StatusCache)
 	SC, bool := CheckStatusCache(MinecraftProtocolVersion, MinecraftVersion)
 	if bool == true && SC != nil {
 		return SC
@@ -53,22 +54,32 @@ func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string)
 	status.Version = StatusVersion{Name: MinecraftVersion, Protocol: MinecraftProtocolVersion}
 	status.Players = StatusPlayers{MaxPlayers: MPlayers, OnlinePlayers: OPlayers}
 	Extra := make([]jsonstruct.StatusObject, 1)
-	Extra[0] = jsonstruct.StatusObject{Text: "GO!", Bold: true, Color: "gold"}
-	status.Description = jsonstruct.StatusObject{Text: "Honey", Bold: true, Color: "yellow", Extra: Extra}
+	if config.GConfig.DEBUGOPTS.Maintenance {
+		Extra[0] = jsonstruct.StatusObject{Text: "!", Bold: true, Color: "gold"}
+		status.Description = jsonstruct.StatusObject{Text: "Server under maintenance", Bold: true, Color: "red", Extra: Extra}
+	} else {
+		Extra[0] = jsonstruct.StatusObject{Text: "GO!", Bold: true, Color: "gold"}
+		status.Description = jsonstruct.StatusObject{Text: "Honey", Bold: true, Color: "yellow", Extra: Extra}
+	}
 	PutStatusInCache(*status, MinecraftProtocolVersion)
 	return status
 }
 
 func PutStatusInCache(SS ServerStatus, MCP int32) {
-	StatusSemaphore.FlushSemaphore() //FlushSemaphore so new data can served
+	//StatusSemaphore.FlushAndSemaphore() //FlushSemaphore so new data can served
 	StatusMutex.Lock()
 	StatusCache[MCP] = SS
+	StatusSemaphore.FlushAndSetSemaphore(StatusCache)
 	StatusMutex.Unlock()
-	StatusSemaphore.SetData(StatusCache) //Set new data
+	//StatusSemaphore.SetData(StatusCache) //Set new data
 }
 
 func CheckStatusCache(MCP int32, MCV string) (*ServerStatus, bool) {
 	SC := StatusSemaphore.GetData()
+	if SC == nil {
+		Log.Critical("Semaphore data interface is nil!")
+		return nil, false
+	}
 	MB := SC.(map[int32]ServerStatus)
 	//StatusMutex.RLock()
 	SS, B := MB[MCP]

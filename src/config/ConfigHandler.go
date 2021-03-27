@@ -35,6 +35,8 @@ type Config struct {
 	DEBUGOPTS struct {
 		PacketAnal        bool   `yaml:"packet-anal"`
 		PacketAnalAddress string `yaml:"packet-anal-address"`
+		Maintenance       bool   `yaml:"maintenance"`
+		//ServerStatusMessage string `yaml:"server-status-message"`
 	} `yaml:"debug-opts"`
 }
 

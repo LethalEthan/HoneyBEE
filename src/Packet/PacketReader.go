@@ -25,12 +25,11 @@ func CreatePacketReader(data []byte) *PacketReader {
 }
 
 func (pr *PacketReader) Seek(offset int64, whence int) (int64, error) {
-
 	switch whence {
 	case io.SeekStart:
 		{
 			if offset < 0 {
-				return pr.seek, fmt.Errorf("seek of %d is below zero", offset)
+				return pr.seek, fmt.Errorf("Seek of %d is below zero", offset)
 			}
 			if offset > pr.end {
 				pr.seek = pr.end
@@ -42,7 +41,7 @@ func (pr *PacketReader) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekCurrent:
 		{
 			if pr.seek+offset < 0 {
-				return pr.seek, fmt.Errorf("seek adjustment of %d from beginning seeks below zero", offset)
+				return pr.seek, fmt.Errorf("Seek adjustment of %d from beginning seeks below zero", offset)
 			}
 			if pr.seek+offset > pr.end {
 				pr.seek = pr.end
@@ -54,7 +53,7 @@ func (pr *PacketReader) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekEnd:
 		{
 			if pr.end+offset < 0 {
-				return pr.seek, fmt.Errorf("seek adjustment of %d from end seeks below zero", offset)
+				return pr.seek, fmt.Errorf("Seek adjustment of %d from end seeks below zero", offset)
 			}
 			if pr.end+offset > pr.end {
 				pr.seek = pr.end
