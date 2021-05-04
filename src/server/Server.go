@@ -10,6 +10,8 @@ import (
 	"net"
 	"player"
 	"sync"
+
+	//"time"
 	"world"
 
 	logging "github.com/op/go-logging"
@@ -46,10 +48,12 @@ var (
 	//	pv                 Version
 	AvailableProtocols []int32
 	//Run control
-	run         bool
-	runmutex    = sync.Mutex{}
-	GCPShutdown = make(chan bool)
-	MMODE       bool //Maintenance mode
+	Run               bool
+	RunMutex          = sync.Mutex{}
+	GCPShutdown       = make(chan bool)
+	MMODE             bool //Maintenance mode
+	ServerInitialised bool
+	ServerREINIT      bool
 )
 
 const (
@@ -97,7 +101,8 @@ func Init() { //this can't be the standard go function init since the logger isn
 	if DEBUG {
 		Log.Debug("Server initialised")
 	}
-	run = true
+	ServerInitialised = true
+	Run = true
 }
 
 func ServerReload() {
@@ -110,6 +115,7 @@ func ServerReload() {
 	if DEBUG {
 		Log.Debug("Server re-initialised")
 	}
+	ServerREINIT = true
 }
 
 func (PH PacketHeader) MapVersion(Conn *ClientConnection) {
@@ -147,10 +153,11 @@ func HandleConnection(Connection *ClientConnection) {
 	Log.Info("Connection handler initiated")
 	//Løøps
 	PH := new(PacketHeader)
+	var err error
 	if Connection != nil {
 		for !Connection.isClosed && GetRun() {
+			//_ = <-Ticker
 			//packet, packetSize, packetID, err := readPacketHeader(Connection)
-			var err error
 			PH.packet, PH.packetSize, PH.packetID, err = readPacketHeader(Connection)
 			if err != nil {
 				CloseClientConnection(Connection)
@@ -176,7 +183,7 @@ func HandleConnection(Connection *ClientConnection) {
 						Connection.KeepAlive()
 						Connection.State = int(Hpacket.NextState)
 						PH.protocol = Hpacket.ProtocolVersion
-						if Config.Server.Protocol.BlockPlayersOnLogin {
+						if Config.DEBUGOPTS.Maintenance {
 							MMODE = true
 							HandleUnsupported(Connection, *PH, true)
 						} else {
@@ -393,7 +400,7 @@ func DisplayPacketInfo(PH PacketHeader, Conn *ClientConnection) {
 }
 
 ///
-/// Get/Set functions that urilise mutexes moved to GetSet.go
+/// Get/Set functions that utilise mutexes moved to GetSet.go
 ///
 
 ///
@@ -416,4 +423,31 @@ func Disconnect(Player string) {
 
 ///
 /// CreateEncryptionRequest moved to CrossProtocol.go
-///
+
+func SendPacket(Connection *ClientConnection, writer *Packet.PacketWriter) {
+	Connection.Conn.Write(writer.GetPacket())
+}
+
+func ReadPacketHeader(Conn *ClientConnection) ([]byte, int32, int32, error) {
+	//Information used from wiki.vg
+	//Read Packet size
+	packetSize, err := VarTool.ParseVarIntFromConnection(Conn.Conn)
+	if err != nil {
+		return nil, 0, 0, err //Return nothing on error
+	}
+	//Handling Legacy Handshake
+	if packetSize == 254 && Conn.State == HANDSHAKE {
+		return nil, 254, 0xFE, nil
+	}
+	packetID, err := VarTool.ParseVarIntFromConnection(Conn.Conn)
+	if err != nil {
+		return nil, 0, 0, err //Return nothing on error
+	}
+	//Don't bother
+	if packetSize-1 == 0 {
+		return nil, packetSize, packetID, nil
+	}
+	packet := make([]byte, packetSize-1)
+	Conn.Conn.Read(packet)
+	return packet, packetSize - 1, packetID, nil
+}

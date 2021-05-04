@@ -13,15 +13,15 @@ func GetKeyChain() {
 }
 
 func GetRun() bool {
-	runmutex.Lock()
-	r := run
-	runmutex.Unlock()
+	RunMutex.Lock()
+	r := Run
+	RunMutex.Unlock()
 	return r
 }
 func SetRun(v bool) {
-	runmutex.Lock()
-	run = v
-	runmutex.Unlock()
+	RunMutex.Lock()
+	Run = v
+	RunMutex.Unlock()
 }
 
 func GetPlayerMap(key string) (string, bool) {

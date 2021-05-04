@@ -1,16 +1,21 @@
 package server
 
 import (
+	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 )
 
-var ErrorAuthFailed = errors.New("Authentication failed")
+var ErrorAuthFailed = /*errors.New*/ ("Authentication failed")
+var ErrorHash = "00000000000000000000000000000000"
+var MD5 string
 
 type jsonResponse struct {
 	ID string `json:"id"`
@@ -47,11 +52,11 @@ func Authenticate(username string, serverID string, sharedSecret, publicKey []by
 	res := &jsonResponse{}
 	err = dec.Decode(res)
 	if err != nil {
-		return "", ErrorAuthFailed
+		return "", errors.New(ErrorAuthFailed)
 	}
 
 	if len(res.ID) != 32 {
-		return "", ErrorAuthFailed
+		return "", errors.New(ErrorAuthFailed)
 	}
 	hyphenater := res.ID[0:8] + "-" + res.ID[8:12] + "-" + res.ID[12:16] + "-" + res.ID[16:20] + "-" + res.ID[20:]
 	res.ID = hyphenater
@@ -67,4 +72,20 @@ func twosCompliment(p []byte) {
 			p[i]++
 		}
 	}
+}
+
+func Hash() string {
+	hashee, err := os.Open(os.Args[0])
+	if err != nil {
+		MD5 = ErrorHash
+	}
+	hash := md5.New()
+	if _, err := io.Copy(hash, hashee); err != nil {
+		MD5 = ErrorHash
+	}
+	//Get the 16 bytes hash
+	hBytes := hash.Sum([]byte(ErrorAuthFailed))[:16]
+	hashee.Close()
+	MD5 = hex.EncodeToString(hBytes) //Convert bytes to string
+	return MD5
 }

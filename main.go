@@ -2,13 +2,17 @@ package main
 
 import (
 	"Packet"
-	"blocks"
 	"bufio"
 	"config"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"net"
+	"nserver"
 	"os"
 	"os/signal"
+	"player"
 	"runtime"
 	"runtime/debug"
 	"server"
@@ -16,19 +20,19 @@ import (
 	"syscall"
 	"time"
 	"utils"
-	"world"
 
 	//	"worldtime"
 	//_ "net/http/pprof"
 	//	"net/http"
+
 	logging "github.com/op/go-logging"
 )
 
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.0.1 (Build 36)"
-	BVersion       = 36
+	HoneyGOVersion = "1.1.0 (Build 60)"
+	BVersion       = 37
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -38,11 +42,15 @@ var (
 	Run            bool
 	RunMutex       = sync.Mutex{}
 	mem            runtime.MemStats
+	Panicked       bool = false
+	tickme              = make(chan bool)
+	Bogus               = make(chan bool) //Bogus channel that does nothing, currently used to block main thread
 )
 
 func init() {
 	//Hello from HoneyGO
 	//Logger Creation Start
+	defer DRECOVER()
 	B1 := logging.NewLogBackend(os.Stderr, "", 0)       //New Backend
 	B1Format := logging.NewBackendFormatter(B1, format) //Set Format
 	B1LF := logging.AddModuleLevel(B1Format)            //Add formatting Levels
@@ -58,7 +66,7 @@ func init() {
 	runtime.GC()
 	//
 	Run = true
-	conf := config.ConfigStart()
+	conf = config.ConfigStart()
 	if conf.Performance.GCPercent == 0 {
 		Log.Warning("GCPercent is 0!, GC will only activate via playerGC")
 	}
@@ -67,9 +75,16 @@ func init() {
 	if ServerPort == "" {
 		Log.Warning("Server port not defined!")
 	}
-	netlisten, err = net.Listen("tcp", ServerPort)
-	if err != nil {
-		Log.Fatal(err.Error())
+	if !conf.DEBUGOPTS.NewServer {
+		netlisten, err = net.Listen("tcp", ServerPort)
+		if err != nil {
+			Log.Fatal(err.Error())
+			os.Exit(1)
+		} else {
+			Log.Info("NetListen started")
+		}
+	}
+	if Panicked {
 		return
 	}
 	//--//
@@ -97,34 +112,106 @@ func init() {
 	go Console()
 	go Shutdown()
 	//DebugOps()
-	//Accepts connection and creates new goroutine for the connection to be handled
-	//other goroutines are stemmed from HandleConnection
-	//ConTO, err := net.Dial("tcp", "192.168.0.42:25565")
-	// go func() {
-	// 	fmt.Println(http.ListenAndServe("localhost:6060", nil))
-	// }()
-	//chunk.CreateNewChunkSection()
-	//var ConnTO net.Conn
 	if conf.DEBUGOPTS.PacketAnal {
 		Log.Warning("MITM Proxy mode enable")
 	}
 }
 
 func main() {
-	Log.Info("Accepting Connections")
-	for GetRun() {
-		Connection, err = netlisten.Accept()
-		if err != nil && Run == true {
-			Log.Error(err.Error())
-			continue
+	defer DRECOVER()
+	if Panicked {
+		Log.Warning("Main: Panic is true, blocked main thread")
+		for {
 		}
-		Connection.SetDeadline(time.Now().Add(time.Duration(1000000000 * conf.Server.Timeout)))
-		Log.Debug("Handshake Process Initiated")
-		if conf.DEBUGOPTS.PacketAnal {
-			server.AnalProbe(Connection, conf.DEBUGOPTS.PacketAnalAddress)
-		} else {
-			go server.HandleConnection(server.CreateClientConnection(Connection, server.HANDSHAKE))
+	}
+	conf = config.GetConfig()
+	if conf.DEBUGOPTS.NewServer {
+		nserver.NewServer()
+	} else {
+		Log.Info("Accepting Connections")
+		for GetRun() {
+			Connection, err = netlisten.Accept()
+			if err != nil && Run == true {
+				Log.Error(err.Error())
+				continue
+			}
+			Log.Debug("C: ", Connection)
+			Connection.SetDeadline(time.Now().Add(time.Duration(time.Second * 5)))
+			//Connection.SetDeadline(time.Now().Add(time.Duration(1000000000 * conf.Server.Timeout)))
+			Log.Debug("Handshake Process Initiated")
+			if conf.DEBUGOPTS.PacketAnal {
+				server.AnalProbe(Connection, conf.DEBUGOPTS.PacketAnalAddress)
+			} else {
+				go server.HandleConnection(server.CreateClientConnection(Connection, server.HANDSHAKE))
+			}
 		}
+	}
+}
+
+//DRECOVER - Recovery -- TBD close server go routines
+func DRECOVER() {
+	if r := recover(); r != nil {
+		Panicked = true //TBD: link to event system to stop everything
+		go SetRun(false)
+		go server.SetRun(false)
+		go func() { //Lock mutexes in case something carries on upon recovery
+			server.RunMutex.Lock()
+			server.PlayerMapMutex.Lock()
+			server.ConnPlayerMutex.Lock()
+			server.ClientConnectionMutex.Lock()
+			server.StatusMutex.Lock()
+			server.PlayerConnMutex.Lock()
+			server.RunMutex.Lock()
+			player.OnlinePlayerMutex.Lock()
+			player.PlayerEntityMutex.Lock()
+			player.PlayerObjectMutex.Lock()
+			server.Run = false //reset as false in case the go routine did not
+			server.GCPShutdown <- true
+		}()
+		go server.StatusSemaphore.StopSemaphore() //TODO: Make all semaphores be able to be stopped
+		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		fmt.Println("Server encountered panic! reason: ", r)
+		fmt.Println("Printing Debug, please create an issue and send this!")
+		fmt.Println("----------------------------------------")
+		fmt.Println("Server Maps and states (package server)")
+		fmt.Println("----------------------------------------")
+		fmt.Println("Server run state:", server.Run, "Mutex: ", server.RunMutex)
+		fmt.Println("HoneyGOVersion: ", HoneyGOVersion, "BVersion: ", BVersion, "FH: ", Hash())
+		fmt.Println("Server Init: ", server.ServerInitialised, "REINIT: ", server.ServerREINIT)
+		fmt.Println("Config:", config.GConfig)
+		fmt.Println("PlayerMap: ", server.PlayerMap)
+		fmt.Println("PlayerConnMap", server.PlayerConnMap)
+		fmt.Println("ConnPlayerMap", server.ConnPlayerMap)
+		fmt.Println("Mutexes: ", "PlayerMap: ", server.PlayerMapMutex, "PCM: ", server.PlayerConnMutex, "CPM: ", server.ConnPlayerMutex)
+		fmt.Println("----------------------------------------")
+		fmt.Println("Network")
+		fmt.Println("----------------------------------------")
+		fmt.Println("Auth: ", server.Hash())
+		fmt.Println("ClientConnectionMap: ", server.ClientConnectionMap)
+		fmt.Println("CCM Mutex: ", server.ClientConnectionMutex)
+		fmt.Println("Status Cache Map: ", server.StatusCache)
+		fmt.Println("Status Mutex: ", server.StatusMutex)
+		fmt.Println("StatusSemaphore", server.StatusSemaphore)
+		fmt.Println("----------------------------------------")
+		fmt.Println("Player Maps and states (package player)")
+		fmt.Println("----------------------------------------")
+		fmt.Println("POM: ", player.PlayerObjectMap)
+		fmt.Println("PEM: ", player.PlayerEntityMap)
+		fmt.Println("OPM: ", player.OnlinePlayerMap)
+		fmt.Println("Mutexes: ", "POM: ", player.PlayerObjectMutex, "PEM: ", player.PlayerEntityMutex, "OPM", player.OnlinePlayerMutex)
+		fmt.Println("----------------------------------------")
+		fmt.Println("Other")
+		fmt.Println("----------------------------------------")
+		fmt.Println("NumCPU: ", runtime.NumCPU())
+		fmt.Println("NumGORoutines: ", runtime.NumGoroutine())
+		fmt.Println("Arch: ", runtime.GOARCH)
+		fmt.Println("OS: ", runtime.GOOS)
+		fmt.Println("GOVer: ", runtime.Version())
+		fmt.Println("Printed Debug , please create an issue and send this!")
+		fmt.Println("")
+		printDebugStats(mem)
+		//os.Exit(1)
+		panic(r)
 	}
 }
 
@@ -155,84 +242,84 @@ func Shutdown() {
 }
 
 //DebugOps - Do stuff for debugging that runs on startup
-func DebugOps() {
-	Block := blocks.GetBlockID(1)
-	fmt.Print(Block)
-	// chunk.BuildChunk(0, 0, 8)
-	// T, S := chunk.COORDSToInts("-69,420")
-	// fmt.Print("\n", T, S)
-	// worker.CreateFlatStoneWorld()
-	CreateRegions()
-	//TESTING -1,-1
-	Region, bool, err := world.GetRegionByInt(1, -1)
-	if err != nil || bool != true {
-		panic("Region ikke fundet")
-	}
-	fmt.Print("\n", Region.ID, "\n")
-	C, err := world.GetChunkFromRegion(Region, 511, -511)
-	if err != nil {
-		Log.Error(err)
-		fmt.Print("ERROR")
-	}
-	fmt.Print("\n", len(Region.Data))
-	fmt.Print("\n", C.ChunkPosX, ",", C.ChunkPosZ)
-	//--//
-	//Testing -1,1
-	testregion(-1, 1, -500, 500)
-	//Testing 1,-1
-	testregion(1, -1, 500, -500)
-	//Error Check
-	Log.Warning("this region is meant to fail")
-	testregion(1, 1, -1000, -1000)
-	// for i := 0; i < /*len(Fuck.Data)*/ 0; i++ {
-	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosX)
-	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosZ)
-	// 	runtime.GC()
-	// 	//time.Sleep(100000)
-	// }
-	//C := world.GetChunkFromRegion(Region, 290, 511)
-	//fmt.Print("\n", C.ChunkPosX, "\n", C.ChunkPosZ)
-	READ := false
-	if READ {
-		for j := 256; j <= 511; j++ {
-			for i := 256; i <= 511; i++ {
-				C, err := world.GetChunkFromRegion(Region, i, j)
-				if err != nil {
-					panic(err)
-				}
-				fmt.Print(C.ChunkPosX, " ", C.ChunkPosZ, " ")
-			}
-		}
-	}
-}
+// func DebugOps() {
+// 	Block := blocks.GetBlockID(1)
+// 	fmt.Print(Block)
+// 	// chunk.BuildChunk(0, 0, 8)
+// 	// T, S := chunk.COORDSToInts("-69,420")
+// 	// fmt.Print("\n", T, S)
+// 	// worker.CreateFlatStoneWorld()
+// 	CreateRegions()
+// 	//TESTING -1,-1
+// 	Region, bool, err := world.GetRegionByInt(1, -1)
+// 	if err != nil || bool != true {
+// 		panic("Region ikke fundet")
+// 	}
+// 	fmt.Print("\n", Region.ID, "\n")
+// 	C, err := world.GetChunkFromRegion(Region, 511, -511)
+// 	if err != nil {
+// 		Log.Error(err)
+// 		fmt.Print("ERROR")
+// 	}
+// 	fmt.Print("\n", len(Region.Data))
+// 	fmt.Print("\n", C.ChunkPosX, ",", C.ChunkPosZ)
+// 	//--//
+// 	//Testing -1,1
+// 	testregion(-1, 1, -500, 500)
+// 	//Testing 1,-1
+// 	testregion(1, -1, 500, -500)
+// 	//Error Check
+// 	Log.Warning("this region is meant to fail")
+// 	testregion(1, 1, -1000, -1000)
+// 	// for i := 0; i < /*len(Fuck.Data)*/ 0; i++ {
+// 	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosX)
+// 	// 	fmt.Print("\n", Fuck.Data[i].ChunkPosZ)
+// 	// 	runtime.GC()
+// 	// 	//time.Sleep(100000)
+// 	// }
+// 	//C := world.GetChunkFromRegion(Region, 290, 511)
+// 	//fmt.Print("\n", C.ChunkPosX, "\n", C.ChunkPosZ)
+// 	READ := false
+// 	if READ {
+// 		for j := 256; j <= 511; j++ {
+// 			for i := 256; i <= 511; i++ {
+// 				C, err := world.GetChunkFromRegion(Region, i, j)
+// 				if err != nil {
+// 					panic(err)
+// 				}
+// 				fmt.Print(C.ChunkPosX, " ", C.ChunkPosZ, " ")
+// 			}
+// 		}
+// 	}
+// }
 
-func CreateRegions() {
-	world.CreateRegion(-1, -1)
-	world.CreateRegion(-1, 1)
-	world.CreateRegion(1, -1)
-	world.CreateRegion(0, 0) //Each around 5MB each
-	world.CreateRegion(0, 1)
-	world.CreateRegion(1, 0)
-	world.CreateRegion(1, 1)
-	// for j := 0; j <= 8; j++ {
-	// 	for i := 0; i <= 8; i++ {
-	// 		go world.CreateRegion(int64(i), int64(j))
-	// 		runtime.GC()
-	// 	}
-	// }
-	//runtime.GC()
-	// for j := 0; j <= 20; j++ {
-	// 	for i := 0; i <= 20; i++ {
-	// 		R := world.GetRegionByInt(i, j)
-	// 		fmt.Print(R.ID)
-	// 	}
-	// }
+// func CreateRegions() {
+// world.CreateRegion(-1, -1)
+// world.CreateRegion(-1, 1)
+// world.CreateRegion(1, -1)
+// world.CreateRegion(0, 0) //Each around 5MB each
+// world.CreateRegion(0, 1)
+// world.CreateRegion(1, 0)
+// world.CreateRegion(1, 1)
+// for j := 0; j <= 8; j++ {
+// 	for i := 0; i <= 8; i++ {
+// 		go world.CreateRegion(int64(i), int64(j))
+// 		runtime.GC()
+// 	}
+// }
+//runtime.GC()
+// for j := 0; j <= 20; j++ {
+// 	for i := 0; i <= 20; i++ {
+// 		R := world.GetRegionByInt(i, j)
+// 		fmt.Print(R.ID)
+// 	}
+// }
 
-	//go world.CreateRegion(0, 0)
-	// if val, tmp := world.RegionChunkMap.Get("0,0"); tmp {
-	// 	fmt.Print(val)
-	// }
-}
+//go world.CreateRegion(0, 0)
+// if val, tmp := world.RegionChunkMap.Get("0,0"); tmp {
+// 	fmt.Print(val)
+// }
+// }
 
 func Console() {
 	Log := logging.MustGetLogger("HoneyGO")
@@ -245,6 +332,8 @@ func Console() {
 		case "shutdown":
 			shutdown <- os.Interrupt
 		case "stop":
+			shutdown <- os.Interrupt
+		case "exit":
 			shutdown <- os.Interrupt
 		case "reload":
 			SetRun(false)
@@ -261,6 +350,8 @@ func Console() {
 			printDebugStats(mem)
 		case "SSM":
 			Log.Debug(server.StatusCache)
+		case "CCM":
+			Log.Debug(server.ClientConnectionMap)
 		default:
 			Log.Warning("Unknown command")
 		}
@@ -279,6 +370,8 @@ func printDebugStats(mem runtime.MemStats) {
 
 	fmt.Println("mem.NumGC:", mem.NumGC)
 
+	fmt.Println("mem.NumForcedGC:", mem.NumForcedGC)
+
 	fmt.Println("-----")
 
 }
@@ -296,18 +389,36 @@ func SetRun(v bool) {
 	RunMutex.Unlock()
 }
 
-func testregion(X int64, Z int64, CX int, CZ int) {
-	//TESTING -1,-1
-	Region, bool, err := world.GetRegionByInt(X, Z)
-	if err != nil || bool != true {
-		panic("Region ikke fundet")
-	}
-	fmt.Print("\n", Region.ID, "\n")
-	C, err := world.GetChunkFromRegion(Region, CX, CZ)
+// func testregion(X int64, Z int64, CX int, CZ int) {
+// 	//TESTING -1,-1
+// 	Region, bool, err := world.GetRegionByInt(X, Z)
+// 	if err != nil || bool != true {
+// 		panic("Region ikke fundet")
+// 	}
+// 	fmt.Print("\n", Region.ID, "\n")
+// 	C, err := world.GetChunkFromRegion(Region, CX, CZ)
+// 	if err != nil {
+// 		Log.Error(err)
+// 		fmt.Print("ERROR")
+// 	}
+// 	fmt.Print("\n", len(Region.Data))
+// 	fmt.Print("\n", C.ChunkPosX, ",", C.ChunkPosZ, "\n")
+// }
+
+var MD5 string
+
+func Hash() string {
+	file, err := os.Open(os.Args[0])
 	if err != nil {
-		Log.Error(err)
-		fmt.Print("ERROR")
+		MD5 = "00000000000000000000000000000000"
 	}
-	fmt.Print("\n", len(Region.Data))
-	fmt.Print("\n", C.ChunkPosX, ",", C.ChunkPosZ, "\n")
+	hash := md5.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		MD5 = "00000000000000000000000000000000"
+	}
+	//Get the 16 bytes hash
+	hBytes := hash.Sum(nil)[:16]
+	file.Close()
+	MD5 = hex.EncodeToString(hBytes) //Convert bytes to string
+	return MD5
 }

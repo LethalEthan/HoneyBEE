@@ -1,4 +1,4 @@
-package Packet
+package npacket
 
 import (
 	"encoding/binary"

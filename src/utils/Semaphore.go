@@ -3,9 +3,6 @@ package utils
 import (
 	"runtime"
 	"sync"
-	"time"
-
-	logging "github.com/op/go-logging"
 )
 
 type Semaphore struct {
@@ -13,16 +10,13 @@ type Semaphore struct {
 	Data    interface{}
 	Channel chan interface{}
 	Running bool
-	//	Pause   chan bool
+	Pause   chan bool
 	Stopped bool
 	Stop    chan bool
 	Mutex   sync.Mutex
-	Delay   time.Ticker //Add a delay to how the semaphore fills - temporary for now (will probably remove later)
+	//Delay   time.Duration //Add a delay to how the semaphore fills - temporary for now (will probably remove later)
 	DataSet chan interface{}
-	//	Comm    chan bool
 }
-
-var Log = logging.MustGetLogger("HoneyGO")
 
 func CreateSemaphore(Limit uint32) *Semaphore {
 	S := new(Semaphore)
@@ -31,47 +25,27 @@ func CreateSemaphore(Limit uint32) *Semaphore {
 	//S.Pause = make(chan bool, 1)
 	S.Stop = make(chan bool, 1)
 	S.Running = true
-	//S.Comm = make(chan bool)
 	return S
 }
 
+//
 func (S *Semaphore) SetData(i interface{}) {
 	S.SetStat(false)
-	_ = <-S.Channel
-	S.Mutex.Lock()
 	S.DataSet <- i
-	S.Mutex.Unlock()
 	S.SetStat(true)
 	return
 }
 
-func (S *Semaphore) Start() {
-	//S.Data = i
-	//S.SetRun(true)
+func (S *Semaphore) Start() error {
 	go func() {
 		for {
 			select {
 			case <-S.Stop:
 				return
-			// case p := <-S.Pause:
-			// 	//if config.GConfig.Server.DEBUG {
-			// 	if p {
-			// 		if config.GConfig.Server.DEBUG {
-			// 			Log.Debug("Semaphore: Pause recieved")
-			// 		}
-			// 	} else {
-			// 		if config.GConfig.Server.DEBUG {
-			// 			Log.Debug("Semaphore: Unpause recieved")
-			// 		}
-			// 		//S.Mutex.Lock()
-			// 		S.Running = true
-			// 		//S.Mutex.Unlock()
-			// 		S.Comm <- true
-			// 	}
+			case <-S.Pause:
+				_ = <-S.Pause
 			case d := <-S.DataSet:
-				//S.Mutex.Lock()
 				S.Data = d
-				//S.Mutex.Unlock()
 			default:
 				if S.GetStat() {
 					S.Channel <- S.Data //Will block automatically when the channel is full and re-fill the buffer when needed
@@ -79,7 +53,7 @@ func (S *Semaphore) Start() {
 			}
 		}
 	}()
-	return
+	return nil
 }
 
 func (S *Semaphore) GetStat() bool {
@@ -109,28 +83,44 @@ func (S *Semaphore) StopSemaphore() {
 //FlushSemaphore - Flush the semaphore to propagate changes to the data interface immediately
 func (S *Semaphore) FlushAndSetSemaphore(i interface{}) {
 	S.SetStat(false)
-	for j := 0; j < 50; j++ { //limit iterations to prevent deadlock
+	var j uint32
+	for j = 0; j < S.Limit; j++ { //limit iterations to prevent deadlock
 		select {
 		case <-S.Channel:
 			_ = <-S.Channel
+			print("semaphore flushed: ", j)
 		default:
 			S.Data = i
 			S.SetStat(true)
 			break
 		}
-		if j > 50 {
-			Log.Critical("Semaphore could not flush channel after 50 iterations!")
-		}
 		return
 	}
+	if j > S.Limit {
+		print("Semaphore could not flush channel after ", S.Limit, " iterations!")
+	}
+	S.SetStat(true)
 }
 
 func (S *Semaphore) GetData() interface{} {
 	if S.Running == true {
-		Log.Debug("Semaphore accessed!")
+		//print("Semaphore accessed!")
 		CR := <-S.Channel
-		Log.Debug("Result:", CR)
+		//print("Result:", CR)
 		return CR
 	}
 	return nil
+}
+
+//FlushSemaphoreNEW - Flush the semaphore to propagate changes to the data interface immediately
+func (S *Semaphore) FlushAndSetSemaphoreNEW(i interface{}) {
+	S.SetStat(false)
+	//S.Stop <- true
+	S.Pause <- true
+	close(S.Channel)
+	S.Channel = nil
+	S.Channel = make(chan interface{}, S.Limit)
+	S.Pause <- true
+	//S.Start()
+	S.SetStat(true)
 }

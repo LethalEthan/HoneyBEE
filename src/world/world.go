@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
 	//"sync"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 
 var (
 	RegionMap           = make(map[RegionID]region)
-	mutex               = &sync.RWMutex{} //This is mandatory because of the concurrent and parrallel nature of how HoneyGO works
+	mutex               = &sync.RWMutex{} //Allow regions to be sharded?
 	Log                 = logging.MustGetLogger("HoneyGO")
 	DEBUG               bool
 	DefaultFlatArray    []byte
@@ -27,13 +28,16 @@ var (
 
 type world struct {
 	name       string
+	DIM_ID     int
 	size       int
 	RegionData map[string][]region
 }
 
 type region struct {
-	ID   RegionID      //string
-	Data []chunk.Chunk //map[string]chunk.Chunk
+	ID          RegionID      //string
+	Data        []chunk.Chunk //map[string]chunk.Chunk
+	Loaded      bool
+	ChunkModify chan chunk.Chunk
 	//Lock &sync.Mutex{}
 }
 
@@ -62,6 +66,7 @@ func CreateRegion(X int64, Z int64) {
 	RID.Z = Z
 	Region.ID = *RID
 	Region.Data = make([]chunk.Chunk, 65536)
+	Region.ChunkModify = make(chan chunk.Chunk, 10)
 	Chunk := new(chunk.Chunk)
 	//
 	var TNow time.Time
@@ -168,7 +173,7 @@ func GetRegionByInt(X int64, Z int64) (region, bool, error) {
 //var RegionChunkCache = make(map[string]region.Data) -- WIP
 
 //GetChunkFromRegion - Gets the chunk from the region
-func GetChunkFromRegion(Region region, CX int, CZ int) (chunk.Chunk, error) {
+func GetChunkFromRegion(Region region, ChunkX int, ChunkZ int) (chunk.Chunk, error) {
 	//Each region contains 0~65536 chunks and each location is dependant on the region location
 	//i.e |Region 0,1 the X chunks are 0~255 and the Z chunks are 255~510
 	//So if we know the region location we can know all the possible chunk locations without ineffeciently trying to scan through them all
@@ -181,28 +186,28 @@ func GetChunkFromRegion(Region region, CX int, CZ int) (chunk.Chunk, error) {
 	//INVESTIGATE: NOT the number to clear the sign bit
 	if Region.ID.X < 0 { //If X is negative
 		ChunkLocationsX = Region.ID.X * -256 //Min XChunk Co-ord
-		CX = CX * -1
+		ChunkX = ChunkX * -1
 	} else {
 		ChunkLocationsX = Region.ID.X * 256 //Min XChunk Co-ord
 	}
 	if Region.ID.Z < 0 {
 		ChunkLocationsZ = Region.ID.Z * -256 //Min ZChunk Co-ord
-		CZ = CZ * -1
+		ChunkZ = ChunkZ * -1
 	} else {
 		ChunkLocationsZ = Region.ID.Z * 256 //Min ZChunk Co-ord
 	}
 	CLZDelta := ChunkLocationsZ + 255 //Max ZChunk Co-ord
 	CLXDelta := ChunkLocationsX + 255 //Max XChunk Co-ord
-	if CX > int(CLXDelta) || CZ > int(CLZDelta) || CX < int(ChunkLocationsX) || CZ < int(ChunkLocationsX) {
+	if ChunkX > int(CLXDelta) || ChunkZ > int(CLZDelta) || ChunkX < int(ChunkLocationsX) || ChunkZ < int(ChunkLocationsX) {
 		fmt.Print("Warning: Chunk OOB")
 		return *UninitialisedChunk, ChunkOOB
 	}
 	//Math
-	T := int(CLZDelta) - CZ      //Minus the Z chunk we try find outta the max possible Zchunk
-	T = T * 256                  //Z increments every 256 chunks since each region goes by 256*256 and starts incrementing with X then increments Z for every 256 chunks
-	T = T + (int(CLXDelta) - CX) //Minus the X chunk we try find outta the max possible Xchunk then add to var T (position in array)
-	T = 65535 - T                //Take away the position of the chunk from the max length of the array
-	Elapse := time.Since(TNow)   //calculates the time it took to find the chunk (all timeings will be linked later on so optimisations can be made)
+	T := int(CLZDelta) - ChunkZ      //Minus the Z chunk we try find outta the max possible Zchunk
+	T = T * 256                      //Z increments every 256 chunks since each region goes by 256*256 and starts incrementing with X then increments Z for every 256 chunks
+	T = T + (int(CLXDelta) - ChunkX) //Minus the X chunk we try find outta the max possible Xchunk then add to var T (position in array)
+	T = 65535 - T                    //Take away the position of the chunk from the max length of the array
+	Elapse := time.Since(TNow)       //calculates the time it took to find the chunk (all timeings will be linked later on so optimisations can be made)
 	if DEBUG {
 		fmt.Print("\nGetChunkFromRegionTook: ", Elapse)
 	}
@@ -215,4 +220,18 @@ func GetChunkRangeFromRegion(Region region) (int64, int64, int64, int64) {
 	MaxCX := MinCX + 255
 	MaxCZ := MinCZ + 255
 	return MinCX, MinCZ, MaxCX, MaxCZ
+}
+
+//RunRegion - Does the region logic and changes the chunks on change, function name will probably change.
+func (R region) RunRegion() {
+	for {
+		select {
+		case CM := <-R.ChunkModify:
+			RegionChunk, err := GetChunkFromRegion(R, int(CM.ChunkPosX), int(CM.ChunkPosZ))
+			if err != nil {
+				panic(err)
+			}
+			_ = RegionChunk
+		}
+	}
 }

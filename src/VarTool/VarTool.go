@@ -30,7 +30,7 @@ func DecodeVarInt(DM VarInt) (int32, error) {
 }
 
 func EncodeVarInt(EM int32) (int32, error) {
-	buf := make([]byte, 6)
+	buf := make([]byte, 5)
 	test := binary.PutVarint(buf, int64(EM))
 	test2 := int32(test)
 	return test2, nil
@@ -174,6 +174,22 @@ func EncodeVarLong(v int64) (vi []byte) {
 		}
 	}
 	return
+}
+
+func CreateVarLong(val int64) []byte {
+	var buff []byte
+	for {
+		temp := byte(val & 0x7F)
+		val = int64(val >> 7)
+		if val != 0 {
+			temp |= 0x80
+		}
+		buff = append(buff, temp)
+		if val == 0 {
+			break
+		}
+	}
+	return buff
 }
 
 func ReadVarIntFromBufIO(ClientConn bufio.Reader) (int32, error) {

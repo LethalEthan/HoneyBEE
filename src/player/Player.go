@@ -2,6 +2,8 @@ package player
 
 import (
 	config "config"
+	"errors"
+	"fmt"
 	"runtime"
 	"sync"
 	"time"
@@ -150,29 +152,31 @@ func AssignEID(P string) uint32 {
 	} else {
 		//Maybe parallelised later by splitting the work load i.e. one go routine searches ID range 1-2000 and another searches 20001-4000
 		//This may not be necessary though but is a consideration in case there is a performance impact
-		C := make(chan uint32)
-		go FindFreeID(C)
-		ID := <-C
+		ID, err := FindFreeID()
+		if err != nil {
+			fmt.Println("GlobalIDCount: ", GlobalIDCount)
+			panic(err)
+		}
 		log.Debug("IIL: ", ID)
-		close(C)
 		return ID
 	}
 }
 
+var GlobalIDCount uint32
+
 //FindFreeID - Finds a free ID to assign for players
-func FindFreeID(C chan uint32) {
-	var i uint32
-	for i = 2; i <= 4294967294; i++ { //starts at 2 atm, I've heard of a client bug with entity ID 0 though I'm not sure
+func FindFreeID() (uint32, error) {
+	for GlobalIDCount = 2; GlobalIDCount <= 4294967294; GlobalIDCount++ { //starts at 2 atm, I've heard of a client bug with entity ID 0 though I'm not sure
 		PlayerObjectMutex.RLock()
-		_, tmp := PlayerObjectMap[i] //check current objects
+		_, tmp := PlayerObjectMap[GlobalIDCount] //check current objects
 		PlayerObjectMutex.RUnlock()
 		if tmp {
-			log.Debug("ID:", i, " being used, skip")
+			log.Debug("ID:", GlobalIDCount, " being used, skip")
 		} else { //if ID isn't being used
-			C <- i
-			return
+			return GlobalIDCount, nil
 		}
 	}
+	return 4, errors.New("Could not assign an ID!")
 }
 
 //GetPOM - get value from PlayerObjectMap
