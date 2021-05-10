@@ -91,7 +91,7 @@ func Init() { //this can't be the standard go function init since the logger isn
 	if len(Config.Server.Protocol.AvailableProtocols) != 0 || Config.Server.Protocol.AvailableProtocols != nil {
 		AvailableProtocols = Config.Server.Protocol.AvailableProtocols
 	}
-	StatusSemaphore.Start()
+	go StatusSemaphore.Start()
 	StatusSemaphore.FlushAndSetSemaphore(StatusCache)
 	CurrentStatus = CreateStatusObject(PrimaryMinecraftProtocolVersion, PrimaryMinecraftVersion)
 	player.Init()

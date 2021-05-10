@@ -22,7 +22,7 @@ func CreateSemaphore(Limit uint32) *Semaphore {
 	S := new(Semaphore)
 	S.Limit = Limit
 	S.Channel = make(chan interface{}, Limit)
-	//S.Pause = make(chan bool, 1)
+	S.Pause = make(chan bool, 1)
 	S.Stop = make(chan bool, 1)
 	S.Running = true
 	return S
@@ -37,22 +37,21 @@ func (S *Semaphore) SetData(i interface{}) {
 }
 
 func (S *Semaphore) Start() error {
-	go func() {
-		for {
-			select {
-			case <-S.Stop:
-				return
-			case <-S.Pause:
-				_ = <-S.Pause
-			case d := <-S.DataSet:
-				S.Data = d
-			default:
-				if S.GetStat() {
-					S.Channel <- S.Data //Will block automatically when the channel is full and re-fill the buffer when needed
-				}
+	for {
+		select {
+		case <-S.Stop:
+			return nil
+		case <-S.Pause:
+			_ = <-S.Pause
+			print("bruh")
+		case d := <-S.DataSet:
+			S.Data = d
+		default:
+			if S.GetStat() {
+				S.Channel <- S.Data //Will block automatically when the channel is full and re-fill the buffer when needed
 			}
 		}
-	}()
+	}
 	return nil
 }
 
@@ -116,11 +115,18 @@ func (S *Semaphore) GetData() interface{} {
 func (S *Semaphore) FlushAndSetSemaphoreNEW(i interface{}) {
 	S.SetStat(false)
 	//S.Stop <- true
-	S.Pause <- true
-	close(S.Channel)
-	S.Channel = nil
-	S.Channel = make(chan interface{}, S.Limit)
-	S.Pause <- true
+	//S.Data = i
+	//go S.Start()
+	S.Stop <- true
+	S.Data = i
+	go S.Start()
+	// S.Pause <- true
+	// S.Data = i
+	// S.Pause <- true
+	// close(S.Channel)
+	// S.Channel = nil
+	// S.Channel = make(chan interface{}, S.Limit)
+	// S.Pause <- true
 	//S.Start()
 	S.SetStat(true)
 }

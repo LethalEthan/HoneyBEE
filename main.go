@@ -31,8 +31,8 @@ import (
 //R.I.P Alex, I'll miss you
 var (
 	format         = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	HoneyGOVersion = "1.1.0 (Build 60)"
-	BVersion       = 37
+	HoneyGOVersion = "1.1.1 (Build 71)"
+	BVersion       = 71
 	Log            = logging.MustGetLogger("HoneyGO")
 	ServerPort     string
 	conf           *config.Config
@@ -43,8 +43,6 @@ var (
 	RunMutex       = sync.Mutex{}
 	mem            runtime.MemStats
 	Panicked       bool = false
-	tickme              = make(chan bool)
-	Bogus               = make(chan bool) //Bogus channel that does nothing, currently used to block main thread
 )
 
 func init() {
@@ -126,7 +124,7 @@ func main() {
 	}
 	conf = config.GetConfig()
 	if conf.DEBUGOPTS.NewServer {
-		nserver.NewServer()
+		nserver.NewServer(conf.Server.Host, conf.Server.Port, conf.Server.MultiCore, false, conf.Server.Reuse, conf.Server.SendBuf, conf.Server.RecieveBuf, conf.Server.ReadBufferCap)
 	} else {
 		Log.Info("Accepting Connections")
 		for GetRun() {

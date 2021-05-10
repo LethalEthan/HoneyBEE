@@ -1,6 +1,8 @@
 package npacket
 
-type VarInt int32
+import logging "github.com/op/go-logging"
+
+var Log = logging.MustGetLogger("HoneyGO")
 
 type GeneralPacket struct {
 	PacketSize   int32
@@ -11,9 +13,10 @@ type GeneralPacket struct {
 }
 
 type PacketCodec interface {
-	Encode() PacketWriter
+	Encode() *PacketWriter
 	Decode()
 	Create()
+	Send()
 }
 
 // func (GP *GeneralPacket) Create() {

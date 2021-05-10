@@ -3,6 +3,11 @@ server:
   port: ":25570" #Set the port
   debug: true #Wanna see the juicy info?
   timeout: 15 #In seconds
+  multicore: true
+  SO_REUSE: true
+  send-buffer: 64
+  recv-buffer: 64
+  read-buffer-cap: 64
   protocol:
     AvailableProtocols: []
     block-players-on-login: true

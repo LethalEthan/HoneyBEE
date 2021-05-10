@@ -75,6 +75,9 @@ func DecodeFloat(D []byte) (float32, error) {
 
 func DecodeDouble(D []byte) (float64, error) {
 	//Decode the long
+	if len(D) == 0 {
+		return 0, errors.New("Array is empty cannot decode!")
+	}
 	DoubleBytes, err := DecodeLong(D)
 	if err != nil {
 		return 0, err
@@ -85,7 +88,7 @@ func DecodeDouble(D []byte) (float64, error) {
 
 func DecodeString(D []byte, StringSize int) (string, error) {
 	if StringSize <= 0 {
-		return "", errors.New("string size of %d invalid" + strconv.Itoa(int(StringSize)))
+		return "", fmt.Errorf("string size of %d invalid" + strconv.Itoa(int(StringSize)))
 	}
 	stringVal := string(D[0:StringSize])
 	return stringVal, nil
@@ -94,6 +97,9 @@ func DecodeString(D []byte, StringSize int) (string, error) {
 func DecodeVarInt(D []byte) (int32, uint32, error) {
 	var Result int32
 	var NumRead uint32
+	if len(D) == 0 {
+		return 0, 0, errors.New("Array is empty cannot decode!")
+	}
 	for {
 		Byte := DecodeUnsignedByte(D[NumRead])
 		//
@@ -103,7 +109,7 @@ func DecodeVarInt(D []byte) (int32, uint32, error) {
 		NumRead++
 		//Size check
 		if NumRead > 5 || int(NumRead) > len(D) {
-			return 0, 0, fmt.Errorf("varint was over five bytes without termination")
+			return 0, 0, errors.New("varint was over five bytes without termination")
 		}
 		//Terminate
 		if Byte&0x80 == 0 {
@@ -116,6 +122,9 @@ func DecodeVarInt(D []byte) (int32, uint32, error) {
 func DecodeVarLong(D []byte) (int64, error) {
 	var Result int64
 	var NumRead uint64
+	if len(D) == 0 {
+		return 0, errors.New("Array is empty cannot decode!")
+	}
 	for {
 		Byte := DecodeUnsignedByte(D[NumRead])
 		//
