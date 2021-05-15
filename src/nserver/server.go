@@ -10,6 +10,7 @@ import (
 
 var Log = logging.MustGetLogger("HoneyGO")
 var DEBUG = true
+var GlobalServer *Server
 
 type Server struct {
 	*gnet.EventServer
@@ -29,6 +30,7 @@ type Client struct {
 
 func NewServer(ip string, port string, multicore bool, tick bool, reuse bool, sendBuf int, recvBuf int, readBufferCap int) Server {
 	S := new(Server)
+	GlobalServer = S
 	gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithTicker(tick), gnet.WithLockOSThread(false), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))
 	return *S
 }
@@ -56,10 +58,14 @@ func (S *Server) OnOpened(Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 func (S *Server) OnClosed(Conn gnet.Conn, err error) (Action gnet.Action) {
 	Log.Infof("Socket with addr: %s is closing...\n", Conn.RemoteAddr().String())
 	//S.ConnectedSockets.Delete(Conn.RemoteAddr().String())
-	C := Conn.Context().(*Client)
-	C.Close <- true
-	close(C.FrameChannel)
-	close(C.Close)
+	C, tmp := Conn.Context().(*Client)
+	if tmp == false {
+		Log.Critical("Conn Context is nil!")
+	} else {
+		C.Close <- true
+		close(C.FrameChannel)
+		close(C.Close)
+	}
 	Conn.SetContext(nil)
 	Log.Infof("Socket with addr: %s is closed\n", Conn.RemoteAddr().String())
 	return
@@ -86,10 +92,10 @@ func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Ac
 it listens continuously to make sure packets are in sequence by using a channel*/
 func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 	//
-	defer ClientConn.Conn.Close()
 	for {
 		select {
 		case Frame := <-FrameChan:
+			Log.Debug("RECV Frame")
 			//Frame := <-FrameChan
 			if len(Frame) == 0 {
 				ClientConn.Conn.Close()
@@ -100,7 +106,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			PacketDataSize := PacketSize - 1
 			PacketID, NR2, err := npacket.DecodeVarInt(Frame[NR:])
 			if err != nil {
-				panic("error")
+				panic(err)
 			}
 			//Size check
 			if PacketSize > 2097151 {
@@ -126,6 +132,10 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			case HANDSHAKE:
 				switch PacketID {
 				case 0x00:
+					if PacketDataSize == 0 {
+						Log.Critical("Packet ordering is whack yo, the bees flew into the glass")
+						ClientConn.Conn.Close()
+					}
 					HP := new(npacket.Handshake_0x00)
 					HP.Packet = GP
 					HP.Decode()
@@ -163,4 +173,10 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			return
 		}
 	}
+}
+
+func (S *Server) Shutdown() {
+	S.EventServer = nil
+	GlobalServer = nil
+	return
 }

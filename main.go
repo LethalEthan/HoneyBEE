@@ -15,6 +15,7 @@ import (
 	"player"
 	"runtime"
 	"runtime/debug"
+	"runtime/pprof"
 	"server"
 	"sync"
 	"syscall"
@@ -81,6 +82,9 @@ func init() {
 		} else {
 			Log.Info("NetListen started")
 		}
+	}
+	if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout == 0 {
+		panic("Please don't be stupid and set the buffers or timeout as 0 :/")
 	}
 	if Panicked {
 		return
@@ -222,9 +226,13 @@ func Shutdown() {
 	case <-shutdown:
 		{
 			Log.Warning("Starting shutdown")
-			SetRun(false)
-			server.SetRun(false)
 			conf := config.GetConfig()
+			if !conf.DEBUGOPTS.NewServer {
+				SetRun(false)
+				server.SetRun(false)
+			} else {
+				nserver.GlobalServer.Shutdown()
+			}
 			if conf.Performance.EnableGCPlayer { //Don't send on an unintialised channel otherwise it will deadlock
 				server.GCPShutdown <- true
 			}
@@ -320,6 +328,7 @@ func Shutdown() {
 // }
 
 func Console() {
+	defer DRECOVER()
 	Log := logging.MustGetLogger("HoneyGO")
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -334,13 +343,32 @@ func Console() {
 		case "exit":
 			shutdown <- os.Interrupt
 		case "reload":
-			SetRun(false)
-			server.SetRun(false)
-			config.ConfigReload()
-			server.GCPShutdown <- true
-			server.ServerReload()
-			server.SetRun(true)
-			SetRun(true)
+			if !conf.DEBUGOPTS.NewServer {
+				SetRun(false)
+				server.SetRun(false)
+				config.ConfigReload()
+				server.GCPShutdown <- true
+				server.ServerReload()
+				server.SetRun(true)
+				SetRun(true)
+			} else {
+				config.ConfigReload()
+				//nserver.Conf = config.GConfig
+				if conf.Performance.CPU == 0 {
+					Log.Info("Setting GOMAXPROCS to all available logical CPU's")
+					runtime.GOMAXPROCS(runtime.NumCPU()) //Set it to the value of how many cores
+				} else {
+					Log.Info("Setting GOMAXPROCS to config: ", conf.Performance.CPU)
+					runtime.GOMAXPROCS(conf.Performance.CPU)
+				}
+				if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 2 {
+					Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
+				}
+				if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout == 0 {
+					panic("Please don't be stupid and set the buffers or timeout as 0 :/")
+				}
+				Log.Critical("If you changed new server to old server this will not be reloaded or changed!")
+			}
 		case "GC":
 			runtime.GC()
 			Log.Info("GC invoked")
@@ -350,6 +378,10 @@ func Console() {
 			Log.Debug(server.StatusCache)
 		case "CCM":
 			Log.Debug(server.ClientConnectionMap)
+		case "panic":
+			panic("panicked, you told me to :)")
+		case "profile":
+			pprof.WriteHeapProfile(honeyprof)
 		default:
 			Log.Warning("Unknown command")
 		}

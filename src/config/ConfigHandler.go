@@ -17,16 +17,17 @@ var (
 // Config struct for HoneyGO config
 type Config struct {
 	Server struct {
-		Host          string `yaml:"host"`    //IP Address to bind the Server to -- TBD
-		Port          string `yaml:"port"`    //TCP Port to bind the Server to
-		DEBUG         bool   `yaml:"debug"`   //Output DEBUG info -- TO BE LINKED
-		Timeout       int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
-		MultiCore     bool   `yaml:"multicore"`
-		Reuse         bool   `yaml:"SO_REUSE"`
-		SendBuf       int    `yaml:"send-buffer"`
-		RecieveBuf    int    `yaml:"recv-buffer"`
-		ReadBufferCap int    `yaml:"read-buffer-cap"`
-		Protocol      struct {
+		Host              string `yaml:"host"`    //IP Address to bind the Server to -- TBD
+		Port              string `yaml:"port"`    //TCP Port to bind the Server to
+		DEBUG             bool   `yaml:"debug"`   //Output DEBUG info -- TO BE LINKED
+		Timeout           int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
+		MultiCore         bool   `yaml:"multicore"`
+		Reuse             bool   `yaml:"SO_REUSE"`
+		SendBuf           int    `yaml:"send-buffer"`
+		RecieveBuf        int    `yaml:"recv-buffer"`
+		ReadBufferCap     int    `yaml:"read-buffer-cap"`
+		ClientFrameBuffer int    `yaml:"client-frame-buffer"`
+		Protocol          struct {
 			AvailableProtocols  []int32 `yaml:"available-protocols"`
 			BlockPlayersOnLogin bool    `yaml:"block-players-on-login"`
 		} `yaml:"protocol"`

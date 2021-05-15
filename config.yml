@@ -1,5 +1,5 @@
 server:
-  host: "127.0.0.1" #currently doesn't do shit
+  host: "0.0.0.0" #currently doesn't do shit
   port: ":25570" #Set the port
   debug: true #Wanna see the juicy info?
   timeout: 15 #In seconds
@@ -8,6 +8,7 @@ server:
   send-buffer: 64
   recv-buffer: 64
   read-buffer-cap: 64
+  client-frame-buffer: 10 #Sets the limit on the buffered channel that handles frames
   protocol:
     AvailableProtocols: []
     block-players-on-login: true
@@ -15,9 +16,9 @@ performance: #Change me!
    cpu: 8
    enable-gc-player: true
    gc-player-interval: 15
-   gc-percent: 200
+   gc-percent: 100
 debug-opts:
     packet-anal: false #switches HoneyGO into a MITM proxy that captures and decodes packets
     packet-anal-address: "192.168.0.42:25580" #Server address that HoneyGO probes
-    maintenance: false
+    maintenance: true
     new-server: true
