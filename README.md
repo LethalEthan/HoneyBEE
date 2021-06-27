@@ -58,8 +58,6 @@ Wanting a Minecraft server that supports the SpongeAPI? Visit [Sponge](https://w
 
 Wanting a high performance minecraft server written in golang, soley made for PvP? [gogs](https://github.com/GambitLLC/gogs) (GO)
 
-Wanting a Frankenstein of Paper forks and enhancements from other repos (not reccomended) Visit [Yatopia](https://github.com/tr7zw/Yatopia) (Java)
-
 Wanting a high performance paper-fork server with bleeding edge enhancements (now with a re-written lighting engine)? Visit [Tuinity](https://github.com/Spottedleaf/Tuinity) (Java)
 
 **For General use I suggest Paper/Tuinity it is stable, bukkit compatible, fast and is the go to standard for most servers.**
