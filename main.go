@@ -80,8 +80,8 @@ func init() {
 		panic("Server port not defined!")
 	}
 	//Server Config Check
-	if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout == 0 {
-		panic("Please don't be stupid and set the buffers or timeout as 0 :/")
+	if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout <= 3 {
+		panic("Please don't be stupid and set the buffers to 0 or timeout as less than 3 :/")
 	}
 	//--//
 	Log.Info("Server Network Listener Started on port ", config.GConfig.Server.Port)
@@ -123,7 +123,7 @@ func main() {
 		}
 	}
 	if config.GConfig.DEBUGOPTS.NewServer {
-		nserver.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
+		nserver.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
 	} else {
 		Log.Info("Accepting Connections")
 		server.Runner()

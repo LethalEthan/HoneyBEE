@@ -24,6 +24,7 @@ type Config struct {
 		DEBUG             bool   `yaml:"debug"`   //Output DEBUG info -- TO BE LINKED
 		Timeout           int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
 		MultiCore         bool   `yaml:"multicore"`
+		LockOSThread      bool   `yaml:"lock-os-thread"`
 		Reuse             bool   `yaml:"SO_REUSE"`
 		SendBuf           int    `yaml:"send-buffer"`
 		RecieveBuf        int    `yaml:"recv-buffer"`

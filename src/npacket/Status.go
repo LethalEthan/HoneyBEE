@@ -10,13 +10,15 @@ import (
 ///CLientBound S->C
 ///
 
-type Status_0x00_CB struct {
+//Status_0x00_CB - Response
+type Stat_Response struct {
 	Packet          *GeneralPacket
 	Response        *server.ServerStatus
 	ProtocolVersion int32
 }
 
-type Status_0x01_CB struct {
+//Status_0x01_CB - Pong
+type Stat_Pong struct {
 	Packet *GeneralPacket
 	Pong   int64
 }
@@ -25,16 +27,18 @@ type Status_0x01_CB struct {
 ///ServerBound C->S
 ///
 
-type Status_0x00_SB struct {
+//Status_0x00_SB - Request
+type Stat_Request struct {
 	Packet *GeneralPacket
 }
 
-type Status_0x01_SB struct {
+//Status_0x01_SB - Ping
+type Stat_Ping struct {
 	Packet *GeneralPacket
 	Ping   int64
 }
 
-func (SP *Status_0x01_SB) Decode() {
+func (SP *Stat_Ping) Decode() {
 	PR := CreatePacketReader(SP.Packet.PacketData)
 	var err error
 	SP.Ping, err = PR.ReadLong()
@@ -43,7 +47,7 @@ func (SP *Status_0x01_SB) Decode() {
 	}
 }
 
-func (SP *Status_0x00_CB) Encode() *PacketWriter {
+func (SP *Stat_Response) Encode() *PacketWriter {
 	//if SP.Packet.PacketSize == 1 {
 	writer := CreatePacketWriter(0x00)
 	SP.Response = server.CreateStatusObject(SP.ProtocolVersion, "1.16.5")
@@ -57,12 +61,8 @@ func (SP *Status_0x00_CB) Encode() *PacketWriter {
 	return writer
 }
 
-func (SP *Status_0x01_CB) Encode() *PacketWriter {
-	// Pong =
-	// SP.Pong
-	//PW := Packet.CreatePacketWriter(0x01)
-	//PW.WriteLong(SP.Packet.OptionalData.(int64))
-	SP.Pong = SP.Packet.OptionalData.(int64)
+func (SP *Stat_Pong) Encode(PingData int64) *PacketWriter {
+	//SP.Pong = SP.Packet.OptionalData.(int64)
 	writer := CreatePacketWriter(0x01)
 	writer.WriteLong(SP.Pong)
 	return writer

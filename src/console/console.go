@@ -30,7 +30,6 @@ var (
 
 func Console() {
 	defer DRECOVER()
-	Log := logging.MustGetLogger("HoneyGO")
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		switch scanner.Text() {
@@ -94,6 +93,8 @@ func Console() {
 				runtime.GC() // get up-to-date statistics
 				if err := pprof.WriteHeapProfile(hprof); err != nil {
 					log.Fatal("could not write memory profile: ", err)
+				} else {
+					Log.Warning("Written Memory Profile")
 				}
 			} else {
 				Log.Critical("memprofile flag not specified! not writing a profile")
@@ -111,6 +112,8 @@ func Console() {
 				runtime.GC() // get up-to-date statistics
 				if err := pprof.WriteHeapProfile(hprof); err != nil {
 					log.Fatal("could not write memory profile: ", err)
+				} else {
+					Log.Warning("Written Memory Profile")
 				}
 			} else {
 				Log.Critical("memprofile flag not specified! not writing a cpuprofile")

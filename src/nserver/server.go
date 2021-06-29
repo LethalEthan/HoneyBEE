@@ -15,7 +15,7 @@ var GlobalServer *Server
 type Server struct {
 	*gnet.EventServer
 	//pool *goroutine.Pool
-	//ConnectedSockets sync.Map //PROPOSAL: Create map standard that can be used concurrently and uses eventual consistency?
+	//ConnectedSockets sync.Map //PROPOSAL: Create map standard that can be used concurrently, writes and reads; queued based on time sent
 }
 
 type Client struct {
@@ -28,11 +28,11 @@ type Client struct {
 	Close           chan bool
 }
 
-func NewServer(ip string, port string, multicore bool, tick bool, reuse bool, sendBuf int, recvBuf int, readBufferCap int) Server {
+func NewServer(ip string, port string, multicore bool, tick bool, lockosthread bool, reuse bool, sendBuf int, recvBuf int, readBufferCap int) (Server, error) {
 	S := new(Server)
 	GlobalServer = S
-	gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithTicker(tick), gnet.WithLockOSThread(false), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))
-	return *S
+	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))
+	return *S, err
 }
 
 func (S *Server) OnInitComplete(Srv gnet.Server) (Action gnet.Action) {
@@ -72,7 +72,8 @@ func (S *Server) OnClosed(Conn gnet.Conn, err error) (Action gnet.Action) {
 }
 
 func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Action) {
-	ClientConn, tmp := Conn.Context().(*Client) //, tmp := S.ConnectedSockets.Load(Conn.RemoteAddr().String())
+	//CC, tmp := S.ConnectedSockets.Load(Conn.RemoteAddr().String())
+	ClientConn, tmp := Conn.Context().(*Client) //Get the client object from conn context
 	if tmp == false {
 		Conn.Close()
 		Log.Critical("Client Connection context was not Client object!")
@@ -96,19 +97,19 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 		select {
 		case Frame := <-FrameChan:
 			Log.Debug("RECV Frame")
-			//Frame := <-FrameChan
 			if len(Frame) == 0 {
 				ClientConn.Conn.Close()
 				return
 			}
 			//Get PacketSize and Data
-			PacketSize, NR, err := npacket.DecodeVarInt(Frame)
+			PacketSize, NR, err := npacket.DecodeVarInt(Frame) //NR = Numread, used to note the position in the frame where it read to
 			PacketDataSize := PacketSize - 1
-			PacketID, NR2, err := npacket.DecodeVarInt(Frame[NR:])
+			PacketID, NR2, err := npacket.DecodeVarInt(Frame[NR:]) //NR2 is the second numread so the Decoder later on will correctly
 			if err != nil {
 				panic(err)
 			}
-			//Size check
+			/*Size check - packets cannot be bigger than this which can lead to the server and client crashing
+			also known as book banning or any item/block that is used to overload the packet limit*/
 			if PacketSize > 2097151 {
 				ClientConn.Conn.Close()
 			}
@@ -121,7 +122,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			GP := new(npacket.GeneralPacket)
 			GP.PacketSize = PacketSize
 			GP.PacketID = PacketID
-			GP.PacketData = Frame[NR2+NR:]
+			GP.PacketData = Frame[NR2+NR:] //Uses the Numreads from earlier to correctly know where the data starts since VarInts are variable in size
 			Log.Debug("Frame: ", Frame)
 			//Legacy Ping - drop conn
 			if PacketSize == 0xFE && ClientConn.State == HANDSHAKE {
@@ -148,7 +149,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 				case 0x00:
 					Log.Debug("status 0x00_SB")
 					if PacketSize == 1 {
-						SP := new(npacket.Status_0x00_CB)
+						SP := new(npacket.Stat_Response)
 						SP.ProtocolVersion = ClientConn.ProtocolVersion
 						writer := SP.Encode()
 						ClientConn.Conn.AsyncWrite(writer.GetPacket())
@@ -157,14 +158,14 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					}
 				case 0x01:
 					Log.Debug("status 0x01_SB")
-					StatP := new(npacket.Status_0x01_SB)
+					StatP := new(npacket.Stat_Ping)
 					GP.OptionalData = StatP.Ping
 					StatP.Packet = GP
 					StatP.Decode()
-					StatPClient := new(npacket.Status_0x01_CB)
+					StatPClient := new(npacket.Stat_Pong)
 					StatPClient.Packet = GP
 					StatPClient.Pong = StatP.Ping
-					writer := StatPClient.Encode()
+					writer := StatPClient.Encode(StatP.Ping)
 					ClientConn.Conn.AsyncWrite(writer.GetPacket())
 					Log.Debug("WRITER NOTICE ME", writer.GetPacket())
 				}
