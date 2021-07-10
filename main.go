@@ -1,7 +1,6 @@
 package main
 
 import (
-	"Packet"
 	"config"
 	"console"
 	"fmt"
@@ -96,8 +95,8 @@ func init() {
 	if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 3 {
 		Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 	}
-	Log.Info("Generating Key Chain")
-	Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
+	//Log.Info("Generating Key Chain")
+	//Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
 	if conf.DEBUGOPTS.PacketAnal {
 		Log.Warning("Packet Analysis enabled, server will not be initialised")
 	} else {
@@ -107,6 +106,8 @@ func init() {
 		} else {
 			nserver.Init()
 		}
+		// NBTW := nbt.CreateNBTWriter("hello world")
+		// NBTW.TestingShit()
 	}
 	go console.Console()
 	go console.Shutdown()
@@ -126,6 +127,7 @@ func main() {
 		nserver.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
 	} else {
 		Log.Info("Accepting Connections")
+		Log.Critical("OLD SERVER DEPRECATED AND REMOVED WILL DO NOTHING!")
 		server.Runner()
 	}
 }

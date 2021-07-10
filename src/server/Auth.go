@@ -21,7 +21,7 @@ type jsonResponse struct {
 	ID string `json:"id"`
 }
 
-func Authenticate(username string, serverID string, sharedSecret, publicKey []byte) (string, error) {
+func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (string, error) {
 	//A hash is created using the shared secret and public key and is sent to the mojang sessionserver
 	//The server returns the data about the player including the player's skin blob
 	//Again I cannot thank enough wiki.vg, this is based off one of the linked java gists by Drew DeVault; thank you for the gist that I used to base this off

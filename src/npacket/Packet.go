@@ -5,6 +5,8 @@ import (
 	"github.com/panjf2000/gnet"
 )
 
+var err error
+
 var Log = logging.MustGetLogger("HoneyGO")
 
 type GeneralPacket struct {

@@ -1,16 +1,20 @@
 package npacket
 
-import "jsonstruct"
+import (
+	"jsonstruct"
+
+	"github.com/panjf2000/gnet"
+)
 
 ///
 ///ClientBound
 ///
 
 type UUID string
-type Identifier int64 //Change me
-type NBT int64        //Change me too
-type Position int64   //Change me too aswell
-type Angle byte       //Change me too aswell aswell
+type Identifier string //Change me
+type NBT int64         //Change me too
+type Position int64    //Change me too aswell
+type Angle byte        //Change me too aswell aswell
 
 //Play_0x00_CB - Spawn Entity
 type (
@@ -336,13 +340,13 @@ type (
 	JoinGame_CB struct {
 		EntityID            int32
 		IsHardcore          bool
-		Gamemode            byte
-		PreviousGamemode    byte
+		Gamemode            int8
+		PreviousGamemode    int8
 		WorldCount          int32
-		Worldnames          []Identifier
+		WorldNames          []Identifier
 		DimensionCodec      NBT
 		Dimension           NBT
-		WorldName           Identifier
+		WorldName           []Identifier
 		HashedSeed          int64
 		MaxPlayers          int32
 		ViewDistance        int32
@@ -831,3 +835,30 @@ type (
 		Tags   TagsFormat
 	}
 )
+
+func (JG *JoinGame_CB) Encode(Conn gnet.Conn) {
+	JG.EntityID = 1
+	JG.IsHardcore = false
+	JG.Gamemode = 1
+	JG.PreviousGamemode = -1
+	JG.WorldCount = 1
+	JG.WorldNames = []Identifier{"minecraft:overworld"}
+	JG.DimensionCodec = 0
+	JG.Dimension = 0
+	JG.WorldName = []Identifier{"minecraft:overworld"}
+	JG.HashedSeed = 0
+	JG.MaxPlayers = 20
+	JG.ViewDistance = 16
+	JG.ReducedDebugInfo = false
+	JG.EnableRespawnScreen = true
+	JG.IsDebug = false
+	JG.IsFlat = true
+	PW := CreatePacketWriter(0x026)
+	PW.WriteInt(JG.EntityID)
+	PW.WriteBoolean(JG.IsHardcore)
+	PW.WriteByte(JG.Gamemode)
+	PW.WriteByte(JG.PreviousGamemode)
+	PW.WriteVarInt(JG.WorldCount)
+	//PW.WriteIdentifier(JG.WorldNames[0])
+	Conn.AsyncWrite(PW.GetPacket())
+}

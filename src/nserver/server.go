@@ -2,6 +2,7 @@ package nserver
 
 import (
 	"npacket"
+	"sync"
 	"time"
 
 	logging "github.com/op/go-logging"
@@ -15,13 +16,14 @@ var GlobalServer *Server
 type Server struct {
 	*gnet.EventServer
 	//pool *goroutine.Pool
-	//ConnectedSockets sync.Map //PROPOSAL: Create map standard that can be used concurrently, writes and reads; queued based on time sent
+	ConnectedSockets sync.Map //PROPOSAL: Create map standard that can be used concurrently, writes and reads; queued based on time sent
 }
 
 type Client struct {
 	Name            string
 	Conn            gnet.Conn
 	ProtocolVersion int32
+	PlayerName      string
 	State           int
 	OptionalData    interface{}
 	FrameChannel    chan []byte
@@ -29,6 +31,8 @@ type Client struct {
 }
 
 func NewServer(ip string, port string, multicore bool, tick bool, lockosthread bool, reuse bool, sendBuf int, recvBuf int, readBufferCap int) (Server, error) {
+	Log.Info("Generating Key chain")
+	npacket.Keys()
 	S := new(Server)
 	GlobalServer = S
 	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))
@@ -48,7 +52,7 @@ func (S *Server) OnOpened(Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	C.State = HANDSHAKE
 	C.FrameChannel = make(chan []byte, 10)
 	C.Close = make(chan bool)
-	//S.ConnectedSockets.Store(Conn.RemoteAddr().String(), C)
+	S.ConnectedSockets.Store(Conn.RemoteAddr().String(), C)
 	Conn.SetContext(C)
 	Log.Debug(Conn.RemoteAddr().String())
 	go C.React(C.FrameChannel, C.Close) //the goroutine that does packet logic
@@ -57,7 +61,7 @@ func (S *Server) OnOpened(Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 
 func (S *Server) OnClosed(Conn gnet.Conn, err error) (Action gnet.Action) {
 	Log.Infof("Socket with addr: %s is closing...\n", Conn.RemoteAddr().String())
-	//S.ConnectedSockets.Delete(Conn.RemoteAddr().String())
+	S.ConnectedSockets.Delete(Conn.RemoteAddr().String())
 	C, tmp := Conn.Context().(*Client)
 	if tmp == false {
 		Log.Critical("Conn Context is nil!")
@@ -116,7 +120,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			//
 			if DEBUG {
 				Log.Debug("ClientConn ", ClientConn, "Conn: ", ClientConn.Conn.RemoteAddr().String())
-				Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID)
+				Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "NR: ", NR, "NR2: ", NR2)
 			}
 			//Make GeneralPacket
 			GP := new(npacket.GeneralPacket)
@@ -153,8 +157,6 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 						SP.ProtocolVersion = ClientConn.ProtocolVersion
 						writer := SP.Encode()
 						ClientConn.Conn.AsyncWrite(writer.GetPacket())
-						//Conn.Close()
-						//return
 					}
 				case 0x01:
 					Log.Debug("status 0x01_SB")
@@ -169,8 +171,43 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					ClientConn.Conn.AsyncWrite(writer.GetPacket())
 					Log.Debug("WRITER NOTICE ME", writer.GetPacket())
 				}
+			case LOGIN:
+				switch PacketID {
+				case 0x00:
+					Log.Debug("Play 0x00_SB")
+					LoginStart := new(npacket.Login_0x00_SB)
+					LoginStart.Packet = GP
+					LoginStart.Decode()
+					Log.Info("Name decoded: ", LoginStart.Name)
+					ClientConn.PlayerName = LoginStart.Name
+					LERQ := new(npacket.Login_0x01_CB)
+					PW := LERQ.Encode()
+					ClientConn.Conn.AsyncWrite(PW.GetPacket())
+					Log.Debug("Sent 0x01_CB")
+				case 0x01:
+					Log.Debug("Play 0x01_SB")
+					LERSP := new(npacket.Login_0x01_SB)
+					LERSP.Packet = GP
+					LERSP.Decode()
+					LS := new(npacket.Login_0x02_CB)
+					LS.UUID = npacket.Auth(ClientConn.PlayerName, LERSP.SharedSecret)
+					LS.Username = ClientConn.PlayerName
+					PW := LS.Encode(ClientConn.PlayerName)
+					ClientConn.Conn.AsyncWrite(PW.GetPacket())
+					Log.Debug("Sent 0x02_CB")
+					JG := new(npacket.JoinGame_CB)
+					JG.Encode(ClientConn.Conn)
+				case 0x02:
+					Log.Debug("Play 0x02_SB")
+				}
+			case PLAY:
+			switch PacketID {
+			case 0x00:
+
+				}
 			}
 		case <-Close:
+			Log.Debug("Closing client conn routine")
 			return
 		}
 	}

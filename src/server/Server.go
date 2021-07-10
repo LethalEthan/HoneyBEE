@@ -70,19 +70,8 @@ type PacketHeader struct {
 	ClientConn *ClientConnection
 }
 
-/*type Version interface {
-	MCDEFAULT(Conn *ClientConnection)
-	MC1_15_2(Conn *ClientConnection)
-	MC1_16(Conn *ClientConnection)
-	MC1_16_1(Conn *ClientConnection)
-	MC1_16_2(Conn *ClientConnection)
-	MC1_16_3(Conn *ClientConnection)
-}
-
-var GCPShutdown = make(chan bool)*/
-
 func Init() { //this can't be the standard go function init since the logger isn't initialised by the time it's called
-	Log.Debug("Server initialising")
+	Log.Debug("Server initialising. OLD SERVER DEPRECATED AND REMOVED THIS WILL DO NOTHING!")
 	if !GotDaKeys {
 		GetKeyChain()
 	}
@@ -105,43 +94,31 @@ func Init() { //this can't be the standard go function init since the logger isn
 	Run = true
 }
 
-func ServerReload() {
-	Config = config.GetConfig()
-	DEBUG = Config.Server.DEBUG
-	player.Init()
-	go world.Init()
-	GCPShutdown <- true
-	go player.GCPlayer(GCPShutdown)
-	if DEBUG {
-		Log.Debug("Server re-initialised")
-	}
-	ServerREINIT = true
-}
-
-func (PH PacketHeader) MapVersion(Conn *ClientConnection) {
-	switch PH.protocol {
-	case 578:
-		Handle_MC1_15_2(Conn, PH)
-		return
-	case 735:
-		Handle_MC1_16(Conn, PH)
-		return
-	case 736:
-		Handle_MC1_16_1(Conn, PH)
-		return
-	case 751:
-		Handle_MC1_16_2(Conn, PH)
-		return
-	case 753:
-		Handle_MC1_16_3(Conn, PH)
-		return
-	default:
-		Log.Warning("Unsupported protocol:", PH.protocol, "("+ProtocolToVer[PH.protocol]+")", "- sending status and closing connection!")
-		HandleUnsupported(Conn, PH, false)
-		CloseClientConnection(Conn)
-		return
-	}
-}
+//
+// func (PH PacketHeader) MapVersion(Conn *ClientConnection) {
+// 	switch PH.protocol {
+// 	case 578:
+// 		Handle_MC1_15_2(Conn, PH)
+// 		return
+// 	case 735:
+// 		Handle_MC1_16(Conn, PH)
+// 		return
+// 	case 736:
+// 		Handle_MC1_16_1(Conn, PH)
+// 		return
+// 	case 751:
+// 		Handle_MC1_16_2(Conn, PH)
+// 		return
+// 	case 753:
+// 		Handle_MC1_16_3(Conn, PH)
+// 		return
+// 	default:
+// 		Log.Warning("Unsupported protocol:", PH.protocol, "("+ProtocolToVer[PH.protocol]+")", "- sending status and closing connection!")
+// 		HandleUnsupported(Conn, PH, false)
+// 		CloseClientConnection(Conn)
+// 		return
+// 	}
+// }
 
 //Get/Set moved to GetSet.go
 
@@ -183,35 +160,6 @@ func HandleConnection(Connection *ClientConnection) {
 						Connection.KeepAlive()
 						Connection.State = int(Hpacket.NextState)
 						PH.protocol = Hpacket.ProtocolVersion
-						if Config.DEBUGOPTS.Maintenance {
-							MMODE = true
-							HandleUnsupported(Connection, *PH, true)
-						} else {
-							PH.MapVersion(Connection)
-						}
-						//PH.MapVersion(Connection) //ADD ME BACK
-						/*
-							switch Hpacket.ProtocolVersion {
-							case 578:
-								pv.MC1_15_2(Connection)
-								return
-							case 735:
-								pv.MC1_16(Connection)
-							case 736:
-								pv.MC1_16_1(Connection)
-								return
-							case 751:
-								pv.MC1_16_2(Connection)
-								return
-							case 753:
-								pv.MC1_16_3(Connection)
-								return
-							default:
-								Log.Warning("Unsupported protocol:", Hpacket.ProtocolVersion, "("+ProtocolToVer[Hpacket.ProtocolVersion]+")", "- sending status and closing connection!")
-								pv.MCDEFAULT(Connection)
-								CloseClientConnection(Connection)
-								return
-							}*/
 						return
 						//--Packet 0x00 End--//
 					}
@@ -410,15 +358,9 @@ func DisplayPacketInfo(PH PacketHeader, Conn *ClientConnection) {
 func Disconnect(Player string) {
 	Log.Debug("Disconnecting Player: ", Player)
 	player.Disconnect(Player)
-	// var p event.Event = event.Player(Player)
-	// p.PlayerDisconnect()
 	EID, _ := player.GetPEM(Player) //PlayerEntityMap[Player]
 	Tmp, _ := GetCPM(EID)           //ConnPlayerMap[EID]
 	Tmp.Close()
-	//P := player.GetPlayerByName(Player)
-	//event.PlayerDisconnect(Player)
-	//
-	// Tmp.Close()
 }
 
 ///

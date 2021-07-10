@@ -48,7 +48,6 @@ func Console() {
 				server.SetRun(false)
 				config.ConfigReload()
 				server.GCPShutdown <- true
-				server.ServerReload()
 				server.SetRun(true)
 				server.SetNetServerRun(true)
 			} else {
