@@ -45,7 +45,7 @@ func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string)
 	if bool == true && SC != nil {
 		return SC
 	}
-	if Config.Server.DEBUG {
+	if config.GConfig.Server.DEBUG {
 		if bool == false || SC == nil {
 			Log.Debug("Cache miss")
 		}
@@ -69,7 +69,7 @@ func PutStatusInCache(SS ServerStatus, MCP int32) {
 	//StatusSemaphore.FlushAndSemaphore() //FlushSemaphore so new data can served
 	StatusMutex.Lock()
 	StatusCache[MCP] = SS
-	StatusSemaphore.FlushAndSetSemaphore(StatusCache)
+	StatusSemaphore.FlushAndSetSemaphoreNEW(StatusCache)
 	StatusMutex.Unlock()
 	//StatusSemaphore.SetData(StatusCache) //Set new data
 }

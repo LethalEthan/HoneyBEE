@@ -8,8 +8,8 @@ type Handshake_0x00 struct {
 	NextState       int32
 }
 
-func (P *Handshake_0x00) Encode() {
-
+func (P *Handshake_0x00) Encode() *PacketWriter {
+	return nil
 }
 
 func (P *Handshake_0x00) Decode() {

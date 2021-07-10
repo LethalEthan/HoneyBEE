@@ -10,8 +10,10 @@ import (
 )
 
 var (
-	log     = logging.MustGetLogger("HoneyGO")
-	GConfig *Config
+	log        = logging.MustGetLogger("HoneyGO")
+	GConfig    *Config
+	Memprofile string
+	Cpuprofile string
 )
 
 // Config struct for HoneyGO config
@@ -22,6 +24,7 @@ type Config struct {
 		DEBUG             bool   `yaml:"debug"`   //Output DEBUG info -- TO BE LINKED
 		Timeout           int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
 		MultiCore         bool   `yaml:"multicore"`
+		LockOSThread      bool   `yaml:"lock-os-thread"`
 		Reuse             bool   `yaml:"SO_REUSE"`
 		SendBuf           int    `yaml:"send-buffer"`
 		RecieveBuf        int    `yaml:"recv-buffer"`
@@ -86,6 +89,8 @@ func ParseFlags() (string, error) {
 	//var configPath string
 	//Set up a CLI flag "-config" to allow users to supply the configuration file - defaults to config.yml
 	flag.StringVar(&configPath, "config", "./config.yml", "path to config file")
+	flag.StringVar(&Memprofile, "memprofile", "", "write memory profile to this file")
+	flag.StringVar(&Cpuprofile, "cpuprofile", "", "write cpu profile to file")
 	//Parse the flags
 	flag.Parse()
 	//Validate the path

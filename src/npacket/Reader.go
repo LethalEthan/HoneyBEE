@@ -319,8 +319,13 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 }
 
 //ReadArray - Returns the array (slice) of the packet Data
-func (pr *PacketReader) ReadArray() ([]byte, error) {
-	return pr.Data, nil
+func (pr *PacketReader) ReadByteArray(length int32) ([]byte, error) {
+	fmt.Print("Current: ", pr.Seeker, "len: ", length)
+	Data := pr.Data[pr.Seeker : pr.Seeker+int64(length)]
+	fmt.Print("Datalen: ", len(Data))
+	pr.SeekWithEOF(int64(length), 1)
+	fmt.Println("seeker: ", pr.Seeker)
+	return Data, nil
 }
 
 const (

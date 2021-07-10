@@ -1,6 +1,11 @@
 package npacket
 
-import logging "github.com/op/go-logging"
+import (
+	logging "github.com/op/go-logging"
+	"github.com/panjf2000/gnet"
+)
+
+var err error
 
 var Log = logging.MustGetLogger("HoneyGO")
 
@@ -12,11 +17,16 @@ type GeneralPacket struct {
 	OptionalData interface{}
 }
 
-type PacketCodec interface {
-	Encode() *PacketWriter
-	Decode()
-	Create()
-	Send()
+//Currently weighing if it's worth to use an interface or just use struct methods, currently just gonna use struct methods for ease
+
+// type PacketCodec interface {
+// 	Encode() *PacketWriter
+// 	Decode() //*GeneralPacket
+// 	//Create()
+// }
+
+func (PW *PacketWriter) Send(Conn *gnet.Conn) {
+	return
 }
 
 // func (GP *GeneralPacket) Create() {

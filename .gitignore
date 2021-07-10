@@ -19,9 +19,11 @@
 # vendor/
 bin/
 .git/
+.github/
 pkg/
 src/github.com/
 src/golang.org/
 src/gopkg.in/
 src/google.golang.org/
 src/go.uber.org/
+src/worker
