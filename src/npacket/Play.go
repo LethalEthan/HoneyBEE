@@ -723,12 +723,14 @@ type (
 		TitleText jsonstruct.ChatComponent
 	}
 
+	//Play 0x5A
 	SetTitleTimes_CB struct {
 		FadeIn  int32
 		Stay    int32
 		FadeOut int32
 	}
 
+	//Play 0x5B
 	EntitySoundEffect_CB struct {
 		SoundID       int32
 		SoundCategory int32
@@ -737,6 +739,7 @@ type (
 		Pitch         float32
 	}
 
+	//Play 0x5C
 	SoundEffect_CB struct {
 		SoundID         int32
 		SoundCategory   int32
@@ -745,5 +748,86 @@ type (
 		EffectPositionZ int32
 		Volume          float32
 		Pitch           float32
+	}
+
+	//Play 0x5D
+	StopSound_CB struct {
+		Flags  byte
+		Source int32
+		Sound  Identifier
+	}
+
+	//Play 0x5E
+	PlayerListHeaderFooter_CB struct {
+		Header jsonstruct.ChatComponent
+		Footer jsonstruct.ChatComponent
+	}
+
+	//Play 0x5F
+	NBTQueryResponse_CB struct {
+		TransactionID int32
+		NBT           NBT
+	}
+
+	//Play 0x60
+	CollectItem_CB struct {
+		CollectedEntityID int32
+		CollectorEntityID int32
+		PickupItemCount   int32
+	}
+
+	//Play 0x61
+	EntityTeleport_CB struct {
+		EntityID int32
+		X        float64
+		Y        float64
+		Z        float64
+		Yaw      Angle
+		Pitch    Angle
+		OnGround bool
+	}
+
+	//Play 0x62
+	Advancements_CB struct {
+		ResetClear         bool
+		MappingSize        int32
+		AdvancementMapping struct {
+			Key   []Identifier
+			Value []Advancement
+		}
+		ListSize        int32
+		Identifiers     []Identifier
+		ProgressSize    int32
+		ProgressMapping struct {
+			Key   []Identifier
+			Value []Advancement
+		}
+	}
+
+	//Play 0x63
+	EntityProperties_CB struct {
+		EntityID           int32
+		NumberOfProperties int32
+		Properties         []Property
+	}
+
+	//Play 0x64
+	EntityEffect_CB struct {
+		EntityID  int32
+		EffectID  byte
+		Amplifier byte
+		Duration  int32
+		Flags     byte
+	}
+
+	DeclareRecipes_CB struct {
+		NumRecipes int32
+		Recipe     Recipes
+	}
+
+	//Play 0x66
+	Tags_CB struct {
+		Length int32
+		Tags   TagsFormat
 	}
 )

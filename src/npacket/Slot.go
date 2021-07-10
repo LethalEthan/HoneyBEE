@@ -6,3 +6,8 @@ type Slot struct {
 	ItemCount int32
 	NBT       NBT
 }
+
+type Slots struct {
+	SlotNumber int16
+	SlotData   int16
+}
