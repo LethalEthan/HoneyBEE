@@ -16,10 +16,10 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
-bin/
 .git/
 .github/
+<<<<<<< HEAD
+<<<<<<< HEAD
 pkg/
 src/github.com/
 src/golang.org/
@@ -27,3 +27,15 @@ src/gopkg.in/
 src/google.golang.org/
 src/go.uber.org/
 src/worker
+=======
+=======
+>>>>>>> 03ebbd3db28f770b060b20ddf3cb21263f7ad8e0
+worker/
+api/
+event/
+plugins/
+__debug_bin
+<<<<<<< HEAD
+>>>>>>> 0617b28 (Modularise the project)
+=======
+>>>>>>> 03ebbd3db28f770b060b20ddf3cb21263f7ad8e0
