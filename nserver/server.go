@@ -196,31 +196,13 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					ClientConn.Conn.AsyncWrite(PW.GetPacket())
 					Log.Debug("Sent 0x02_CB")
 					JG := new(npacket.JoinGame_CB)
-<<<<<<< HEAD:nserver/server.go
-<<<<<<< HEAD:src/nserver/server.go
-					JG.Encode(ClientConn.Conn)
-=======
 					JG.Encode(LS.UUID, LS.Username, 0, ClientConn.Conn)
->>>>>>> 0617b28 (Modularise the project):nserver/server.go
-=======
-					JG.Encode(LS.UUID, LS.Username, 0, ClientConn.Conn)
->>>>>>> 03ebbd3db28f770b060b20ddf3cb21263f7ad8e0:src/nserver/server.go
 				case 0x02:
 					Log.Debug("Play 0x02_SB")
 				}
 			case PLAY:
-<<<<<<< HEAD:nserver/server.go
-<<<<<<< HEAD:src/nserver/server.go
-			switch PacketID {
-			case 0x00:
-=======
 				switch PacketID {
 				case 0x00:
->>>>>>> 0617b28 (Modularise the project):nserver/server.go
-=======
-				switch PacketID {
-				case 0x00:
->>>>>>> 03ebbd3db28f770b060b20ddf3cb21263f7ad8e0:src/nserver/server.go
 
 				}
 			}

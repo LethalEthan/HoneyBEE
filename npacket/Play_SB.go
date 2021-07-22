@@ -219,9 +219,6 @@ type (
 		Slot int16
 	}
 
-<<<<<<< HEAD
-	//0x26 and 0x27 in PlaySB
-=======
 	//Play 0x26
 	UpdateCommandBlock_SB struct {
 		Location Position
@@ -236,7 +233,6 @@ type (
 		Command     string
 		TrackOutput string
 	}
->>>>>>> 03ebbd3db28f770b060b20ddf3cb21263f7ad8e0
 
 	CreativeInventoryAction_SB struct {
 		Slot        int16
