@@ -22,6 +22,4 @@ worker/
 api/
 event/
 plugins/
-go.mod
-go.sum
 __debug_bin
