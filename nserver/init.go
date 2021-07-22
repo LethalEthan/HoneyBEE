@@ -1,10 +1,10 @@
 package nserver
 
 import (
-	"player"
-	"server"
-	"utils"
-	"world"
+	"HoneyGO/player"
+	"HoneyGO/server"
+	"HoneyGO/utils"
+	"HoneyGO/world"
 )
 
 var GCPShutdown = make(chan bool)

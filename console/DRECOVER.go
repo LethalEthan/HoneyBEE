@@ -1,12 +1,12 @@
 package console
 
 import (
-	"config"
+	"HoneyGO/config"
+	"HoneyGO/player"
+	"HoneyGO/server"
+	"HoneyGO/utils"
 	"fmt"
-	"player"
 	"runtime"
-	"server"
-	"utils"
 )
 
 ///
@@ -75,7 +75,6 @@ func DRECOVER() {
 		fmt.Println("Printed Debug , please create an issue and send this!")
 		fmt.Println("")
 		utils.PrintDebugStats()
-		//os.Exit(1)
 		panic(r)
 	}
 }

@@ -1,17 +1,17 @@
 package main
 
 import (
-	"config"
-	"console"
+	"HoneyGO/config"
+	"HoneyGO/console"
+	"HoneyGO/nserver"
+	"HoneyGO/server"
+	"HoneyGO/utils"
 	"fmt"
 	"log"
-	"nserver"
 	"os"
 	"runtime"
 	"runtime/debug"
 	"runtime/pprof"
-	"server"
-	"utils"
 
 	logging "github.com/op/go-logging"
 )

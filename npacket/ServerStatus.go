@@ -1,10 +1,10 @@
 package npacket
 
 import (
-	"config"
-	"jsonstruct"
+	"HoneyGO/config"
+	"HoneyGO/jsonstruct"
+	"HoneyGO/utils"
 	"sync"
-	"utils"
 )
 
 type ServerStatus struct {

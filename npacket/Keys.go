@@ -1,11 +1,11 @@
 package npacket
 
 import (
-	"config"
+	"HoneyGO/config"
+	"HoneyGO/server"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"server"
 	"time"
 )
 

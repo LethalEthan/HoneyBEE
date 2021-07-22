@@ -1,8 +1,8 @@
 package server
 
 import (
-	"Packet"
-	"VarTool"
+	"HoneyGO/Packet"
+	"HoneyGO/VarTool"
 	"bufio"
 	"fmt"
 	"io"

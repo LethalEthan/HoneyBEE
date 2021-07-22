@@ -1,7 +1,7 @@
 package Packet
 
 import (
-	"config"
+	"HoneyGO/config"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"

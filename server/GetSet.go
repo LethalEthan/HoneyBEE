@@ -1,7 +1,7 @@
 package server
 
 import (
-	"Packet"
+	"HoneyGO/Packet"
 	"net"
 )
 

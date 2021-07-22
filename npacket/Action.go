@@ -1,6 +1,6 @@
 package npacket
 
-import "jsonstruct"
+import "HoneyGO/jsonstruct"
 
 type ActionComponet struct {
 	ActionID int

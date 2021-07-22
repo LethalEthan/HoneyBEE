@@ -1,6 +1,6 @@
 package npacket
 
-import "jsonstruct"
+import "HoneyGO/jsonstruct"
 
 type Matches struct {
 	Match      string

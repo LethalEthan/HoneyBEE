@@ -1,6 +1,6 @@
 package npacket
 
-import "jsonstruct"
+import "HoneyGO/jsonstruct"
 
 type Icon struct {
 	Type           int32
