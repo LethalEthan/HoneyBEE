@@ -1,7 +1,7 @@
 package nserver
 
 import (
-	"npacket"
+	"HoneyGO/npacket"
 	"sync"
 	"time"
 

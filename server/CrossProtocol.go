@@ -1,11 +1,11 @@
 package server
 
 import (
-	"Packet"
+	"HoneyGO/Packet"
+	"HoneyGO/player"
 	"crypto/rand"
 	"crypto/rsa"
 	"errors"
-	"player"
 	"time"
 
 	"github.com/pquerna/ffjson/ffjson"

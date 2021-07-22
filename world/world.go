@@ -1,8 +1,8 @@
 package world
 
 import (
-	"chunk"
-	"config"
+	"HoneyGO/chunk"
+	"HoneyGO/config"
 	"errors"
 	"fmt"
 	"sync"

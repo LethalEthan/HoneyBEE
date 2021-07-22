@@ -1,7 +1,7 @@
 package player
 
 import (
-	config "config"
+	"HoneyGO/config"
 	"errors"
 	"fmt"
 	"runtime"

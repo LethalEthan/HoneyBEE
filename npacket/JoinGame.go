@@ -1,8 +1,8 @@
 package npacket
 
 import (
-	"nbt"
-	"player"
+	"HoneyGO/nbt"
+	"HoneyGO/player"
 
 	"github.com/panjf2000/gnet"
 )

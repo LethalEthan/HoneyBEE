@@ -1,7 +1,7 @@
 package chunk
 
 import (
-	"blocks"
+	"HoneyGO/blocks"
 	"fmt"
 	"strconv"
 	"strings"

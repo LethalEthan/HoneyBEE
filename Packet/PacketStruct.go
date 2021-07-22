@@ -1,7 +1,7 @@
 package Packet
 
 import (
-	config "config"
+	"HoneyGO/config"
 	"fmt"
 	"net"
 )

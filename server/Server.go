@@ -1,18 +1,16 @@
 package server
 
 import (
-	"Packet"
-	"VarTool"
-	config "config"
+	"HoneyGO/Packet"
+	"HoneyGO/VarTool"
+	"HoneyGO/config"
+	"HoneyGO/player"
+	"HoneyGO/world"
 	"crypto/rsa"
 	"fmt"
 	"io/ioutil"
 	"net"
-	"player"
 	"sync"
-
-	//"time"
-	"world"
 
 	logging "github.com/op/go-logging"
 	"github.com/pquerna/ffjson/ffjson"

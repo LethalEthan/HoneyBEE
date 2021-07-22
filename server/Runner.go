@@ -1,7 +1,7 @@
 package server
 
 import (
-	"config"
+	"HoneyGO/config"
 	"net"
 	"os"
 	"sync"
