@@ -16,7 +16,7 @@ I am very supportive of open-source and free software, for that reason this proj
 
 Checklist:
 
-* [x] 1.15.2 protocol support (Handshake, Status, Login, Play)
+* [x] 1.17 protocol support (Handshake, Status, Login, Play)
 * [ ] Entities and Tile entities
 * [ ] Mobs and Animals
 * [ ] Simple Terrain Generation
@@ -26,9 +26,10 @@ Checklist:
 * [ ] Commands
 * [ ] Block/Entity Data
 * [ ] Actually logging in and being able to play to some degree
+* [ ] NBT
 * [ ] Bedrock Support
 * [x] Server Configuration
-* [ ] HoneyPot (A proxy linking multiple HoneyGO servers muchlike waterfall/bungee)
+* [ ] HoneyHive (A proxy linking multiple HoneyGO servers muchlike waterfall/bungee)
 
 **Suggestions**
 

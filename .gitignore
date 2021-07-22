@@ -16,12 +16,12 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
-bin/
 .git/
-pkg/
-src/github.com/
-src/golang.org/
-src/gopkg.in/
-src/google.golang.org/
-src/go.uber.org/
+.github/
+worker/
+api/
+event/
+plugins/
+go.mod
+go.sum
+__debug_bin

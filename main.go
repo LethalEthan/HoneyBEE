@@ -1,7 +1,6 @@
 package main
 
 import (
-	"Packet"
 	"config"
 	"console"
 	"fmt"
@@ -20,17 +19,10 @@ import (
 //R.I.P Alex, I'll miss you
 //Most things defined in main have moved
 var (
-	format = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	//HoneyGOVersion = "1.1.1 (Build 71)"
-	//BVersion       = 71
-	Log = logging.MustGetLogger("HoneyGO")
-	//ServerPort string
-	conf *config.Config
-	// Connection net.Conn
-	// netlisten  net.Listener
-	err error
-	// Run      bool
-	// RunMutex      = sync.Mutex{}
+	format   = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
+	Log      = logging.MustGetLogger("HoneyGO")
+	conf     *config.Config
+	err      error
 	Panicked bool = false
 	hprof    *os.File
 	cprof    *os.File
@@ -80,8 +72,8 @@ func init() {
 		panic("Server port not defined!")
 	}
 	//Server Config Check
-	if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout == 0 {
-		panic("Please don't be stupid and set the buffers or timeout as 0 :/")
+	if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout <= 3 {
+		panic("Please don't be stupid and set the buffers to 0 or timeout as less than 3 :/")
 	}
 	//--//
 	Log.Info("Server Network Listener Started on port ", config.GConfig.Server.Port)
@@ -96,8 +88,8 @@ func init() {
 	if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 3 {
 		Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 	}
-	Log.Info("Generating Key Chain")
-	Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
+	//Log.Info("Generating Key Chain")
+	//Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
 	if conf.DEBUGOPTS.PacketAnal {
 		Log.Warning("Packet Analysis enabled, server will not be initialised")
 	} else {
@@ -123,9 +115,10 @@ func main() {
 		}
 	}
 	if config.GConfig.DEBUGOPTS.NewServer {
-		nserver.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
+		nserver.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
 	} else {
 		Log.Info("Accepting Connections")
+		Log.Critical("OLD SERVER DEPRECATED AND REMOVED WILL DO NOTHING!")
 		server.Runner()
 	}
 }
