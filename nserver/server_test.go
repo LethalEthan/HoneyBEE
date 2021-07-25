@@ -18,7 +18,7 @@ func BenchmarkServer(b *testing.B) {
 	//S.React(Frame []byte, Conn)
 }
 
-func TestServer(t *testing.T) bool {
+func TestServer(t *testing.T) {
 	// S, err := NewServer("127.0.0.1", ":25565", true, false, true, true, 16, 16, 16)
 	// if err != nil {
 	// 	t.Error("Could not verify if server could be started: ", err)
@@ -28,7 +28,6 @@ func TestServer(t *testing.T) bool {
 	// }
 	// S.Shutdown()
 	t.SkipNow()
-	return true
 }
 
 //

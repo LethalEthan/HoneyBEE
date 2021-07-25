@@ -99,8 +99,6 @@ func init() {
 		} else {
 			nserver.Init()
 		}
-		// NBTW := nbt.CreateNBTWriter("hello world")
-		// NBTW.TestingShit()
 	}
 	go console.Console()
 	go console.Shutdown()
