@@ -10,13 +10,13 @@ This software is still being developed so expect bugs and issues now and then, a
 
 **To people who want to contribute: If you would like to contribute to HoneyGO or HoneyComb you'll need to create a fork and submit a Pull Request (PR), The code will be reviewed and potentially be merged (no guarantees). I will also add your name to the contributors list. Any PR's must use the same license**
 
-As of now we only have basic features to start off with but as development continues we will have more features along with a custom plugin system (HoneyComb, will be available later in the future) and perhaps a way to get forge support although that would be WAYY in the future and I'm not too sure how that would be implemented especially with licensing. Another thing that I want to work on is an easy way to link multiple HoneyGO servers together much like waterfall/bungee, this would be called HoneyPot.
+As of now we only have basic features to start off with but as development continues we will have more features along with a custom plugin system (HoneyComb, will be available later in the future) and perhaps a way to get forge support although that would be WAYY in the future and I'm not too sure how that would be implemented especially with licensing. Another thing that I want to work on is an easy way to link multiple HoneyGO servers together much like waterfall/bungee, this would be called HoneyHive.
 
 I am very supportive of open-source and free software, for that reason this project will be free forever. You can copy, modify and redistribute my code as long it is under the same license and credit is given to proper authors. If you would like to donate to support HoneyGO that would be much appreciated and you will be added to the donator list (Donators.md)
 
 Checklist:
 
-* [x] 1.15.2 protocol support (Handshake, Status, Login, Play)
+* [x] 1.17 protocol support (Handshake, Status, Login, Play)
 * [ ] Entities and Tile entities
 * [ ] Mobs and Animals
 * [ ] Simple Terrain Generation
@@ -26,9 +26,10 @@ Checklist:
 * [ ] Commands
 * [ ] Block/Entity Data
 * [ ] Actually logging in and being able to play to some degree
+* [ ] NBT
 * [ ] Bedrock Support
 * [x] Server Configuration
-* [ ] HoneyPot (A proxy linking multiple HoneyGO servers muchlike waterfall/bungee)
+* [ ] HoneyHive (A proxy linking multiple HoneyGO servers muchlike waterfall/bungee)
 
 **Suggestions**
 

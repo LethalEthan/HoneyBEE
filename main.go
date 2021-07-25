@@ -1,17 +1,17 @@
 package main
 
 import (
-	"config"
-	"console"
+	"HoneyGO/config"
+	"HoneyGO/console"
+	"HoneyGO/nserver"
+	"HoneyGO/server"
+	"HoneyGO/utils"
 	"fmt"
 	"log"
-	"nserver"
 	"os"
 	"runtime"
 	"runtime/debug"
 	"runtime/pprof"
-	"server"
-	"utils"
 
 	logging "github.com/op/go-logging"
 )
@@ -19,17 +19,10 @@ import (
 //R.I.P Alex, I'll miss you
 //Most things defined in main have moved
 var (
-	format = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	//HoneyGOVersion = "1.1.1 (Build 71)"
-	//BVersion       = 71
-	Log = logging.MustGetLogger("HoneyGO")
-	//ServerPort string
-	conf *config.Config
-	// Connection net.Conn
-	// netlisten  net.Listener
-	err error
-	// Run      bool
-	// RunMutex      = sync.Mutex{}
+	format   = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
+	Log      = logging.MustGetLogger("HoneyGO")
+	conf     *config.Config
+	err      error
 	Panicked bool = false
 	hprof    *os.File
 	cprof    *os.File
@@ -106,8 +99,6 @@ func init() {
 		} else {
 			nserver.Init()
 		}
-		// NBTW := nbt.CreateNBTWriter("hello world")
-		// NBTW.TestingShit()
 	}
 	go console.Console()
 	go console.Shutdown()
