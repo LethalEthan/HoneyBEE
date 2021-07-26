@@ -155,7 +155,10 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					if PacketSize == 1 {
 						SP := new(npacket.Stat_Response)
 						SP.ProtocolVersion = ClientConn.ProtocolVersion
-						writer := SP.Encode()
+						writer, err := SP.Encode()
+						if err != nil {
+							panic(err)
+						}
 						ClientConn.Conn.AsyncWrite(writer.GetPacket())
 					} else {
 						Log.Warning("Packet is bigger than expected")

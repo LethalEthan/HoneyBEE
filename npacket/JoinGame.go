@@ -4,7 +4,6 @@ import (
 	"HoneyGO/nbt"
 	"HoneyGO/player"
 	"HoneyGO/utils"
-	"os"
 
 	"github.com/panjf2000/gnet"
 )
@@ -28,7 +27,7 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 		IsDebug:             false,
 		IsFlat:              true,
 	}
-	PW := CreatePacketWriter(0x26)
+	PW := CreatePacketWriterWithCapacity(0x26, 1024)
 	PW.WriteInt(JG.EntityID)
 	PW.WriteBoolean(JG.IsHardcore)
 	PW.WriteUnsignedByte(JG.Gamemode)
@@ -53,15 +52,19 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	TC2.AddTag(nbt.CreateIntTag("id", 0))
 	TC2.AddTag(CreateBiomeProperties(1.0, 1.0, 1.0, 1.0, 8364543, 8364543, 8364543, 8364543, 8364543, 8364543, "none", "plains", "", "", ""))
 	Blist.AddToList(TC2)
+	JG.DimensionCodec.AddTag(Blist)
+	JG.DimensionCodec.EndCompoundTag()
+	JG.DimensionCodec.EndCompoundTag()
+	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.Encode()
-	f, err := os.Create("testing.nbt")
-	if err != nil {
-		panic(err)
-	}
-	f.Write(JG.DimensionCodec.Data)
-	f.Close()
+	// f, err := os.Create("testing.nbt")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// f.Write(JG.DimensionCodec.Data)
+	// f.Close()
 	utils.PrintBytes("DimensionCodec", JG.DimensionCodec.Data)
 	//JG.DimensionCodec.
 }
@@ -76,7 +79,7 @@ func CreateDimensionTypeRegistry(piglin_safe, natural, respawn_anchor_works, has
 		nbt.CreateStringTag("effects", effects), nbt.CreateByteTag("has_raids", has_raids), nbt.CreateIntTag("min_y", min_y),
 		nbt.CreateIntTag("height", height), nbt.CreateIntTag("logical_height", logical_height),
 		nbt.CreateFloatTag("coordinate_scale", coordinate_scale), nbt.CreateByteTag("ultrawarm", ultrawarm),
-		nbt.CreateByteTag("has_ceiling", has_ceiling), nbt.TEnd{}})
+		nbt.CreateByteTag("has_ceiling", has_ceiling), nbt.TEnd{}, nbt.TEnd{}})
 	return TC
 }
 

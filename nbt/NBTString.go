@@ -15,6 +15,10 @@ func (NBTW *NBTWriter) writeString(Name string, val string) {
 	if val != "" {
 		NBTW.AppendByteSlice([]byte(utils.Int16ToByteArray(int16(len(val)))))
 		NBTW.AppendByteSlice([]byte(val))
+	} else {
+		if Name != "" {
+			NBTW.AppendByteSlice([]byte{0, 0})
+		}
 	}
 	return
 }

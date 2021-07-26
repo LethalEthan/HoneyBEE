@@ -154,9 +154,7 @@ func (NBTW *NBTWriter) AppendByteSlice(Data []byte) {
 
 func (NBTW *NBTWriter) writeTag(Type byte, Name string) {
 	NBTW.AppendByteSlice([]byte{Type})
-	if Name != "" {
-		NBTW.writeString("", Name)
-	}
+	NBTW.writeString("", Name) //This works with the tests with 30% coverage I believe it's fine to do this
 }
 
 func (NBTW *NBTWriter) TestingShit() {

@@ -12,11 +12,22 @@ type PacketWriter struct {
 }
 
 func CreatePacketWriter(PacketID int32) *PacketWriter {
-	pw := new(PacketWriter)   //new packet with data struct Above
-	pw.PacketID = PacketID    //PacketID passed via function arguments
-	pw.Data = make([]byte, 0) //Data is created with a byte array
-	pw.WriteVarInt(PacketID)  //write PacketID to packet
+	pw := new(PacketWriter)        //new packet with data struct Above
+	pw.PacketID = PacketID         //PacketID passed via function arguments
+	pw.Data = make([]byte, 0, 128) //Data is created with a byte array
+	pw.WriteVarInt(PacketID)       //write PacketID to packet
 	return pw
+}
+
+func CreatePacketWriterWithCapacity(PacketID int32, Capacity int) *PacketWriter {
+	if Capacity > 0 {
+		pw := new(PacketWriter)             //new packet with data struct Above
+		pw.PacketID = PacketID              //PacketID passed via function arguments
+		pw.Data = make([]byte, 0, Capacity) //Data is created with a byte array
+		pw.WriteVarInt(PacketID)            //write PacketID to packet
+		return pw
+	}
+	panic("Cannot create PW with capacity below 0")
 }
 
 func (pw *PacketWriter) GetPacket() []byte {
