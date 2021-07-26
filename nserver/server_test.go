@@ -1,20 +1,19 @@
 package nserver
 
 import (
-	"fmt"
 	"testing"
 )
 
 func BenchmarkServer(b *testing.B) {
-	S, err := NewServer("127.0.0.1", "25565", true, false, true, true, 16, 16, 16)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Print(S)
+	// S, err := NewServer("127.0.0.1", "25565", true, false, true, true, 16, 16, 16)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	//fmt.Print(S)
 	//Conn := new(gnet.Conn)
-	for i := 0; i < b.N; i++ {
-
-	}
+	// for i := 0; i < b.N; i++ {
+	//
+	// }
 	//S.React(Frame []byte, Conn)
 }
 
