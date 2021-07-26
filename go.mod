@@ -1,6 +1,6 @@
 module HoneyGO
 
-go 1.17
+go 1.16.6
 
 require (
 	github.com/LethalEthan/Go-Nibble v0.0.0-20200906174923-7a467d5ddff9
