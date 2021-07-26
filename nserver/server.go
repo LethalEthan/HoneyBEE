@@ -157,6 +157,8 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 						SP.ProtocolVersion = ClientConn.ProtocolVersion
 						writer := SP.Encode()
 						ClientConn.Conn.AsyncWrite(writer.GetPacket())
+					} else {
+						Log.Warning("Packet is bigger than expected")
 					}
 				case 0x01:
 					Log.Debug("status 0x01_SB")

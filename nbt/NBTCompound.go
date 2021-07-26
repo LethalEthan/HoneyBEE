@@ -31,14 +31,14 @@ func CreateCompoundTagObject(Name string, Capacity int) TCompound {
 
 func (NBTW *NBTWriter) EndCompoundTag() {
 	if NBTW.CurrentTag.PreviousTag != nil {
-		NBTW.CurrentTag.AddTag("", TEnd{})
+		NBTW.CurrentTag.AddTag(TEnd{})
 		NBTW.CurrentTag.NumEntries = len(NBTW.CurrentTag.Value) //NumEntries is updated every time when AddTag is called, this is just for fool-proofing
-		NBTW.CurrentTag.PreviousTag.AddTag(NBTW.CurrentTag.Name, *NBTW.CurrentTag)
+		NBTW.CurrentTag.PreviousTag.AddTag(*NBTW.CurrentTag)
 		NBTW.CurrentTag = NBTW.CurrentTag.PreviousTag
 		return
 	}
 	NBTW.CurrentTag.NumEntries = len(NBTW.CurrentTag.Value)
-	NBTW.CurrentTag.AddTag("", TEnd{})
+	NBTW.CurrentTag.AddTag(TEnd{})
 }
 
 func (NBTW *NBTWriter) writeCompoundTag(Name string) {
@@ -51,7 +51,7 @@ func (NBTW *NBTWriter) writeCompoundTag(Name string) {
 // 	TC.Value = make([]interface{}, 0, 16) //Make length 0 and capacity 16 helps with lowering allocations until it reaches 16
 // }
 
-func (TC *TCompound) AddTag(Name string, val interface{}) {
+func (TC *TCompound) AddTag(val interface{}) {
 	//TC.Index++
 	TC.Value = append(TC.Value, val)
 	// TC.NumEntries = len(TC.Value)

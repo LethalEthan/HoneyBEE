@@ -38,34 +38,34 @@ func CreateNBTWriter(Name string) *NBTWriter {
 func (NBTW *NBTWriter) AddTag(Val interface{}) {
 	switch Val.(type) {
 	case TEnd:
-		NBTW.CurrentTag.AddTag("", TEnd{})
+		NBTW.CurrentTag.AddTag(TEnd{})
 	case TByte:
-		NBTW.CurrentTag.AddTag(Val.(TByte).Name, Val.(TByte))
+		NBTW.CurrentTag.AddTag(Val.(TByte))
 	case TShort:
-		NBTW.CurrentTag.AddTag(Val.(TShort).Name, Val.(TShort))
+		NBTW.CurrentTag.AddTag(Val.(TShort))
 	case TInt:
-		NBTW.CurrentTag.AddTag(Val.(TInt).Name, Val.(TInt))
+		NBTW.CurrentTag.AddTag(Val.(TInt))
 	case TLong:
-		NBTW.CurrentTag.AddTag(Val.(TLong).Name, Val.(TLong))
+		NBTW.CurrentTag.AddTag(Val.(TLong))
 	case TFloat:
-		NBTW.CurrentTag.AddTag(Val.(TFloat).Name, Val.(TFloat))
+		NBTW.CurrentTag.AddTag(Val.(TFloat))
 	case TDouble:
-		NBTW.CurrentTag.AddTag(Val.(TDouble).Name, Val.(TDouble))
+		NBTW.CurrentTag.AddTag(Val.(TDouble))
 	case TByteArray:
 		BA := Val.(TByteArray)
 		BA.length = len(BA.Value)
-		NBTW.CurrentTag.AddTag(Val.(TByteArray).Name, Val.(TByteArray))
+		NBTW.CurrentTag.AddTag(Val.(TByteArray))
 	case TString:
-		NBTW.CurrentTag.AddTag(Val.(TString).Name, Val.(TString))
+		NBTW.CurrentTag.AddTag(Val.(TString))
 	case TList:
 		List := Val.(TList)
 		List.length = len(List.Value)
-		NBTW.CurrentTag.AddTag(List.Name, List)
+		NBTW.CurrentTag.AddTag(List)
 	case TCompound:
 		TC := Val.(TCompound)
 		TC.NumEntries = len(TC.Value)
 		TC.PreviousTag = NBTW.CurrentTag
-		TC.AddTag("", TEnd{})
+		TC.AddTag(TEnd{})
 		NBTW.currentTagIndex++
 		NBTW.CurrentTag = NBTW.CurrentTag.PreviousTag
 		//NBTW.CurrentTag.Index++
@@ -73,11 +73,11 @@ func (NBTW *NBTWriter) AddTag(Val interface{}) {
 	case TIntArray:
 		TIA := Val.(TIntArray)
 		TIA.length = len(TIA.Value)
-		NBTW.CurrentTag.AddTag(Val.(TIntArray).Name, interface{}(TIA))
+		NBTW.CurrentTag.AddTag(TIA)
 	case TLongArray:
 		TLA := Val.(TLongArray)
 		TLA.length = len(TLA.Value)
-		NBTW.CurrentTag.AddTag(Val.(TLongArray).Name, interface{}(TLA))
+		NBTW.CurrentTag.AddTag(TLA)
 	}
 }
 
@@ -93,21 +93,21 @@ func (NBTW *NBTWriter) AddTagBasedOnValue(Name string, Val interface{}) error {
 	case nil:
 		return NBTnil
 	case byte:
-		NBTW.CurrentTag.AddTag(Name, TByte{Name, Val.(byte)})
+		NBTW.CurrentTag.AddTag(TByte{Name, Val.(byte)})
 	case int16:
-		NBTW.CurrentTag.AddTag(Name, TShort{Name, Val.(int16)})
+		NBTW.CurrentTag.AddTag(TShort{Name, Val.(int16)})
 	case int32:
-		NBTW.CurrentTag.AddTag(Name, TInt{Name, Val.(int32)})
+		NBTW.CurrentTag.AddTag(TInt{Name, Val.(int32)})
 	case int64:
-		NBTW.CurrentTag.AddTag(Name, TLong{Name, Val.(int64)})
+		NBTW.CurrentTag.AddTag(TLong{Name, Val.(int64)})
 	case float32:
-		NBTW.CurrentTag.AddTag(Name, TFloat{Name, Val.(float32)})
+		NBTW.CurrentTag.AddTag(TFloat{Name, Val.(float32)})
 	case float64:
-		NBTW.CurrentTag.AddTag(Name, TDouble{Name, Val.(float64)})
+		NBTW.CurrentTag.AddTag(TDouble{Name, Val.(float64)})
 	case []byte:
-		NBTW.CurrentTag.AddTag(Name, TByteArray{Name, Val.([]byte), len(Val.([]byte)), 0})
+		NBTW.CurrentTag.AddTag(TByteArray{Name, Val.([]byte), len(Val.([]byte)), 0})
 	case string:
-		NBTW.CurrentTag.AddTag(Name, TString{Name, Val.(string)})
+		NBTW.CurrentTag.AddTag(TString{Name, Val.(string)})
 	case map[string]interface{}: //All types, iterated through, this will not accept compounds or lists since they cannot be deteced via primitives
 		var err error
 		for i, v := range Val.(map[string]interface{}) {
@@ -119,9 +119,9 @@ func (NBTW *NBTWriter) AddTagBasedOnValue(Name string, Val interface{}) error {
 		}
 		return err
 	case []int32:
-		NBTW.CurrentTag.AddTag(Name, TIntArray{Name, Val.([]int32), len(Val.([]int32)), 0})
+		NBTW.CurrentTag.AddTag(TIntArray{Name, Val.([]int32), len(Val.([]int32)), 0})
 	case []int64:
-		NBTW.CurrentTag.AddTag(Name, TLongArray{Name, Val.([]int64), len(Val.([]int64)), 0})
+		NBTW.CurrentTag.AddTag(TLongArray{Name, Val.([]int64), len(Val.([]int64)), 0})
 	default:
 		return fmt.Errorf("NBTTypeUnknown: %s, Value: %v", Name, Val)
 	}
