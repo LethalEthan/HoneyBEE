@@ -27,7 +27,7 @@ jobs:
     - name: Tidy
       run: go mod tidy
     - name: Build
-      run: go build -o HoneyGO -v ./...
+      run: go build -o ~/HoneyGO -v ./...
 
     - name: Test
       run: go test -v ./...
@@ -38,5 +38,5 @@ jobs:
         # Artifact name
         name: HoneyGO # optional, default is artifact
          # A file, directory or wildcard pattern that describes what to upload
-        path: ./HoneyGO
+        path: ~/HoneyGO
         if-no-files-found: error
