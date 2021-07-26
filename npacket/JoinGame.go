@@ -45,7 +45,8 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.CreateCompoundTag("minecraft:worldgen/biome")
 	JG.DimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:worldgen/biome"))
-	Blist := nbr.CreateListTag("value", nbt.TagCompound)
+	Blist := nbt.CreateListTag("value", nbt.TagCompound)
+	_ = Blist
 	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.Encode()
 	//JG.DimensionCodec.
