@@ -29,3 +29,12 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+    
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        # Artifact name
+        name: HoneyGO # optional, default is artifact
+         # A file, directory or wildcard pattern that describes what to upload
+        path: ./HoneyGO
+        if-no-files-found: error
