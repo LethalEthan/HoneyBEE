@@ -1,10 +1,10 @@
 package worldtime
 
 import (
-	"Packet"
+	"HoneyGO/Packet"
+	"HoneyGO/player"
 	"fmt"
 	"net"
-	"player"
 	"time"
 
 	logging "github.com/op/go-logging"
