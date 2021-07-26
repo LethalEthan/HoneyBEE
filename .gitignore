@@ -7,6 +7,7 @@
 *.old
 *.nrn
 *.fuk
+*.txt
 __debug_bin
 
 # Test binary, built with `go test -c`
