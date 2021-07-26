@@ -32,6 +32,12 @@ jobs:
       
     - name: BuildWindows
       run: env GOOS=windows GOARCH=amd64 go build -o ~/HoneyGO-Windows/ -v ./...
+        
+    - name: CopyConfigLinux
+      run: cp ./config.yml ~/HoneyGO-Linux/
+      
+    - name: CopyConfigWindows
+      run: cp ./config.yml ~/HoneyGO-Windows/
     
     - name: Test
       run: go test -v ./...
@@ -42,7 +48,7 @@ jobs:
         # Artifact name
         name: HoneyGO-Linux # optional, default is artifact
          # A file, directory or wildcard pattern that describes what to upload
-        path: ~/HoneyGO-Linux/HoneyGO
+        path: ~/HoneyGO-Linux/
         if-no-files-found: error
         
     - name: Upload Windows Build Artifact
@@ -51,5 +57,5 @@ jobs:
         # Artifact name
         name: HoneyGO-Windows # optional, default is artifact
          # A file, directory or wildcard pattern that describes what to upload
-        path: ~/HoneyGO-Windows/HoneyGO.exe
+        path: ~/HoneyGO-Windows/
         if-no-files-found: error
