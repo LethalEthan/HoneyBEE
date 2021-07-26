@@ -27,17 +27,29 @@ jobs:
     - name: Tidy
       run: go mod tidy
       
-    - name: Build
-      run: go build -o ~/HoneyGO/ -v ./...
-
+    - name: BuildLinux
+      run: go build -o ~/HoneyGO-Linux/ -v ./...
+      
+    - name: BuildWindows
+      run: env GOOS=windows GOARCH=amd64 go build -o ~/HoneyGO-Windows/ -v ./...
+    
     - name: Test
       run: go test -v ./...
     
-    - name: Upload a Build Artifact
+    - name: Upload Linux Build Artifact
       uses: actions/upload-artifact@v2.2.4
       with:
         # Artifact name
-        name: HoneyGO # optional, default is artifact
+        name: HoneyGO-Linux # optional, default is artifact
          # A file, directory or wildcard pattern that describes what to upload
-        path: ~/HoneyGO/HoneyGO
+        path: ~/HoneyGO-Linux/HoneyGO
+        if-no-files-found: error
+        
+    - name: Upload Windows Build Artifact
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        # Artifact name
+        name: HoneyGO-Windows # optional, default is artifact
+         # A file, directory or wildcard pattern that describes what to upload
+        path: ~/HoneyGO-Windows/HoneyGO.exe
         if-no-files-found: error
