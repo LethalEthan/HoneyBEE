@@ -3,30 +3,29 @@ package npacket
 import (
 	"HoneyGO/nbt"
 	"HoneyGO/player"
-	"HoneyGO/utils"
 
 	"github.com/panjf2000/gnet"
 )
 
 func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet.Conn) {
-	JG = &JoinGame_CB{
-		EntityID:            int32(player.AssignEID(playername)),
-		IsHardcore:          false,
-		Gamemode:            GM,
-		PreviousGamemode:    -1,
-		WorldCount:          1,
-		WorldNames:          []Identifier{"minecraft:overworld"},
-		DimensionCodec:      nbt.CreateNBTWriter(""),
-		Dimension:           nbt.CreateNBTWriter(""),
-		WorldName:           "minecraft:overworld",
-		HashedSeed:          0,
-		MaxPlayers:          20,
-		ViewDistance:        12,
-		ReducedDebugInfo:    false,
-		EnableRespawnScreen: true,
-		IsDebug:             false,
-		IsFlat:              true,
-	}
+	//JG = &JoinGame_CB{
+	JG.EntityID = int32(player.AssignEID(playername))
+	JG.IsHardcore = false
+	JG.Gamemode = GM
+	JG.PreviousGamemode = -1
+	JG.WorldCount = 1
+	JG.WorldNames = []Identifier{"minecraft:overworld"}
+	JG.DimensionCodec = nbt.CreateNBTWriter("")
+	JG.Dimension = nbt.CreateNBTWriter("")
+	JG.WorldName = "minecraft:overworld"
+	JG.HashedSeed = 0
+	JG.MaxPlayers = 20
+	JG.ViewDistance = 12
+	JG.ReducedDebugInfo = false
+	JG.EnableRespawnScreen = true
+	JG.IsDebug = false
+	JG.IsFlat = true
+	//}
 	PW := CreatePacketWriterWithCapacity(0x26, 1024)
 	PW.WriteInt(JG.EntityID)
 	PW.WriteBoolean(JG.IsHardcore)
@@ -34,26 +33,29 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	PW.WriteByte(JG.PreviousGamemode)
 	PW.WriteVarInt(JG.WorldCount)
 	PW.WriteArrayIdentifier(JG.WorldNames)
-	JG.DimensionCodec.CreateCompoundTag("minecraft:dimension_type")
+	JG.DimensionCodec.AddCompoundTag("minecraft:dimension_type")
 	JG.DimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:dimension_type"))
 	List := nbt.CreateListTag("value", nbt.TagCompound)
 	TC := nbt.CreateCompoundTagObject("", 8)
 	TC.AddTag(nbt.CreateStringTag("name", "minecraft:overworld"))
 	TC.AddTag(nbt.CreateIntTag("id", 0))
 	TC.AddTag(CreateDimensionTypeRegistry(1, 1, 0, 1, 1, 1, 0, 0, 1.0, 1.0, 0, 256, 64, 12000, "", "minecraft:overworld"))
+	TC.PreviousTag = JG.DimensionCodec.CurrentTag
+	TC.EndTag()
 	List.AddToList(TC)
 	JG.DimensionCodec.AddTag(List)
 	JG.DimensionCodec.EndCompoundTag()
-	JG.DimensionCodec.CreateCompoundTag("minecraft:worldgen/biome")
+	JG.DimensionCodec.AddCompoundTag("minecraft:worldgen/biome")
 	JG.DimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:worldgen/biome"))
 	Blist := nbt.CreateListTag("value", nbt.TagCompound)
 	TC2 := nbt.CreateCompoundTagObject("", 8)
 	TC2.AddTag(nbt.CreateStringTag("name", "minecraft:plains"))
 	TC2.AddTag(nbt.CreateIntTag("id", 0))
 	TC2.AddTag(CreateBiomeProperties(1.0, 1.0, 1.0, 1.0, 8364543, 8364543, 8364543, 8364543, 8364543, 8364543, "none", "plains", "", "", ""))
+	TC2.PreviousTag = JG.DimensionCodec.CurrentTag
+	TC2.EndTag()
 	Blist.AddToList(TC2)
 	JG.DimensionCodec.AddTag(Blist)
-	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.EndCompoundTag()
@@ -65,7 +67,8 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	// }
 	// f.Write(JG.DimensionCodec.Data)
 	// f.Close()
-	utils.PrintBytes("DimensionCodec", JG.DimensionCodec.Data)
+	// utils.PrintHexFromBytes("DimensionCodec", JG.DimensionCodec.Data)
+	// Log.Info("DimensionCodec", JG.DimensionCodec.Data)
 	//JG.DimensionCodec.
 }
 
@@ -79,7 +82,8 @@ func CreateDimensionTypeRegistry(piglin_safe, natural, respawn_anchor_works, has
 		nbt.CreateStringTag("effects", effects), nbt.CreateByteTag("has_raids", has_raids), nbt.CreateIntTag("min_y", min_y),
 		nbt.CreateIntTag("height", height), nbt.CreateIntTag("logical_height", logical_height),
 		nbt.CreateFloatTag("coordinate_scale", coordinate_scale), nbt.CreateByteTag("ultrawarm", ultrawarm),
-		nbt.CreateByteTag("has_ceiling", has_ceiling), nbt.TEnd{}, nbt.TEnd{}})
+		nbt.CreateByteTag("has_ceiling", has_ceiling)})
+	TC.EndTag()
 	return TC
 }
 
@@ -89,7 +93,8 @@ func CreateBiomeProperties(depth, temperature, scale, downfall float32, sky_colo
 		nbt.CreateStringTag("precipitation", precipitation), nbt.CreateFloatTag("depth", depth),
 		nbt.CreateFloatTag("temperature", temperature), nbt.CreateFloatTag("scale", scale),
 		nbt.CreateFloatTag("downfall", downfall), nbt.CreateStringTag("category", category),
-		CreateBiomeEffects(sky_colour, water_fog_colour, fog_colour, water_colour, foliage_colour, grass_colour, grass_colour_modifier), nbt.TEnd{}})
+		CreateBiomeEffects(sky_colour, water_fog_colour, fog_colour, water_colour, foliage_colour, grass_colour, grass_colour_modifier)})
+	TC.EndTag()
 	return TC
 }
 
@@ -99,6 +104,7 @@ func CreateBiomeEffects(sky_colour, water_fog_colour, fog_colour, water_colour, 
 		nbt.CreateIntTag("sky_color", sky_colour), nbt.CreateIntTag("water_fog_color", water_fog_colour),
 		nbt.CreateIntTag("fog_color", fog_colour), nbt.CreateIntTag("water_color", water_colour),
 		nbt.CreateIntTag("foliage_color", foliage_colour), nbt.CreateIntTag("grass_color", grass_colour),
-		nbt.CreateStringTag("grass_color_modifier", grass_colour_modifier), nbt.TEnd{}})
+		nbt.CreateStringTag("grass_color_modifier", grass_colour_modifier)})
+	TC.EndTag()
 	return TC
 }
