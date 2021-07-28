@@ -115,7 +115,8 @@ func main() {
 		}
 	}
 	if config.GConfig.DEBUGOPTS.NewServer {
-		nserver.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
+		_, err := nserver.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
+		Log.Critical(err)
 	} else {
 		Log.Info("Accepting Connections")
 		Log.Critical("OLD SERVER DEPRECATED AND REMOVED WILL DO NOTHING!")
