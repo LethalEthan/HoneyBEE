@@ -4,7 +4,6 @@ import (
 	"HoneyGO/config"
 	"errors"
 	"fmt"
-	"runtime"
 	"sync"
 	"time"
 
@@ -85,56 +84,56 @@ func GetPlayerByName(Name string) *PlayerObject {
 }
 
 //GCPlayer - Garbage Collect offline and expired players
-func GCPlayer(GCP chan bool) {
-	if SConfig.Performance.EnableGCPlayer {
-		if SConfig.Performance.GCPlayer == 0 { //Nothing Set
-			GCInterval = 15 * time.Minute //Default to 15 minutes
-		} else {
-			GCInterval = time.Duration(SConfig.Performance.GCPlayer) * time.Minute
-		}
-	} else {
-		GCInterval = 0
-		log.Warning("GCPlayer thread is not running, check config 'enable-gc-player'\n this is not reccomended and is only for test/debug purposes or for packet analyse mode")
-		return
-	}
-	//CreateTicker
-	ticker := time.NewTicker(GCInterval)
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				PlayerObjectMutex.RLock() //Lock map before loop reads
-				for i, val := range PlayerObjectMap {
-					PlayerObjectMutex.RUnlock() //Unlock map to not tie up others
-					if val.Online != true {
-						PlayerEntityMutex.Lock() //relock to delete from map
-						delete(PlayerEntityMap, val.Name)
-						PlayerEntityMutex.Unlock()
-						PlayerObjectMutex.Lock()
-						delete(PlayerObjectMap, i)
-						PlayerObjectMutex.Unlock()
-						log.Debug("Player:", val.Name, "deleted from map")
-					} else {
-						log.Debug("No player to GC found in map")
-					}
-					PlayerObjectMutex.RLock() //Relock for when loop reads
-				}
-				PlayerObjectMutex.RUnlock() //make sure that map is unlocked
-				runtime.GC()                //run a GC
-			case <-GCP:
-				if <-GCP {
-					Log := logging.MustGetLogger("HoneyGO")
-					Log.Warning("Stopping GCPlayer")
-					ticker.Stop()
-					//Cleanup
-					ticker = nil
-					Log = nil
-					return
-				}
-			}
-		}
-	}()
-}
+// func GCPlayer(GCP chan bool) {
+// 	if SConfig.Performance.EnableGCPlayer {
+// 		if SConfig.Performance.GCPlayer == 0 { //Nothing Set
+// 			GCInterval = 15 * time.Minute //Default to 15 minutes
+// 		} else {
+// 			GCInterval = time.Duration(SConfig.Performance.GCPlayer) * time.Minute
+// 		}
+// 	} else {
+// 		GCInterval = 0
+// 		//log.Warning("GCPlayer thread is not running, check config 'enable-gc-player'\n this is not reccomended and is only for test/debug purposes or for packet analyse mode")
+// 		return
+// 	}
+// 	//CreateTicker
+// 	ticker := time.NewTicker(GCInterval)
+// 	go func() {
+// 		for {
+// 			select {
+// 			case <-ticker.C:
+// 				PlayerObjectMutex.RLock() //Lock map before loop reads
+// 				for i, val := range PlayerObjectMap {
+// 					PlayerObjectMutex.RUnlock() //Unlock map to not tie up others
+// 					if val.Online != true {
+// 						PlayerEntityMutex.Lock() //relock to delete from map
+// 						delete(PlayerEntityMap, val.Name)
+// 						PlayerEntityMutex.Unlock()
+// 						PlayerObjectMutex.Lock()
+// 						delete(PlayerObjectMap, i)
+// 						PlayerObjectMutex.Unlock()
+// 						log.Debug("Player:", val.Name, "deleted from map")
+// 					} else {
+// 						log.Debug("No player to GC found in map")
+// 					}
+// 					PlayerObjectMutex.RLock() //Relock for when loop reads
+// 				}
+// 				PlayerObjectMutex.RUnlock() //make sure that map is unlocked
+// 				runtime.GC()                //run a GC
+// 			case <-GCP:
+// 				if <-GCP {
+// 					Log := logging.MustGetLogger("HoneyGO")
+// 					Log.Warning("Stopping GCPlayer")
+// 					ticker.Stop()
+// 					//Cleanup
+// 					ticker = nil
+// 					Log = nil
+// 					return
+// 				}
+// 			}
+// 		}
+// 	}()
+// }
 
 //Disconnect - Handles player disconnecting
 func Disconnect(Name string) {

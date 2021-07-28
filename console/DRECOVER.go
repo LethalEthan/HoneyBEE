@@ -2,8 +2,8 @@ package console
 
 import (
 	"HoneyGO/config"
+	"HoneyGO/npacket"
 	"HoneyGO/player"
-	"HoneyGO/server"
 	"HoneyGO/utils"
 	"fmt"
 	"runtime"
@@ -18,45 +18,45 @@ func DRECOVER() {
 	if r := recover(); r != nil {
 		Panicked = true //TBD: link to event system to stop everything
 		//go SetRun(false)
-		go server.SetRun(false)
+		//go server.SetRun(false)
 		go func() { //Lock mutexes in case something carries on upon recovery
-			server.RunMutex.Lock()
-			server.PlayerMapMutex.Lock()
-			server.ConnPlayerMutex.Lock()
-			server.ClientConnectionMutex.Lock()
-			server.StatusMutex.Lock()
-			server.PlayerConnMutex.Lock()
-			server.RunMutex.Lock()
+			// server.RunMutex.Lock()
+			// server.PlayerMapMutex.Lock()
+			// server.ConnPlayerMutex.Lock()
+			// server.ClientConnectionMutex.Lock()
+			// server.StatusMutex.Lock()
+			// server.PlayerConnMutex.Lock()
+			// server.RunMutex.Lock()
 			player.OnlinePlayerMutex.Lock()
 			player.PlayerEntityMutex.Lock()
 			player.PlayerObjectMutex.Lock()
-			server.Run = false //reset as false in case the go routine did not
-			server.GCPShutdown <- true
+			//server.Run = false //reset as false in case the go routine did not
+			//server.GCPShutdown <- true
 		}()
-		go server.StatusSemaphore.StopSemaphore() //TODO: Make all semaphores be able to be stopped
+		//go server.StatusSemaphore.StopSemaphore() //TODO: Make all semaphores be able to be stopped
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		fmt.Println("Server encountered panic! reason: ", r)
 		fmt.Println("Printing Debug, please create an issue and send this!")
 		fmt.Println("----------------------------------------")
 		fmt.Println("Server Maps and states (package server)")
 		fmt.Println("----------------------------------------")
-		fmt.Println("Server run state:", server.Run, "Mutex: ", server.RunMutex)
+		// fmt.Println("Server run state:", server.Run, "Mutex: ", server.RunMutex)
 		fmt.Println("HoneyGOVersion: ", utils.HoneyGOVersion, "BVersion: ", utils.BVersion, "FH: ", Hash())
-		fmt.Println("Server Init: ", server.ServerInitialised, "REINIT: ", server.ServerREINIT)
+		// fmt.Println("Server Init: ", server.ServerInitialised, "REINIT: ", server.ServerREINIT)
 		fmt.Println("Config:", config.GConfig)
-		fmt.Println("PlayerMap: ", server.PlayerMap)
-		fmt.Println("PlayerConnMap", server.PlayerConnMap)
-		fmt.Println("ConnPlayerMap", server.ConnPlayerMap)
-		fmt.Println("Mutexes: ", "PlayerMap: ", server.PlayerMapMutex, "PCM: ", server.PlayerConnMutex, "CPM: ", server.ConnPlayerMutex)
+		// fmt.Println("PlayerMap: ", server.PlayerMap)
+		// fmt.Println("PlayerConnMap", server.PlayerConnMap)
+		// fmt.Println("ConnPlayerMap", server.ConnPlayerMap)
+		// fmt.Println("Mutexes: ", "PlayerMap: ", server.PlayerMapMutex, "PCM: ", server.PlayerConnMutex, "CPM: ", server.ConnPlayerMutex)
 		fmt.Println("----------------------------------------")
 		fmt.Println("Network")
 		fmt.Println("----------------------------------------")
-		fmt.Println("Auth: ", server.Hash())
-		fmt.Println("ClientConnectionMap: ", server.ClientConnectionMap)
-		fmt.Println("CCM Mutex: ", server.ClientConnectionMutex)
-		fmt.Println("Status Cache Map: ", server.StatusCache)
-		fmt.Println("Status Mutex: ", server.StatusMutex)
-		fmt.Println("StatusSemaphore", server.StatusSemaphore)
+		fmt.Println("Auth: ", npacket.Hash())
+		// fmt.Println("ClientConnectionMap: ", server.ClientConnectionMap)
+		// fmt.Println("CCM Mutex: ", server.ClientConnectionMutex)
+		// fmt.Println("Status Cache Map: ", server.StatusCache)
+		// fmt.Println("Status Mutex: ", server.StatusMutex)
+		// fmt.Println("StatusSemaphore", server.StatusSemaphore)
 		fmt.Println("----------------------------------------")
 		fmt.Println("Player Maps and states (package player)")
 		fmt.Println("----------------------------------------")

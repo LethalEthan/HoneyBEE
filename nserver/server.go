@@ -75,6 +75,11 @@ func (S *Server) OnClosed(Conn gnet.Conn, err error) (Action gnet.Action) {
 	return
 }
 
+///
+///Optimise me, try not to use channels, maybe try a zero sized struct{} channel in worst case
+///Do not use a seperate go routine for every client as per gnet I can use ants a go pool but this needs testing
+///
+
 func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	//CC, tmp := S.ConnectedSockets.Load(Conn.RemoteAddr().String())
 	ClientConn, tmp := Conn.Context().(*Client) //Get the client object from conn context
