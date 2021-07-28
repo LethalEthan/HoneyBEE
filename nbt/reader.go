@@ -208,7 +208,7 @@ func (NBTR *NBTReader) readString() (string, error) {
 func (NBTR *NBTReader) readWithEOFSeek(offset int) ([]byte, error) {
 	//Check if offset overflows
 	if NBTR.seeker+offset > NBTR.end {
-		utils.PrintBytes("overflow", NBTR.data) //fmt.Print(NBTR.data)
+		utils.PrintHexFromBytes("overflow", NBTR.data) //fmt.Print(NBTR.data)
 		return []byte{0}, fmt.Errorf("offset: %d seeker: %d end: %d", offset, NBTR.seeker, NBTR.end)
 	}
 	//Return data
