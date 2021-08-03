@@ -31,9 +31,15 @@ type StatusPlayers struct {
 // 	StatusSemaphore = utils.CreateSemaphore(10) //allow 10 concurrent connections to the StatusCache
 // )
 
+var LastStatus ServerStatus
+
 //CreateStatusObject - Create the server status object
 func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string) *ServerStatus {
 	//Limit the range of protocols to prevent the cache being flooded by false requests in attempt to crash the server maliciously
+	if LastStatus.Version.Protocol == MinecraftProtocolVersion {
+		Log.Debug("Cache")
+		return &LastStatus
+	}
 	if MinecraftProtocolVersion > 1200 || MinecraftProtocolVersion < 500 {
 		Log.Info("Protocol OOB, setting to 1.17!")
 		MinecraftProtocolVersion = utils.PrimaryMinecraftProtocolVersion
