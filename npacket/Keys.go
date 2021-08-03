@@ -45,7 +45,8 @@ func Keys() {
 func Auth(username string, sharedSecret []byte) string {
 	PlayerUUID, autherr := Authenticate(username, "", sharedSecret, publicKeySlice)
 	if autherr != nil {
-		panic(autherr)
+		Log.Error("Auth Fail!")
+		return ""
 	}
 	return PlayerUUID
 }
