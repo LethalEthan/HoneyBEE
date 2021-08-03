@@ -6,38 +6,50 @@ import (
 )
 
 type PacketWriter struct {
-	Data       []byte
-	PacketID   int32
-	PacketSize int32
+	data       []byte
+	packetID   int32
+	packetSize int32
 }
 
 func CreatePacketWriter(PacketID int32) *PacketWriter {
 	pw := new(PacketWriter)        //new packet with data struct Above
-	pw.PacketID = PacketID         //PacketID passed via function arguments
-	pw.Data = make([]byte, 0, 128) //Data is created with a byte array
+	pw.packetID = PacketID         //PacketID passed via function arguments
+	pw.data = make([]byte, 0, 128) //Data is created with a byte array
 	pw.WriteVarInt(PacketID)       //write PacketID to packet
 	return pw
 }
 
+/*CreatePacketWriterWithCapacity - Create a packet writer with capacity on the data slice
+max 2097151 if over it will default to a capacity of 128*/
 func CreatePacketWriterWithCapacity(PacketID int32, Capacity int) *PacketWriter {
-	if Capacity > 0 {
-		pw := new(PacketWriter)             //new packet with data struct Above
-		pw.PacketID = PacketID              //PacketID passed via function arguments
-		pw.Data = make([]byte, 0, Capacity) //Data is created with a byte array
-		pw.WriteVarInt(PacketID)            //write PacketID to packet
+	pw := new(PacketWriter)
+	pw.packetID = PacketID
+	if Capacity > 0 && Capacity < 2097151 {
+		pw.data = make([]byte, 0, Capacity)
+		pw.WriteVarInt(PacketID)
 		return pw
 	}
-	panic("Cannot create PW with capacity below 0")
+	pw.data = make([]byte, 0, 128)
+	pw.WriteVarInt(PacketID)
+	return pw
 }
 
 func (pw *PacketWriter) GetPacket() []byte {
-	return append(pw.CreateVarLong(int64(pw.PacketSize)), pw.Data...)
+	return append(pw.CreateVarInt(uint32(pw.packetSize)), pw.data...)
+}
+
+func (pw *PacketWriter) GetPacketID() int32 {
+	return pw.packetID
+}
+
+func (pw *PacketWriter) GetPacketSize() int32 {
+	return pw.packetSize
 }
 
 func (pw *PacketWriter) AppendByteSlice(Data []byte) {
-	pw.Data = append(pw.Data, Data...)
+	pw.data = append(pw.data, Data...)
 
-	pw.PacketSize += int32(len(Data))
+	pw.packetSize += int32(len(Data))
 }
 
 //WriteBoolean - Write Boolean to packet
@@ -132,22 +144,20 @@ func (pw *PacketWriter) WriteArrayIdentifier(val []Identifier) {
 
 //WriteVarInt - Write VarInt to packet (int32)
 func (pw *PacketWriter) WriteVarInt(val int32) {
-	pw.WriteVarLong(int64(val))
+	pw.AppendByteSlice(pw.CreateVarInt(uint32(val)))
 }
 
 //WriteVarLong - Write VarLong (int64)
 func (pw *PacketWriter) WriteVarLong(val int64) {
-	//tt := pw.CreateVarLong(val)
-	//Log.Debug("!!!!: ", tt)
-	pw.AppendByteSlice(pw.CreateVarLong(val))
+	pw.AppendByteSlice(pw.CreateVarLong(uint64(val)))
 }
 
-//CreateVarLong - Creates a VarLong
-func (pw *PacketWriter) CreateVarLong(val int64) []byte {
-	var buff []byte
+//CreateVarLong - Creates a VarLong, requires uint to move the sign bit
+func (pw *PacketWriter) CreateVarLong(val uint64) []byte {
+	var buff = make([]byte, 0, 10)
 	for {
 		temp := byte(val & 0x7F)
-		val = int64(val >> 7)
+		val = val >> 7
 		if val != 0 {
 			temp |= 0x80
 		}
@@ -159,9 +169,24 @@ func (pw *PacketWriter) CreateVarLong(val int64) []byte {
 	return buff
 }
 
-//
-// func (pw *PacketWriter) UseInterface(i interface{}) {
-// 	switch i.(type) {
-// 	case:
-// 	}
-// }
+//CreateVarInt - creates VarInt, requires uint to move the sign bit
+func (pw *PacketWriter) CreateVarInt(val uint32) []byte {
+	var buff = make([]byte, 0, 5)
+	var tmp byte
+	for {
+		tmp = byte(val & 0x7F)
+		val = val >> 7
+		if val != 0 {
+			tmp |= 0x80
+		}
+		buff = append(buff, tmp)
+		if val == 0 {
+			break
+		}
+		if len(buff) >= 5 {
+			Log.Critical("Buff over 5!")
+			break
+		}
+	}
+	return buff
+}
