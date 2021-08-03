@@ -61,7 +61,7 @@ type TCompound struct {
 	Index        int
 	PreviousTag  *TCompound
 	PreviousTags []TCompound
-	NextTags     []CompoundTag
+	NextTags     []TCompound
 }
 
 type TIntArray struct {
