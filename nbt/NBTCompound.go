@@ -20,7 +20,7 @@ func (NBTW *NBTWriter) AddCompoundTag(Name string) {
 compound tag will have to be added to NBTWriter with NBTW.AddTag(TCompound)
 
 Capacity is for the []interface{} slice that stores the objects, the capacity is how many objects can be appended without needing a new slice to be re-allocated*/
-func CreateCompoundTagObject(Name string, Capacity int) TCompound {
+func CreateCompoundTag(Name string, Capacity int) TCompound {
 	TC := new(TCompound)
 	TC.Name = Name
 	if Capacity > 0 {

@@ -30,6 +30,8 @@ var (
 func init() {
 	//Hello from HoneyGO
 	//Logger Creation Start
+	debug.SetMaxThreads(1024)
+	debug.SetMaxStack(4294967296)
 	defer console.DRECOVER()
 	B1 := logging.NewLogBackend(os.Stderr, "", 0)       //New Backend
 	B1Format := logging.NewBackendFormatter(B1, format) //Set Format

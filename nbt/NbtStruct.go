@@ -58,10 +58,10 @@ type TCompound struct {
 	TagsIndex    map[string]int
 	TagsIDIndex  map[int]string
 	NumEntries   int
-	PreviousTag  *TCompound
-	PreviousTags []*TCompound
-	NextTags     []*CompoundTag
 	Index        int
+	PreviousTag  *TCompound
+	PreviousTags []TCompound
+	NextTags     []CompoundTag
 }
 
 type TIntArray struct {
