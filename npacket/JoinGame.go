@@ -7,7 +7,7 @@ import (
 	"github.com/panjf2000/gnet"
 )
 
-func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet.Conn) {
+func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet.Conn) *PacketWriter {
 	//JG = &JoinGame_CB{
 	JG.EntityID = int32(player.AssignEID(playername))
 	JG.IsHardcore = false
@@ -36,7 +36,7 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	JG.DimensionCodec.AddCompoundTag("minecraft:dimension_type")
 	JG.DimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:dimension_type"))
 	List := nbt.CreateListTag("value", nbt.TagCompound)
-	TC := nbt.CreateCompoundTagObject("", 8)
+	TC := nbt.CreateCompoundTag("", 8)
 	TC.AddTag(nbt.CreateStringTag("name", "minecraft:overworld"))
 	TC.AddTag(nbt.CreateIntTag("id", 0))
 	TC.AddTag(CreateDimensionTypeRegistry(1, 1, 0, 1, 1, 1, 0, 0, 1.0, 1.0, 0, 256, 64, 12000, "", "minecraft:overworld"))
@@ -48,7 +48,7 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	JG.DimensionCodec.AddCompoundTag("minecraft:worldgen/biome")
 	JG.DimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:worldgen/biome"))
 	Blist := nbt.CreateListTag("value", nbt.TagCompound)
-	TC2 := nbt.CreateCompoundTagObject("", 8)
+	TC2 := nbt.CreateCompoundTag("", 8)
 	TC2.AddTag(nbt.CreateStringTag("name", "minecraft:plains"))
 	TC2.AddTag(nbt.CreateIntTag("id", 0))
 	TC2.AddTag(CreateBiomeProperties(1.0, 1.0, 1.0, 1.0, 8364543, 8364543, 8364543, 8364543, 8364543, 8364543, "none", "plains", "", "", ""))
@@ -61,6 +61,22 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.EndCompoundTag()
 	JG.DimensionCodec.Encode()
+	PW.WriteArray(JG.DimensionCodec.Data)
+	TC3 := CreateDimensionTypeRegistry(1, 1, 0, 1, 1, 1, 0, 0, 1.0, 1.0, 0, 256, 64, 12000, "", "minecraft:overworld")
+	JG.Dimension.AddTag(TC3)
+	JG.Dimension.EndCompoundTag()
+	JG.Dimension.Encode()
+	PW.WriteArray(JG.DimensionCodec.Data)
+	PW.WriteArray(JG.Dimension.Data)
+	PW.WriteIdentifier(JG.WorldName)
+	PW.WriteLong(0)
+	PW.WriteVarInt(20)
+	PW.WriteVarInt(12)
+	PW.WriteBoolean(false)
+	PW.WriteBoolean(true)
+	PW.WriteBoolean(true)
+	PW.WriteBoolean(true)
+	return PW
 	// f, err := os.Create("testing.nbt")
 	// if err != nil {
 	// 	panic(err)
@@ -73,7 +89,7 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 }
 
 func CreateDimensionTypeRegistry(piglin_safe, natural, respawn_anchor_works, has_skylight, bed_works, has_raids, ultrawarm, has_ceiling byte, ambient_light, coordinate_scale float32, min_y, height, logical_height int32, fixed_time int64, infiniburn, effects string) nbt.TCompound {
-	TC := nbt.CreateCompoundTagObject("element", 16)
+	TC := nbt.CreateCompoundTag("element", 16)
 	TC.AddMultipleTags([]interface{}{
 		nbt.CreateByteTag("piglin_safe", piglin_safe), nbt.CreateByteTag("natural", natural),
 		nbt.CreateFloatTag("ambient_light", ambient_light), nbt.CreateLongTag("fixed_time", fixed_time),
@@ -88,7 +104,7 @@ func CreateDimensionTypeRegistry(piglin_safe, natural, respawn_anchor_works, has
 }
 
 func CreateBiomeProperties(depth, temperature, scale, downfall float32, sky_colour, water_fog_colour, fog_colour, water_colour, foliage_colour, grass_colour int32, precipitation, category, temperature_modifier, grass_colour_modifier, ambient_sound string) nbt.TCompound {
-	TC := nbt.CreateCompoundTagObject("element", 8)
+	TC := nbt.CreateCompoundTag("element", 8)
 	TC.AddMultipleTags([]interface{}{
 		nbt.CreateStringTag("precipitation", precipitation), nbt.CreateFloatTag("depth", depth),
 		nbt.CreateFloatTag("temperature", temperature), nbt.CreateFloatTag("scale", scale),
@@ -99,7 +115,7 @@ func CreateBiomeProperties(depth, temperature, scale, downfall float32, sky_colo
 }
 
 func CreateBiomeEffects(sky_colour, water_fog_colour, fog_colour, water_colour, foliage_colour, grass_colour int32, grass_colour_modifier string) nbt.TCompound {
-	TC := nbt.CreateCompoundTagObject("effects", 10)
+	TC := nbt.CreateCompoundTag("effects", 10)
 	TC.AddMultipleTags([]interface{}{
 		nbt.CreateIntTag("sky_color", sky_colour), nbt.CreateIntTag("water_fog_color", water_fog_colour),
 		nbt.CreateIntTag("fog_color", fog_colour), nbt.CreateIntTag("water_color", water_colour),
