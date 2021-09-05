@@ -53,13 +53,15 @@ type TList struct {
 }
 
 type TCompound struct {
-	Name        string
-	Value       []interface{}
-	TagsIndex   map[string]int
-	TagsIDIndex map[int]string
-	NumEntries  int
-	PreviousTag *TCompound
-	Index       int
+	Name         string
+	Value        []interface{}
+	TagsIndex    map[string]int
+	TagsIDIndex  map[int]string
+	NumEntries   int
+	Index        int
+	PreviousTag  *TCompound
+	PreviousTags []TCompound
+	NextTags     []TCompound
 }
 
 type TIntArray struct {

@@ -14,6 +14,6 @@ var (
 	//
 	NBTUnknownType   = errors.New("Value type is unknown, cannot create an NBT tag :(")
 	NBTEmptyName     = errors.New("NBT Name is empty!")
-	NBTnil           = errors.New("You tried passing nil, what are you thinkng?")
+	NBTnil           = errors.New("You tried passing nil, what are you thinking?")
 	NBTExpectedError = errors.New("Expected error, recieved nil")
 )

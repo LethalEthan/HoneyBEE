@@ -12,7 +12,7 @@ func (NBTW *NBTWriter) traverseCompound(TC TCompound) {
 		switch v.(type) {
 		case TEnd:
 			NBTW.writeTag(TagEnd, "")
-			break
+			//return
 		case TByte:
 			NBTW.writeByte(v.(TByte).Name, v.(TByte).Value)
 		case TShort:

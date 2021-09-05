@@ -1,9 +1,5 @@
 package npacket
 
-import (
-	"github.com/pquerna/ffjson/ffjson"
-)
-
 ///
 ///CLientBound S->C
 ///
@@ -45,18 +41,18 @@ func (SP *Stat_Ping) Decode() {
 	}
 }
 
-func (SP *Stat_Response) Encode() *PacketWriter {
+func (SP *Stat_Response) Encode() (*PacketWriter, error) {
 	//if SP.Packet.PacketSize == 1 {
 	writer := CreatePacketWriter(0x00)
 	SP.Response = CreateStatusObject(SP.ProtocolVersion, "1.17")
 	Log.Debug("ProtoVER: ", SP.ProtocolVersion)
-	marshaledStatus, err := ffjson.Marshal(SP.Response) //Sends status via json
+	marshaledStatus, err := SP.Response.MarshalJSON() //(SP.Response) //Sends status via json
 	if err != nil {
 		Log.Error(err)
-		return writer
+		return nil, err
 	}
-	writer.WriteString(string(marshaledStatus))
-	return writer
+	writer.WriteString(string(marshaledStatus)) //WriteString(string(marshaledStatus))
+	return writer, nil
 }
 
 func (SP *Stat_Pong) Encode(PingData int64) *PacketWriter {

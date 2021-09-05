@@ -14,11 +14,10 @@ server:
     block-players-on-login: true
 performance: #Change me!
    cpu: 8
-   enable-gc-player: true
+   enable-gc-player: false
    gc-player-interval: 15
    gc-percent: 100
 debug-opts:
     packet-anal: false #switches HoneyGO into a MITM proxy that captures and decodes packets
     packet-anal-address: "192.168.0.42:25580" #Server address that HoneyGO probes
     maintenance: false
-    new-server: true
