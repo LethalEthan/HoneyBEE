@@ -1,61 +1,93 @@
 package particle
 
 const (
-	ambient_entity_effect = 0
-	angry_villager        = 1
-	barrier               = 2
-	block                 = 3
-	bubble                = 4
-	cloud                 = 5
-	crit                  = 6
-	damage_indicator      = 7
-	dragon_effect         = 8
-	dripping_lava         = 9
-	falling_lava          = 10
-	landing_lava          = 11
-	dripping_water        = 13
-	dust                  = 14
-	effect                = 15
-	elder_guardian        = 16
-	enchanted_hit         = 17
-	enchant               = 18
-	end_rod               = 19
-	entity_effect         = 20
-	explosion_emitter     = 21
-	explosion             = 22
-	falling_dust          = 23
-	firework              = 24
-	fishing               = 25
-	flame                 = 26
-	flash                 = 27
-	happy_villager        = 28
-	composter             = 29
-	heart                 = 30
-	instant_effect        = 31
-	item                  = 32
-	item_slime            = 33
-	item_snowball         = 34
-	large_smoke           = 35
-	lava                  = 36
-	mycelium              = 37
-	note                  = 38
-	proof                 = 39
-	portal                = 40
-	rain                  = 41
-	smoke                 = 42
-	sneeze                = 43
-	split                 = 44
-	squid_ink             = 45
-	sweep_attack          = 46
-	totem_of_dying        = 47
-	underwater            = 48
-	splash                = 49
-	witch                 = 50
-	bubble_pop            = 51
-	current_down          = 52
-	bubble_column_up      = 53
-	nautilus              = 54
-	dolphin               = 55
-	campfire_cosy_smoke   = 56
-	campfire_signal_smoke = 57
+	ambient_entity_effect = iota
+	angry_villager
+	barrier
+	light
+	block
+	bubble
+	cloud
+	crit
+	damage_indicator
+	dragon_breath
+	dripping_lava
+	falling_lava
+	landing_lava
+	dripping_water
+	falling_water
+	dust
+	dust_color_transition
+	effect
+	elder_guardian
+	enchanted_hit
+	enchant
+	end_rod
+	entity_effect
+	explosion_emitter
+	explosion
+	falling_dust
+	firework
+	fishing
+	flame
+	soul_fire_flame
+	soul
+	flash
+	happy_villager
+	composter
+	heart
+	instant_effect
+	item
+	vibration
+	item_slime
+	item_snowball
+	large_smoke
+	lava
+	mycelium
+	note
+	poof
+	portal
+	rain
+	smoke
+	sneeze
+	spit
+	squid_ink
+	sweep_attack
+	totem_of_dying
+	underwater
+	splash
+	witch
+	bubble_pop
+	current_down
+	bubble_column_up
+	nautilus
+	dolphin
+	campfire_cosy_smoke
+	campfire_signal_smoke
+	dripping_honey
+	falling_honey
+	landing_honey
+	falling_nectar
+	falling_spore_blossom
+	ash
+	crimson_spore
+	warped_spore
+	spore_blossom_air
+	dripping_obsidian_tear
+	falling_obsidian_tear
+	landing_obsidian_tear
+	reverse_portal
+	white_ash
+	small_flame
+	snowflake
+	dripping_dripstone_lava
+	falling_dripstone_lava
+	dripping_dripstone_water
+	falling_dripstone_water
+	glow_squid_ink
+	glow
+	wax_on
+	wax_off
+	electric_spark
+	scrape
 )

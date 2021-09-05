@@ -2,7 +2,6 @@ package npacket
 
 import (
 	"HoneyGO/config"
-	"HoneyGO/server"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -44,9 +43,10 @@ func Keys() {
 }
 
 func Auth(username string, sharedSecret []byte) string {
-	PlayerUUID, autherr := server.Authenticate(username, "", sharedSecret, publicKeySlice)
+	PlayerUUID, autherr := Authenticate(username, "", sharedSecret, publicKeySlice)
 	if autherr != nil {
-		panic(autherr)
+		Log.Error("Auth Fail!")
+		return ""
 	}
 	return PlayerUUID
 }

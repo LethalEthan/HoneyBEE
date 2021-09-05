@@ -1,4 +1,4 @@
-package server
+package npacket
 
 import (
 	"crypto/md5"

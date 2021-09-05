@@ -186,18 +186,26 @@ type (
 
 	//Play_0x16
 	SetSlot_CB struct {
-		ItemID        int32
-		CooldownTicks int32
+		WindowsID byte
+		StateID   int32
+		Slot      int16
+		SlotData  Slot
 	}
 
 	//Play_0x17
 	SetCooldown_CB struct {
-		Channel Identifier
-		Data    []byte
+		ItemID        int32
+		CooldownTicks int32
 	}
 
 	//Play_0x18
 	PluginMessage_CB struct {
+		Channel Identifier
+		Data    []byte
+	}
+
+	//Play_0x19
+	NamedSoundEffect_CB struct {
 		SoundName     Identifier
 		SoundCategory int32
 		EffectPosX    int32
@@ -205,11 +213,6 @@ type (
 		EffectPosZ    int32
 		Volume        float32
 		Pitch         float32
-	}
-
-	//Play_0x19
-	NamedSoundEffect_CB struct {
-		Reason jsonstruct.ChatComponent
 	}
 
 	//Play 0x1A
