@@ -1,4 +1,4 @@
-module HoneyGO
+module HoneyBEE
 
 go 1.16
 
@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/valyala/fasthttp v1.28.0
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/tools v0.1.5 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
