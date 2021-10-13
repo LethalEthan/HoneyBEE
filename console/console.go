@@ -1,9 +1,10 @@
 package console
 
 import (
-	"HoneyGO/config"
-	"HoneyGO/nserver"
-	"HoneyGO/utils"
+	"HoneyBEE/config"
+	"HoneyBEE/nserver"
+	"HoneyBEE/server"
+	"HoneyBEE/utils"
 	"bufio"
 	"crypto/md5"
 	"encoding/hex"
@@ -21,7 +22,7 @@ import (
 var (
 	conf     *config.Config
 	shutdown = make(chan os.Signal, 1)
-	Log      = logging.MustGetLogger("HoneyGO")
+	Log      = logging.MustGetLogger("HoneyBEE")
 	Panicked bool
 	hprof    *os.File
 	cprof    *os.File
@@ -107,6 +108,11 @@ func Console() {
 			} else {
 				Log.Critical("memprofile flag not specified! not writing a cpuprofile")
 			}
+		case "savepackets":
+			Log.Critical("Saving packets...")
+			server.SaveClient()
+			server.SaveServer()
+			Log.Critical("Saved packets!")
 		default:
 			Log.Warning("Unknown command")
 		}
@@ -134,26 +140,22 @@ func Hash() string {
 //Shutdown - listens for sigterm and exits
 func Shutdown() {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
-	select {
-	case <-shutdown:
-		{
-			Log.Warning("Starting shutdown")
-			// if !config.GConfig.DEBUGOPTS.NewServer {
-			// 	server.SetNetServerRun(false)
-			// 	server.SetRun(false)
-			// } else {
-			nserver.GlobalServer.Shutdown()
-			//}
-			//if config.GConfig.Performance.EnableGCPlayer { //Don't send on an unintialised channel otherwise it will deadlock
-			//	go func() { nserver.GCPShutdown <- true }()
-			//}
-			//server.ClientConnectionMutex.Lock()
-			//Log.Debug(server.ClientConnectionMap) //Check if any connections are still active in the map, there shouldn't be any left over
-			DEBUG := true
-			if DEBUG {
-				utils.PrintDebugStats()
-			}
-			os.Exit(0)
-		}
+	<-shutdown
+	Log.Warning("Starting shutdown")
+	// if !config.GConfig.DEBUGOPTS.NewServer {
+	// 	server.SetNetServerRun(false)
+	// 	server.SetRun(false)
+	// } else {
+	nserver.GlobalServer.Shutdown()
+	//}
+	//if config.GConfig.Performance.EnableGCPlayer { //Don't send on an unintialised channel otherwise it will deadlock
+	//	go func() { nserver.GCPShutdown <- true }()
+	//}
+	//server.ClientConnectionMutex.Lock()
+	//Log.Debug(server.ClientConnectionMap) //Check if any connections are still active in the map, there shouldn't be any left over
+	DEBUG := true
+	if DEBUG {
+		utils.PrintDebugStats()
 	}
+	os.Exit(0)
 }

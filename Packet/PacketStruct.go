@@ -1,7 +1,7 @@
 package Packet
 
 import (
-	"HoneyGO/config"
+	"HoneyBEE/config"
 	"fmt"
 	"net"
 )

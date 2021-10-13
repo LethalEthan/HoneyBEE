@@ -10,13 +10,13 @@ import (
 )
 
 var (
-	log        = logging.MustGetLogger("HoneyGO")
+	log        = logging.MustGetLogger("HoneyBEE")
 	GConfig    *Config
 	Memprofile string
 	Cpuprofile string
 )
 
-// Config struct for HoneyGO config
+// Config struct for HoneyBEE config
 type Config struct {
 	Server struct {
 		Host              string `yaml:"host"`    //IP Address to bind the Server to -- TBD

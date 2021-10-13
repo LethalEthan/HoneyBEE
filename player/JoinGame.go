@@ -1,7 +1,7 @@
 package player
 
 import (
-	"HoneyGO/Packet"
+	"HoneyBEE/Packet"
 	"net"
 	"time"
 )

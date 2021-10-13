@@ -1,7 +1,7 @@
 package Packet
 
 import (
-	"HoneyGO/config"
+	"HoneyBEE/config"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -13,7 +13,7 @@ import (
 var (
 	DEBUG          = true //Output debug info?
 	err            error  //error interface
-	Log            = logging.MustGetLogger("HoneyGO")
+	Log            = logging.MustGetLogger("HoneyBEE")
 	publicKeyBytes []byte          //Key stored in byte array for packet delivery
 	publicKey      *rsa.PublicKey  //PublicKey
 	privateKey     *rsa.PrivateKey //PrivateKey
@@ -58,7 +58,7 @@ func keys() {
 //CreateEncryptionRequest - Creates the packet Encryption Request and sends to the client
 /*func CreateEncryptionRequest(Connection *ClientConnection), CH chan bool) {
 	Connection.KeepAlive()
-	Log := logging.MustGetLogger("HoneyGO")
+	Log := logging.MustGetLogger("HoneyBEE")
 	Log.Debug("Login State, packetID 0x00")
 
 	//Encryption Request

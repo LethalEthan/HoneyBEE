@@ -6,6 +6,20 @@ import (
 )
 
 var Ascii = `
+     ___           ___           ___           ___           ___            ___           ___           ___    
+    /\__\         /\  \         /\__\         /\  \         |\__\          /\  \         /\  \         /\  \   
+   /:/  /        /::\  \       /::|  |       /::\  \        |:|  |        /::\  \       /::\  \       /::\  \  
+  /:/__/        /:/\:\  \     /:|:|  |      /:/\:\  \       |:|  |       /:/\:\  \     /:/\:\  \     /:/\:\  \ 
+ /::\  \ ___   /:/  \:\  \   /:/|:|  |__   /::\~\:\  \      |:|__|__    /::\ \:\__\   /::\~\:\  \   /::\~\:\  \ 
+/:/\:\  /\__\ /:/__/ \:\__\ /:/ |:| /\__\ /:/\:\ \:\__\     /::::\__\  /:/\:\ \:|__| /:/\:\ \:\__\ /:/\:\ \:\__\
+\/__\:\/:/  / \:\  \ /:/  / \/__|:|/:/  / \:\~\:\ \/__/    /:/~~/|__/  \:\ \:\/:/  / \:\~\:\ \/__/ \:\~\:\ \/__/
+     \::/  /   \:\  /:/  /      |:/:/  /   \:\ \:\__\     /:/  /        \:\ \::/  /   \:\ \:\__\    \:\ \:\__\  
+     /:/  /     \:\/:/  /       |::/  /     \:\ \/__/    /:/  /          \:\/:/  /     \:\ \/__/     \:\ \/__/  
+    /:/  /       \::/  /        /:/  /       \:\__\      \/__/            \::/__/       \:\__\        \:\__\   
+    \/__/         \/__/         \/__/         \/__/                                      \/__/         \/__/ `
+
+/*
+var Ascii = `
      ___           ___           ___           ___           ___           ___           ___
     /\__\         /\  \         /\__\         /\  \         |\__\         /\  \         /\  \
    /:/  /        /::\  \       /::|  |       /::\  \        |:|  |       /::\  \       /::\  \
@@ -16,7 +30,7 @@ var Ascii = `
      \::/  /   \:\  /:/  /      |:/:/  /   \:\ \:\__\     /:/  /       \:\ \:\__\    \:\  /:/  /
      /:/  /     \:\/:/  /       |::/  /     \:\ \/__/    /:/  /         \:\/:/  /     \:\/:/  /
     /:/  /       \::/  /        /:/  /       \:\__\      \/__/           \::/  /       \::/  /
-    \/__/         \/__/         \/__/         \/__/                       \/__/         \/__/    `
+    \/__/         \/__/         \/__/         \/__/                       \/__/         \/__/    `*/
 
 var Ascii2 = `
    _
@@ -25,7 +39,7 @@ var Ascii2 = `
 -(||)(')
   '''`
 
-var BACONV = errors.New("Error converting byte array to desired type")
+var errbytearrayconversion = errors.New("error converting byte array to desired type")
 
 func Int16ToByteArray(val int16) []byte {
 	Bint16 := []byte{byte(val >> 8), byte(val)}
@@ -44,29 +58,26 @@ func Int64ToByteArray(val int64) []byte {
 
 func ByteArrayToInt16(val []byte) (int16, error) {
 	if len(val) > 2 {
-		return 0, BACONV
+		return 0, errbytearrayconversion
 	} else {
-		var conval int16
-		conval = int16(binary.BigEndian.Uint16(val))
+		conval := int16(binary.BigEndian.Uint16(val))
 		return conval, nil
 	}
 }
 
 func ByteArrayToInt32(val []byte) (int32, error) {
 	if len(val) > 4 {
-		return 0, BACONV
+		return 0, errbytearrayconversion
 	}
-	var conval int32
-	conval = int32(binary.BigEndian.Uint32(val))
+	conval := int32(binary.BigEndian.Uint32(val))
 	return conval, nil
 }
 
 func ByteArrayToInt64(val []byte) (int64, error) {
 	if len(val) > 8 {
-		return 0, BACONV
+		return 0, errbytearrayconversion
 	} else {
-		var conval int64
-		conval = int64(binary.BigEndian.Uint64(val))
+		conval := int64(binary.BigEndian.Uint64(val))
 		return conval, nil
 	}
 }

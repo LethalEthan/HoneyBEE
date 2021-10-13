@@ -1,6 +1,6 @@
 package npacket
 
-import "HoneyGO/jsonstruct"
+import "HoneyBEE/jsonstruct"
 
 type Advancement struct {
 	HasParent        bool

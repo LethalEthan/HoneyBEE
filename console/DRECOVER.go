@@ -1,10 +1,10 @@
 package console
 
 import (
-	"HoneyGO/config"
-	"HoneyGO/npacket"
-	"HoneyGO/player"
-	"HoneyGO/utils"
+	"HoneyBEE/config"
+	"HoneyBEE/npacket"
+	"HoneyBEE/player"
+	"HoneyBEE/utils"
 	"fmt"
 	"runtime"
 )
@@ -41,7 +41,7 @@ func DRECOVER() {
 		fmt.Println("Server Maps and states (package server)")
 		fmt.Println("----------------------------------------")
 		// fmt.Println("Server run state:", server.Run, "Mutex: ", server.RunMutex)
-		fmt.Println("HoneyGOVersion: ", utils.HoneyGOVersion, "BVersion: ", utils.BVersion, "FH: ", Hash())
+		fmt.Println("HoneyBEEVersion: ", utils.GetVersionString(), "BVersion: ", utils.BuildVersion, "FH: ", Hash())
 		// fmt.Println("Server Init: ", server.ServerInitialised, "REINIT: ", server.ServerREINIT)
 		fmt.Println("Config:", config.GConfig)
 		// fmt.Println("PlayerMap: ", server.PlayerMap)

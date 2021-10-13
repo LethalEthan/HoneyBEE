@@ -1,7 +1,7 @@
 package player
 
 import (
-	"HoneyGO/config"
+	"HoneyBEE/config"
 	"errors"
 	"fmt"
 	"sync"
@@ -10,7 +10,7 @@ import (
 	logging "github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("HoneyGO")
+var log = logging.MustGetLogger("HoneyBEE")
 
 var SConfig = config.GetConfig()
 
@@ -122,7 +122,7 @@ func GetPlayerByName(Name string) *PlayerObject {
 // 				runtime.GC()                //run a GC
 // 			case <-GCP:
 // 				if <-GCP {
-// 					Log := logging.MustGetLogger("HoneyGO")
+// 					Log := logging.MustGetLogger("HoneyBEE")
 // 					Log.Warning("Stopping GCPlayer")
 // 					ticker.Stop()
 // 					//Cleanup

@@ -1,8 +1,8 @@
 package world
 
 import (
-	"HoneyGO/chunk"
-	"HoneyGO/config"
+	"HoneyBEE/chunk"
+	"HoneyBEE/config"
 	"errors"
 	"fmt"
 	"sync"
@@ -17,7 +17,7 @@ import (
 var (
 	RegionMap           = make(map[RegionID]region)
 	mutex               = &sync.RWMutex{} //Allow regions to be sharded?
-	Log                 = logging.MustGetLogger("HoneyGO")
+	Log                 = logging.MustGetLogger("HoneyBEE")
 	DEBUG               bool
 	DefaultFlatArray    []byte
 	UninitialisedRegion = new(region)

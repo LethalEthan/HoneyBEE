@@ -56,29 +56,37 @@ func DecodeVarLong(DM VarLong) (int64, error) {
 	return result, nil
 }
 
-func ParseVarIntFromConnection(conn net.Conn) (int32, error) {
-	var result int32
+func ParseVarIntFromConnection(conn net.Conn) (int32, []byte, error) {
+	var result uint32
 	var numRead uint32
+	//var val int32
 	buff := make([]byte, 1)
+	BA := make([]byte, 5)
+	n, err := conn.Read(buff)
+	if n != 1 {
+		return 0, []byte{0}, err
+	}
 	for {
-		_, err := conn.Read(buff)
-		if err != nil {
-			return 0, err
-		}
-		val := int32((buff[0] & 0x7F))
-		result |= (val << (7 * numRead))
+		BA[numRead] = buff[0]
+		result |= uint32((buff[0] & 0x7F) << (7 * numRead))
+		//result |= (val << (7 * numRead))
 
 		numRead++
 
 		if numRead > 5 {
-			return 0, fmt.Errorf("varint was over five bytes without termination")
+			return 0, []byte{0}, fmt.Errorf("varint was over five bytes without termination")
 		}
 
 		if buff[0]&0x80 == 0 {
 			break
 		}
+
+		n, err := conn.Read(buff)
+		if err != nil || n != 1 {
+			return int32(result), BA, err
+		}
 	}
-	return result, nil
+	return int32(result), BA, nil
 }
 
 func ByteDecodeVarInt(b []byte) (int32, error) {

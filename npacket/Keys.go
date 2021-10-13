@@ -1,7 +1,7 @@
 package npacket
 
 import (
-	"HoneyGO/config"
+	"HoneyBEE/config"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"

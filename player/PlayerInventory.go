@@ -1,6 +1,6 @@
 package player
 
-import "HoneyGO/Packet"
+import "HoneyBEE/Packet"
 
 func SetHotbarSlot(Conn *ClientConnection) {
 	writer := Packet.CreatePacketWriter(0x40)

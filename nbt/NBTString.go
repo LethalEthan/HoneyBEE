@@ -1,6 +1,6 @@
 package nbt
 
-import "HoneyGO/utils"
+import "HoneyBEE/utils"
 
 func CreateStringTag(Name string, Val string) TString {
 	return TString{Name, Val}

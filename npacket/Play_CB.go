@@ -1,8 +1,8 @@
 package npacket
 
 import (
-	"HoneyGO/jsonstruct"
-	"HoneyGO/nbt"
+	"HoneyBEE/jsonstruct"
+	"HoneyBEE/nbt"
 )
 
 ///

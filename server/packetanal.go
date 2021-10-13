@@ -4,4 +4,4 @@ import (
 	logging "github.com/op/go-logging"
 )
 
-var Log = logging.MustGetLogger("HoneyGO")
+var Log = logging.MustGetLogger("HoneyBEE")

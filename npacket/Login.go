@@ -93,7 +93,7 @@ func (LERSP *Login_0x01_SB) Decode() {
 
 func (LPR *Login_0x02_SB) Decode() {
 	PR := CreatePacketReader(LPR.Packet.PacketData)
-	var NR uint32
+	var NR byte
 	LPR.MessageID, NR, err = PR.ReadVarInt()
 	LPR.Successful, err = PR.ReadBoolean()
 	LPR.Data, err = PR.ReadByteArray(int32(len(LPR.Packet.PacketData) - int(NR) - 1))
