@@ -2,7 +2,7 @@ package blocks
 
 import logging "github.com/op/go-logging"
 
-var log = logging.MustGetLogger("HoneyGO")
+var log = logging.MustGetLogger("HoneyBEE")
 
 //BlockData - Not complete
 var (

@@ -1,7 +1,7 @@
 package chunk
 
 import (
-	"HoneyGO/blocks"
+	"HoneyBEE/blocks"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,7 +31,7 @@ var (
 	//ChunkData  = make([][][]int64, 512)
 	//ChunkData uses a string/Chunk map to store the byte arrays of blocks which
 	ChunkData = make(map[string]Chunk)
-	Log       = logging.MustGetLogger("HoneyGO")
+	Log       = logging.MustGetLogger("HoneyBEE")
 	COORDS    string
 )
 
