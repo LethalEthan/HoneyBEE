@@ -1,7 +1,7 @@
 package nserver
 
 import (
-	"HoneyGO/npacket"
+	"HoneyBEE/npacket"
 	"sync"
 	"time"
 
@@ -9,7 +9,7 @@ import (
 	"github.com/panjf2000/gnet"
 )
 
-var Log = logging.MustGetLogger("HoneyGO")
+var Log = logging.MustGetLogger("HoneyBEE")
 var DEBUG = true
 var GlobalServer *Server
 
@@ -40,7 +40,7 @@ func NewServer(ip string, port string, multicore bool, tick bool, lockosthread b
 }
 
 func (S *Server) OnInitComplete(Srv gnet.Server) (Action gnet.Action) {
-	Log.Infof("HoneyGO is listening on %s (multi-cores: %t, SO_REUSE: %t, Timeout: %d, loops: %d) ", Srv.Addr.String(), Srv.Multicore, Srv.ReusePort, Srv.TCPKeepAlive, Srv.NumEventLoop)
+	Log.Infof("HoneyBEE is listening on %s (multi-cores: %t, SO_REUSE: %t, Timeout: %d, loops: %d) ", Srv.Addr.String(), Srv.Multicore, Srv.ReusePort, Srv.TCPKeepAlive, Srv.NumEventLoop)
 	return gnet.None
 }
 
@@ -94,7 +94,7 @@ func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Ac
 		Log.Warning("Frame is 0?!")
 	}
 	Conn.SetContext(ClientConn)
-	Log.Critical("Sent FrameChannel")
+	//Log.Critical("Sent FrameChannel")
 	return
 }
 
@@ -105,7 +105,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 	for {
 		select {
 		case Frame := <-FrameChan:
-			Log.Debug("RECV Frame")
+			//Log.Debug("RECV Frame")
 			if len(Frame) == 0 {
 				ClientConn.Conn.Close()
 				return
@@ -120,12 +120,12 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			/*Size check - packets cannot be bigger than this which can lead to the server and client crashing
 			also known as book banning or any item/block that is used to overload the packet limit*/
 			if PacketSize > 2097151 {
-				ClientConn.Conn.Close()
+				ClientConn.Conn.Close() //Disconnect the client until  I find a solution, my idea is a custom mod or client that raises the packet size to a Long
 			}
 			//
 			if DEBUG {
 				Log.Debug("ClientConn ", ClientConn, "Conn: ", ClientConn.Conn.RemoteAddr().String())
-				Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "NR: ", NR, "NR2: ", NR2)
+				Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "State: ", ClientConn.State)
 			}
 			//Make GeneralPacket
 			GP := new(npacket.GeneralPacket)
@@ -148,7 +148,10 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					}
 					HP := new(npacket.Handshake_0x00)
 					HP.Packet = GP
-					HP.Decode()
+					err := HP.Decode()
+					if err != nil {
+						ClientConn.Conn.Close()
+					}
 					ClientConn.ProtocolVersion = HP.ProtocolVersion
 					ClientConn.State = int(HP.NextState)
 					ClientConn.Conn.SetContext(ClientConn)
@@ -195,26 +198,82 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					ClientConn.Conn.AsyncWrite(PW.GetPacket())
 					Log.Debug("Sent 0x01_CB")
 				case 0x01:
-					Log.Debug("Play 0x01_SB")
+					Log.Debug("Play 0x01_SB") //Login Response
 					LERSP := new(npacket.Login_0x01_SB)
 					LERSP.Packet = GP
 					LERSP.Decode()
+					//Login Success
 					LS := new(npacket.Login_0x02_CB)
 					LS.UUID = npacket.Auth(ClientConn.PlayerName, LERSP.SharedSecret)
+					if LS.UUID == "" {
+						ClientConn.Conn.Close()
+					}
 					LS.Username = ClientConn.PlayerName
 					PW := LS.Encode(ClientConn.PlayerName)
-					ClientConn.Conn.AsyncWrite(PW.GetPacket())
+					ClientConn.Conn.AsyncWrite(PW.GetPacket()) //Send Login Success
 					Log.Debug("Sent 0x02_CB")
+					Log.Debug(PW.GetData())
+					//Set to Play state
+					ClientConn.State = PLAY
+					ClientConn.Conn.SetContext(ClientConn) //Set conn context
+					//JoinGame
 					JG := new(npacket.JoinGame_CB)
-					JG.Encode(LS.UUID, LS.Username, 0, ClientConn.Conn)
+					PW = JG.Encode(LS.UUID, LS.Username, 0, ClientConn.Conn)
+					ClientConn.Conn.AsyncWrite(PW.GetPacket())
+					/*
+						//Plugin Message - brand
+						PW = npacket.CreatePacketWriterWithCapacity(0x04, 24)
+						PW.WriteVarInt(0x0F)
+						PW.WriteIdentifier("minecraft:brand")
+						PW.WriteArray([]byte("HoneyBEE!"))
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						//
+						PM := new(npacket.PluginMessage_CB)
+						PW = PM.Encode()
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						Log.Debug("Sent PM: ", PW.GetPacket())
+						//
+						PW = npacket.CreatePacketWriterWithCapacity(0x0E, 10)
+						PW.WriteByte(0)
+						PW.WriteBoolean(false)
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						Log.Debug("Sent Diff")
+						//
+						PW = npacket.CreatePacketWriterWithCapacity(0x32, 10)
+						PW.WriteByte(0x01)
+						PW.WriteFloat(0.05)
+						PW.WriteBoolean(false)
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						Log.Debug("Sent PA")
+						//
+						PW = npacket.CreatePacketWriterWithCapacity(0x58, 24)
+						PW.WriteLong(100000)
+						PW.WriteLong(1000)
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						Log.Debug("TIME: ", PW.GetPacket())
+						Log.Debug("Sent Time")*/
+				default:
+					Log.Debug("Recieved some shit")
 				case 0x02:
 					Log.Debug("Play 0x02_SB")
+				case 0x03:
+					Log.Debug("Recived 0x03")
+				case 0x04:
+					Log.Debug("Recived 0x04")
 				}
 			case PLAY:
 				switch PacketID {
 				case 0x00:
-
+					Log.Info("Recieved 0x00")
+				case 0x05:
+					Log.Info("Recieved 0x05")
+				case 0x0A:
+					Log.Info("Recieved 0x0A")
+				default:
+					Log.Debug("Recieved packet play:", PacketID)
 				}
+			default:
+				Log.Info("PP")
 			}
 		case <-Close:
 			Log.Debug("Closing client conn routine")

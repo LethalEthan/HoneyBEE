@@ -3,16 +3,16 @@ package npacket
 import "errors"
 
 var (
-	WriterEmpty  = errors.New("Writer Empty Data!")
-	WriterLength = errors.New("Writer Length is incorrect!")
-	WriterType   = errors.New("Writer Type is incorrect!")
-	WriterName   = errors.New("Writer Name incorrect!")
-	WriterValue  = errors.New("Writer Value is incorrect!")
+	writerEmpty  = errors.New("Writer Empty Data!")
+	writerLength = errors.New("Writer Length is incorrect!")
+	writerType   = errors.New("Writer Type is incorrect!")
+	writerName   = errors.New("Writer Name incorrect!")
+	writerValue  = errors.New("Writer Value is incorrect!")
 	//
-	WriterReadOverflow = errors.New("Writer reading overflow")
-	WriterRead404      = errors.New("Writer not found!")
+	writerReadOverflow = errors.New("Writer reading overflow")
+	writerRead404      = errors.New("Writer not found!")
 	//
-	WriterUnknownType   = errors.New("Value type is unknown, Write :(")
-	Writernil           = errors.New("You tried passing nil, what are you thinking?")
-	WriterExpectedError = errors.New("Expected error, recieved nil")
+	writerUnknownType   = errors.New("Value type is unknown, Write :(")
+	writernil           = errors.New("You tried passing nil, what are you thinking?")
+	writerExpectedError = errors.New("Expected error, recieved nil")
 )

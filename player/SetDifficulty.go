@@ -1,10 +1,10 @@
 package player
 
 import (
-	"HoneyGO/Packet"
+	"HoneyBEE/Packet"
 )
 
-//var log = logging.MustGetLogger("HoneyGO")
+//var log = logging.MustGetLogger("HoneyBEE")
 
 //SetDifficulty - Packet struct for SetDifficulty
 type SetDifficulty struct {
@@ -15,7 +15,7 @@ type SetDifficulty struct {
 //CreateSetDiff - Create SetDifficulty Packet and send
 func CreateSetDiff(Conn *ClientConnection) {
 	//Conn.KeepAlive()
-	//Log := logging.MustGetLogger("HoneyGO")
+	//Log := logging.MustGetLogger("HoneyBEE")
 	//Log.Debug("Packet Play, 0x0E Created")
 	SD := &SetDifficulty{0, true} //new(SetDifficulty)
 	writer := Packet.CreatePacketWriter(0x0E)

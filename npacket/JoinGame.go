@@ -1,8 +1,8 @@
 package npacket
 
 import (
-	"HoneyGO/nbt"
-	"HoneyGO/player"
+	"HoneyBEE/nbt"
+	"HoneyBEE/player"
 
 	"github.com/panjf2000/gnet"
 )
@@ -76,6 +76,7 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	PW.WriteBoolean(true)
 	PW.WriteBoolean(true)
 	PW.WriteBoolean(true)
+	Log.Debug("SENT JOIN GAME")
 	return PW
 	// f, err := os.Create("testing.nbt")
 	// if err != nil {

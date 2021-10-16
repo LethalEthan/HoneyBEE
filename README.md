@@ -1,18 +1,18 @@
-# HoneyGO
+# HoneyBEE
 
-HoneyGO is a Minecraft server written in GO, with help from [wiki.vg](https://wiki.vg) (Huge thanks to them and I suggest helping them out with a donation for the awesome resources that they publish for free <3).
+HoneyBEE is a Minecraft server written in GO, with help from [wiki.vg](https://wiki.vg) (Huge thanks to them and I suggest helping them out with a donation for the awesome resources that they publish for free <3).
 
 Join my discord for support and to ask questions :) [here](https://discord.gg/rBm2U5TJNx)
 
-This software is still being developed so expect bugs and issues now and then, also remember that feedback and disclosure of issues is welcomed but please don't send any hateful or spam issues :). HoneyGO as of now is considered pre-alpha it is very early in development and has only been released publicly on github since 25/4/2020
+This software is still being developed so expect bugs and issues now and then, also remember that feedback and disclosure of issues is welcomed but please don't send any hateful or spam issues :). HoneyBEE as of now is considered pre-alpha it is very early in development and has only been released publicly on github since 25/4/2020
 
-**Disclaimer: All code is completely original and is not based off of Mojang's code, any PR's must not be based off of or have any of Mojang's copyrighted code as it will not be accepted nor be encouraged as it would be obviously illegal, please see the Terms and Conditions of Mojang for familiarisation. I am not in any way affiliated with Mojang, HoneyGO is not endorsed nor approved by Mojang.**
+**Disclaimer: All code is completely original and is not based off of Mojang's code, any PR's must not be based off of or have any of Mojang's copyrighted code as it will not be accepted nor be encouraged as it would be obviously illegal, please see the Terms and Conditions of Mojang for familiarisation. I am not in any way affiliated with Mojang, HoneyBEE is not endorsed nor approved by Mojang.**
 
-**To people who want to contribute: If you would like to contribute to HoneyGO or HoneyComb you'll need to create a fork and submit a Pull Request (PR), The code will be reviewed and potentially be merged (no guarantees). I will also add your name to the contributors list. Any PR's must use the same license**
+**To people who want to contribute: If you would like to contribute to HoneyBEE or HoneyComb you'll need to create a fork and submit a Pull Request (PR), The code will be reviewed and potentially be merged (no guarantees). I will also add your name to the contributors list. Any PR's must use the same license**
 
-As of now we only have basic features to start off with but as development continues we will have more features along with a custom plugin system (HoneyComb, will be available later in the future) and perhaps a way to get forge support although that would be WAYY in the future and I'm not too sure how that would be implemented especially with licensing. Another thing that I want to work on is an easy way to link multiple HoneyGO servers together much like waterfall/bungee, this would be called HoneyHive.
+As of now we only have basic features to start off with but as development continues we will have more features along with a custom plugin system (HoneyComb, will be available later in the future) and perhaps a way to get forge support although that would be WAYY in the future and I'm not too sure how that would be implemented especially with licensing. Another thing that I want to work on is an easy way to link multiple HoneyBEE servers together much like waterfall/bungee, this would be called HoneyHive.
 
-I am very supportive of open-source and free software, for that reason this project will be free forever for personal use only. You can copy, modify and redistribute my code as long it is under the terms of the license and credit is given to proper authors. If you would like to donate to support HoneyGO that would be much appreciated and you will be added to the donator list (Donators.md)
+I am very supportive of open-source and free software, for that reason this project will be free forever for personal use only. You can copy, modify and redistribute my code as long it is under the terms of the license and credit is given to proper authors. If you would like to donate to support HoneyBEE that would be much appreciated and you will be added to the donator list (Donators.md)
 
 Checklist:
 
@@ -22,18 +22,18 @@ Checklist:
 * [ ] Simple Terrain Generation
 * [ ] Chunk/Region Handling
 * [ ] Configurable Terrain Generation
-* [ ] HoneyGO Plugin API (HoneyComb)
+* [ ] HoneyBEE Plugin API (HoneyComb)
 * [ ] Commands
 * [ ] Block/Entity Data
 * [ ] Actually logging in and being able to play to some degree
 * [ ] NBT
 * [ ] Bedrock Support
 * [x] Server Configuration
-* [ ] HoneyHive (A proxy linking multiple HoneyGO servers muchlike waterfall/bungee)
+* [ ] HoneyHive (A proxy linking multiple HoneyBEE servers muchlike waterfall/bungee)
 
 **Suggestions**
 
-If HoneyGO isn't what you needed you could look at some other projects that are popular and are recommended from me. The projects listed are actively developed and support modern-ish versions of Minecraft (1.12 - 1.17):
+If HoneyBEE isn't what you needed you could look at some other projects that are popular and are recommended from me. The projects listed are actively developed and support modern-ish versions of Minecraft (1.12 - 1.17):
 
 Wanting a lightweight C# minecraft server? [Starfield](https://github.com/StarfieldMC/Starfield) (C#)
 
@@ -76,4 +76,4 @@ Wanting a high performance paper-fork server with bleeding edge enhancements (no
 **For General use I suggest Paper/Tuinity it is stable, bukkit compatible, fast and is the go to standard for most servers.**
 
 **\
-HoneyGO is still an experimental Minecraft Server (Only started development a few months ago) and with that could come major changes that may break/corrupt worlds (We'll try not to). HoneyGO at the moment is only suitable for a simple creative/lobby server as the terrain generation and entity AI is nowhere near completion and could take some time.**
+HoneyBEE is still an experimental Minecraft Server (Only started development a few months ago) and with that could come major changes that may break/corrupt worlds (We'll try not to). HoneyBEE at the moment is only suitable for a simple creative/lobby server as the terrain generation and entity AI is nowhere near completion and could take some time.**

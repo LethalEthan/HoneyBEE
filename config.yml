@@ -18,6 +18,6 @@ performance: #Change me!
    gc-player-interval: 15
    gc-percent: 100
 debug-opts:
-    packet-anal: false #switches HoneyGO into a MITM proxy that captures and decodes packets
-    packet-anal-address: "192.168.0.42:25580" #Server address that HoneyGO probes
+    packet-anal: false #switches HoneyBEE into a MITM proxy that captures and decodes packets
+    packet-anal-address: "192.168.0.42:25580" #Server address that HoneyBEE probes
     maintenance: false

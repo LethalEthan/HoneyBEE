@@ -1,7 +1,7 @@
 package nserver
 
 import (
-	"HoneyGO/world"
+	"HoneyBEE/world"
 )
 
 var GCPShutdown = make(chan bool)

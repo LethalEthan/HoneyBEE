@@ -93,7 +93,7 @@ func (LERSP *Login_0x01_SB) Decode() {
 
 func (LPR *Login_0x02_SB) Decode() {
 	PR := CreatePacketReader(LPR.Packet.PacketData)
-	var NR uint32
+	var NR byte
 	LPR.MessageID, NR, err = PR.ReadVarInt()
 	LPR.Successful, err = PR.ReadBoolean()
 	LPR.Data, err = PR.ReadByteArray(int32(len(LPR.Packet.PacketData) - int(NR) - 1))
@@ -117,7 +117,7 @@ func (LoginSucc *Login_0x02_CB) Encode(player string) *PacketWriter {
 	PW := CreatePacketWriter(0x02)
 	PW.WriteString(LoginSucc.UUID)
 	PW.WriteString(player)
-	Log.Info("info: ", player, "2: ", LoginSucc.UUID)
+	Log.Info("info:", player, "UUID:", LoginSucc.UUID)
 	return PW
 }
 

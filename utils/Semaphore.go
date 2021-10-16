@@ -1,5 +1,6 @@
 package utils
 
+/*
 import (
 	"runtime"
 	"sync"
@@ -52,7 +53,6 @@ func (S *Semaphore) Start() error {
 			}
 		}
 	}
-	return nil
 }
 
 func (S *Semaphore) GetStat() bool {
@@ -129,4 +129,4 @@ func (S *Semaphore) FlushAndSetSemaphoreNEW(i interface{}) {
 	// S.Pause <- true
 	//S.Start()
 	S.SetStat(true)
-}
+}*/

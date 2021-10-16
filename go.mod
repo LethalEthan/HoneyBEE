@@ -1,4 +1,4 @@
-module HoneyGO
+module HoneyBEE
 
 go 1.16
 

@@ -1,8 +1,8 @@
 package worldtime
 
 import (
-	"HoneyGO/Packet"
-	"HoneyGO/player"
+	"HoneyBEE/Packet"
+	"HoneyBEE/player"
 	"fmt"
 	"net"
 	"time"
@@ -17,7 +17,7 @@ type world_time struct {
 
 var Tick bool
 var shutdown chan bool
-var Log = logging.MustGetLogger("HoneyGO")
+var Log = logging.MustGetLogger("HoneyBEE")
 
 func WorldTime(S chan bool) {
 	WT := new(world_time)

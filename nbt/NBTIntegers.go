@@ -1,6 +1,6 @@
 package nbt
 
-import "HoneyGO/utils"
+import "HoneyBEE/utils"
 
 ///
 ///Int16/Short

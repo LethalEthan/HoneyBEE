@@ -4,7 +4,7 @@ import (
 	logging "github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("HoneyGO")
+var log = logging.MustGetLogger("HoneyBEE")
 
 var ItemID map[float32]string
 

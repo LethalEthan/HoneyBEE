@@ -1,7 +1,7 @@
 package npacket
 
 import (
-	"HoneyGO/nbt"
+	"HoneyBEE/nbt"
 	_ "embed"
 	"fmt"
 	"testing"

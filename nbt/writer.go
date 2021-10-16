@@ -6,7 +6,7 @@ import (
 	"github.com/op/go-logging"
 )
 
-var Log = logging.MustGetLogger("HoneyGO")
+var Log = logging.MustGetLogger("HoneyBEE")
 var TestData = []byte{10, 0, 11, 104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 8, 0, 4, 110, 97, 109, 101, 0, 9, 66, 97, 110, 97, 110, 114, 97, 109, 97, 0}
 
 type NBTWriter struct {
