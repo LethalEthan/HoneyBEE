@@ -117,7 +117,7 @@ func (LoginSucc *Login_0x02_CB) Encode(player string) *PacketWriter {
 	PW := CreatePacketWriter(0x02)
 	PW.WriteString(LoginSucc.UUID)
 	PW.WriteString(player)
-	Log.Info("info: ", player, "2: ", LoginSucc.UUID)
+	Log.Info("info:", player, "UUID:", LoginSucc.UUID)
 	return PW
 }
 

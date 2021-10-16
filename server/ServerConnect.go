@@ -3,8 +3,6 @@ package server
 import (
 	"net"
 	"time"
-
-	"github.com/valyala/fasthttp"
 )
 
 var ServerConn net.Conn
@@ -13,14 +11,13 @@ var SCounter int
 
 func Start() {
 	var err error
-	ServerConn, err = fasthttp.Dial("192.168.0.56:25570") //mc-central.net:25565") //192.168.0.56:25570") //"127.0.0.1:25570") //"82.40.185.10:25565") //"80.112.26.124:25565")
+	ServerConn, err = net.Dial("tcp", "127.0.0.1:25567") //mc-central.net:25565") //192.168.0.56:25570") //"127.0.0.1:25570")
 	if err != nil {
 		Log.Critical("Error dialing")
 		panic(err)
 	}
 	Log.Debug("Connected handling...")
 	go HandleServer(ServerConn)
-	return
 }
 
 func HandleServer(conn net.Conn) {
@@ -65,9 +62,8 @@ func HandleServer(conn net.Conn) {
 			CloseClient()
 			return
 		}
-		Log.Debug("DATAMITM: ", r)
-		// ServerPackets[SCounter] = data
-		// SCounter++
+		r = data[:n]
+		//Log.Debug("DATAMITM: ", r)
 		n, err := ClientConn.Write(r)
 		if err != nil {
 			Log.Critical("CC W: ", err)

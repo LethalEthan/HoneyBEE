@@ -51,33 +51,7 @@ func HandleClient(conn net.Conn) {
 		if len(r) <= 0 {
 			panic("You done fucked up")
 		}
-		// 	pr := npacket.CreatePacketReader(r)
-		// 	_, _, err := pr.ReadVarInt()
-		// 	ID, _, err := pr.ReadVarInt()
-		// 	if err != nil {
-		// 		err = nil
-		// 		goto skip
-		// 	}
-		// 	if ID == 0x00 && state == 0 {
-		// 		PV, _, err := pr.ReadVarInt()
-		// 		_, err = pr.ReadString()
-		// 		SP, err := pr.ReadUnsignedShort()
-		// 		NS, _, err := pr.ReadVarInt()
-		// 		if err != nil {
-		// 			Log.Critical("BRUHHHHH")
-		// 			state = 5
-		// 			goto skip
-		// 		}
-		// 		state = int(NS)
-		// 		pw := npacket.CreatePacketWriter(0x00)
-		// 		pw.WriteVarInt(PV)
-		// 		pw.WriteString("play.moonglade.pw")
-		// 		pw.WriteUnsignedShort(SP)
-		// 		pw.WriteVarInt(NS)
-		// 		r = pw.GetPacket()
-		// 	}
-		// skip:
-		Log.Critical("Sending: ", r)
+		//Log.Critical("Sending: ", r)
 		n, err := ServerConn.Write(r)
 		if err != nil {
 			Log.Critical("SC W: ", err)

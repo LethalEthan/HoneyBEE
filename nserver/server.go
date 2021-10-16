@@ -125,7 +125,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			//
 			if DEBUG {
 				Log.Debug("ClientConn ", ClientConn, "Conn: ", ClientConn.Conn.RemoteAddr().String())
-				Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "NR: ", NR, "NR2: ", NR2)
+				Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "State: ", ClientConn.State)
 			}
 			//Make GeneralPacket
 			GP := new(npacket.GeneralPacket)
@@ -198,61 +198,62 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					ClientConn.Conn.AsyncWrite(PW.GetPacket())
 					Log.Debug("Sent 0x01_CB")
 				case 0x01:
-					Log.Debug("Play 0x01_SB")
+					Log.Debug("Play 0x01_SB") //Login Response
 					LERSP := new(npacket.Login_0x01_SB)
 					LERSP.Packet = GP
 					LERSP.Decode()
+					//Login Success
 					LS := new(npacket.Login_0x02_CB)
 					LS.UUID = npacket.Auth(ClientConn.PlayerName, LERSP.SharedSecret)
 					if LS.UUID == "" {
 						ClientConn.Conn.Close()
 					}
 					LS.Username = ClientConn.PlayerName
-					var PW *npacket.PacketWriter
-					PW = LS.Encode(ClientConn.PlayerName)
-					ClientConn.Conn.AsyncWrite(PW.GetPacket())
+					PW := LS.Encode(ClientConn.PlayerName)
+					ClientConn.Conn.AsyncWrite(PW.GetPacket()) //Send Login Success
 					Log.Debug("Sent 0x02_CB")
+					Log.Debug(PW.GetData())
+					//Set to Play state
 					ClientConn.State = PLAY
-					ClientConn.Conn.SetContext(ClientConn)
-					//DEBUG do this properly
-					PW = npacket.CreatePacketWriterWithCapacity(0x03, 10)
-					PW.WriteVarInt(-1)
-					ClientConn.Conn.AsyncWrite(PW.GetPacket())
-					//
-					PW = npacket.CreatePacketWriterWithCapacity(0x04, 24)
-					PW.WriteVarInt(0x0F)
-					PW.WriteIdentifier("minecraft:brand")
-					PW.WriteArray([]byte("HoneyBEE!"))
-					ClientConn.Conn.AsyncWrite(PW.GetPacket())
-					//
+					ClientConn.Conn.SetContext(ClientConn) //Set conn context
+					//JoinGame
 					JG := new(npacket.JoinGame_CB)
 					PW = JG.Encode(LS.UUID, LS.Username, 0, ClientConn.Conn)
 					ClientConn.Conn.AsyncWrite(PW.GetPacket())
-					//
-					PM := new(npacket.PluginMessage_CB)
-					PW = PM.Encode()
-					ClientConn.Conn.AsyncWrite(PW.GetPacket())
-					Log.Debug("Sent PM: ", PW.GetPacket())
-					//
-					PW = npacket.CreatePacketWriterWithCapacity(0x0E, 10)
-					PW.WriteByte(0)
-					PW.WriteBoolean(false)
-					ClientConn.Conn.AsyncWrite(PW.GetPacket())
-					Log.Debug("Sent Diff")
-					//
-					PW = npacket.CreatePacketWriterWithCapacity(0x32, 10)
-					PW.WriteByte(0x01)
-					PW.WriteFloat(0.05)
-					PW.WriteBoolean(false)
-					ClientConn.Conn.AsyncWrite(PW.GetPacket())
-					Log.Debug("Sent PA")
-					//
-					PW = npacket.CreatePacketWriterWithCapacity(0x58, 24)
-					PW.WriteLong(100000)
-					PW.WriteLong(1000)
-					ClientConn.Conn.AsyncWrite(PW.GetPacket())
-					Log.Debug("TIME: ", PW.GetPacket())
-					Log.Debug("Sent Time")
+					/*
+						//Plugin Message - brand
+						PW = npacket.CreatePacketWriterWithCapacity(0x04, 24)
+						PW.WriteVarInt(0x0F)
+						PW.WriteIdentifier("minecraft:brand")
+						PW.WriteArray([]byte("HoneyBEE!"))
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						//
+						PM := new(npacket.PluginMessage_CB)
+						PW = PM.Encode()
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						Log.Debug("Sent PM: ", PW.GetPacket())
+						//
+						PW = npacket.CreatePacketWriterWithCapacity(0x0E, 10)
+						PW.WriteByte(0)
+						PW.WriteBoolean(false)
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						Log.Debug("Sent Diff")
+						//
+						PW = npacket.CreatePacketWriterWithCapacity(0x32, 10)
+						PW.WriteByte(0x01)
+						PW.WriteFloat(0.05)
+						PW.WriteBoolean(false)
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						Log.Debug("Sent PA")
+						//
+						PW = npacket.CreatePacketWriterWithCapacity(0x58, 24)
+						PW.WriteLong(100000)
+						PW.WriteLong(1000)
+						ClientConn.Conn.AsyncWrite(PW.GetPacket())
+						Log.Debug("TIME: ", PW.GetPacket())
+						Log.Debug("Sent Time")*/
+				default:
+					Log.Debug("Recieved some shit")
 				case 0x02:
 					Log.Debug("Play 0x02_SB")
 				case 0x03:

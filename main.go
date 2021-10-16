@@ -4,6 +4,7 @@ import (
 	"HoneyBEE/config"
 	"HoneyBEE/console"
 	"HoneyBEE/nserver"
+	"HoneyBEE/server"
 	"HoneyBEE/utils"
 	"fmt"
 	"log"
@@ -47,7 +48,7 @@ func init() {
 	B1LF.SetLevel(logging.DEBUG, "")
 	logging.SetBackend(B1LF)
 	//Logger Creation END
-	Log.Info("HoneyBEE ", utils.GetVersionString(), " starting...")
+	Log.Info("HoneyBEE", utils.GetVersionString(), "starting...")
 	fmt.Print(utils.Ascii, utils.Ascii2, "\n")
 	//Remove unused Ascii strings for less memory cosumption
 	utils.Ascii = ""
@@ -83,16 +84,13 @@ func init() {
 	// Log.Debug("T3: ", T3, "NR", NR3, "err", err)
 	//Log.Debug("Test", (0xC4 & 0x7F))
 	// err = nil
+
 	//Server Config Check
-	// if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout <= 3 {
-	// 	panic("Please don't be stupid and set the buffers to 0 or timeout as less than 3 :/")
-	// }
-	//--//
 	Log.Info("Server Network Listener Started on port ", config.GConfig.Server.Port)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
 	if conf.Performance.CPU == 0 {
 		Log.Info("Setting GOMAXPROCS to all available logical CPU's")
-		runtime.GOMAXPROCS(runtime.NumCPU()) //Set it to the value of how many cores
+		runtime.GOMAXPROCS(runtime.NumCPU())
 	} else {
 		Log.Info("Setting GOMAXPROCS to config: ", conf.Performance.CPU)
 		runtime.GOMAXPROCS(conf.Performance.CPU)
@@ -102,16 +100,15 @@ func init() {
 	}
 	//Log.Info("Generating Key Chain")
 	//Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
-	//if conf.DEBUGOPTS.PacketAnal {
-	// Log.Warning("Packet Analysis enabled, server will not be initialised")
-	// _, err :=
-	//go server.StartClient() //NewMITMServer("127.0.0.1", ":25565", false, false, true, false, 0, 0, 0)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//} else {
-	//nserver.Init()
-	//}
+	if conf.DEBUGOPTS.PacketAnal {
+		Log.Warning("Packet Analysis enabled, server will not be initialised")
+		go server.StartClient()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		nserver.Init()
+	}
 	nserver.Init()
 	go console.Console()
 	go console.Shutdown()

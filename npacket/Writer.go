@@ -34,7 +34,12 @@ func CreatePacketWriterWithCapacity(PacketID int32, Capacity int) *PacketWriter 
 	return pw
 }
 
+func (pw *PacketWriter) GetData() []byte {
+	return pw.data
+}
+
 func (pw *PacketWriter) GetPacket() []byte {
+	Log.Debug("PacketSize: ", len(pw.data))
 	return append(pw.CreateVarInt(uint32(pw.packetSize)), pw.data...)
 }
 
