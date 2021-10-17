@@ -3,7 +3,7 @@ package main
 import (
 	"HoneyBEE/config"
 	"HoneyBEE/console"
-	"HoneyBEE/nserver"
+	"HoneyBEE/mitm"
 	"HoneyBEE/server"
 	"HoneyBEE/utils"
 	"fmt"
@@ -75,7 +75,7 @@ func init() {
 	if config.GConfig.Server.Port == "" {
 		panic("Server port not defined!")
 	}
-	// pr := npacket.CreatePacketReader([]byte{0xCC, 0x16, 0xC4, 0xF6, 0x01, 0x78, 0x9C, 0xED, 0x9D, 0x5F, 0x6C, 0x1C, 0x47, 0x19, 0xC0, 0xE7}) //0x03, 0x03, 0x80, 0x02}) //[]byte{0x03, 0xC4, 0x80})
+	// pr := packet.CreatePacketReader([]byte{0xCC, 0x16, 0xC4, 0xF6, 0x01, 0x78, 0x9C, 0xED, 0x9D, 0x5F, 0x6C, 0x1C, 0x47, 0x19, 0xC0, 0xE7}) //0x03, 0x03, 0x80, 0x02}) //[]byte{0x03, 0xC4, 0x80})
 	// T, NR, err := pr.ReadVarInt()
 	// Log.Debug("T: ", T, "NR", NR, "err", err)
 	// T2, NR2, err := pr.ReadVarInt()
@@ -102,14 +102,14 @@ func init() {
 	//Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
 	if conf.DEBUGOPTS.PacketAnal {
 		Log.Warning("Packet Analysis enabled, server will not be initialised")
-		go server.StartClient()
+		go mitm.StartClient()
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		nserver.Init()
+		server.Init()
 	}
-	nserver.Init()
+	server.Init()
 	go console.Console()
 	go console.Shutdown()
 	if conf.DEBUGOPTS.PacketAnal {
@@ -126,7 +126,7 @@ func main() {
 			time.Sleep(20000000)
 		}
 	}
-	_, err := nserver.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
+	_, err := server.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
 	if err != nil {
 		Log.Critical(err)
 	}
