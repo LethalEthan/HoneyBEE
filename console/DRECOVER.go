@@ -2,7 +2,7 @@ package console
 
 import (
 	"HoneyBEE/config"
-	"HoneyBEE/npacket"
+	"HoneyBEE/packet"
 	"HoneyBEE/utils"
 	"fmt"
 	"runtime"
@@ -22,7 +22,7 @@ func DRECOVER() {
 		fmt.Println("----------------------------------------")
 		fmt.Println("Network")
 		fmt.Println("----------------------------------------")
-		fmt.Println("Auth: ", npacket.Hash())
+		fmt.Println("Auth: ", packet.Hash())
 		fmt.Println("----------------------------------------")
 		fmt.Println("Other")
 		fmt.Println("----------------------------------------")

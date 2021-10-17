@@ -2,7 +2,7 @@ package console
 
 import (
 	"HoneyBEE/config"
-	"HoneyBEE/server"
+	"HoneyBEE/mitm"
 	"HoneyBEE/utils"
 	"bufio"
 	"crypto/md5"
@@ -102,8 +102,8 @@ func Console() {
 			}
 		case "savepackets":
 			Log.Critical("Saving packets...")
-			server.SaveClient()
-			server.SaveServer()
+			mitm.SaveClient()
+			mitm.SaveServer()
 			Log.Critical("Saved packets!")
 		default:
 			Log.Warning("Unknown command")
