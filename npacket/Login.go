@@ -75,7 +75,6 @@ func (LS *Login_0x00_SB) Decode() {
 	if err != nil {
 		panic(err)
 	}
-	return
 }
 
 func (LERSP *Login_0x01_SB) Decode() {
@@ -100,7 +99,6 @@ func (LPR *Login_0x02_SB) Decode() {
 	if err != nil {
 		panic(err)
 	}
-	return
 }
 
 func (LERQ *Login_0x01_CB) Encode() *PacketWriter {
