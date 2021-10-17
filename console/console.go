@@ -2,7 +2,6 @@ package console
 
 import (
 	"HoneyBEE/config"
-	"HoneyBEE/nserver"
 	"HoneyBEE/server"
 	"HoneyBEE/utils"
 	"bufio"
@@ -135,7 +134,6 @@ func Shutdown() {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	<-shutdown
 	Log.Warning("Starting shutdown")
-	nserver.GlobalServer.Shutdown()
 	DEBUG := true
 	if DEBUG {
 		utils.PrintDebugStats()
