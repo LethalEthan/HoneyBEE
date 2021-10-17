@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+var errEmpty = errors.New("array is empty, cannot decode")
+
 //DecodeBoolean - reads a single byte from the packet, and interprets it as a boolean.
 //It throws an error and returns false if it has a problem either reading from the packet or encounters a value outside of the boolean range.
 func DecodeBoolean(D byte) (bool, error) {
@@ -17,7 +19,7 @@ func DecodeBoolean(D byte) (bool, error) {
 	case 0x01:
 		return true, nil
 	default:
-		return false, errors.New("Invalid value found in boolean!, likely incorrect byte!")
+		return false, errors.New("invalid value found in boolean!, likely incorrect byte")
 	}
 }
 
@@ -38,7 +40,7 @@ func DecodeShort(D []byte) (int16, error) {
 
 func DecodeUnsignedShort(D []byte) (uint16, error) {
 	if len(D) > 2 {
-		return 0, errors.New("data greater than 2 for short!")
+		return 0, errors.New("data greater than 2 for short")
 	}
 	//Get the 2 bytes that make up the short
 	Short := binary.BigEndian.Uint16(D[0:2])
@@ -47,7 +49,7 @@ func DecodeUnsignedShort(D []byte) (uint16, error) {
 
 func DecodeInteger(D []byte) (int32, error) {
 	if len(D) > 4 {
-		return 0, errors.New("data greater than 4 for VarInt!")
+		return 0, errors.New("data greater than 4 for VarInt")
 	}
 	//Get the 4 bytes that make up the int
 	Integer := int32(binary.BigEndian.Uint32(D[0:4]))
@@ -57,7 +59,7 @@ func DecodeInteger(D []byte) (int32, error) {
 func DecodeLong(D []byte) (int64, error) {
 	//Get the 8 bytes that make up the long
 	if len(D) > 8 {
-		return 0, errors.New("data greater than 8 for Long!")
+		return 0, errors.New("data greater than 8 for Long")
 	}
 	Long := int64(binary.BigEndian.Uint64(D[0:8]))
 	return Long, nil
@@ -76,7 +78,7 @@ func DecodeFloat(D []byte) (float32, error) {
 func DecodeDouble(D []byte) (float64, error) {
 	//Decode the long
 	if len(D) == 0 {
-		return 0, errors.New("Array is empty cannot decode!")
+		return 0, errEmpty
 	}
 	DoubleBytes, err := DecodeLong(D)
 	if err != nil {
@@ -98,7 +100,7 @@ func DecodeVarInt(D []byte) (int32, uint32, error) {
 	var Result int32
 	var NumRead uint32
 	if len(D) == 0 {
-		return 0, 0, errors.New("Array is empty cannot decode!")
+		return 0, 0, errEmpty
 	}
 	for {
 		Byte := DecodeUnsignedByte(D[NumRead])
@@ -123,7 +125,7 @@ func DecodeVarLong(D []byte) (int64, error) {
 	var Result int64
 	var NumRead uint64
 	if len(D) == 0 {
-		return 0, errors.New("Array is empty cannot decode!")
+		return 0, errEmpty
 	}
 	for {
 		Byte := DecodeUnsignedByte(D[NumRead])

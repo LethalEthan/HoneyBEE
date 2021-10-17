@@ -13,11 +13,8 @@ type PacketReader struct {
 	Data   []byte
 	Seeker int64
 	End    int64
-	Status int
 	FP     interface{}
 }
-
-var EOF = errors.New("Packet EOF")
 
 //CreatePacketReader - Creates Packet Reader
 func CreatePacketReader(Data []byte) *PacketReader {
@@ -25,47 +22,24 @@ func CreatePacketReader(Data []byte) *PacketReader {
 	pr.Data = Data
 	pr.Seeker = 0
 	pr.End = int64(len(Data))
-	pr.Status = Begin
 	return pr
 }
 
 //Seek - Seek through the Data array
-func (pr *PacketReader) Seek(offset int64, stat int) (int64, error) {
-	// if pr.Seeker == pr.End {
-	// 	return pr.Seeker, fmt.Errorf("Seek is at end", offset)
-	// }
+func (pr *PacketReader) Seek(offset int64) (int64, error) {
 	pr.Seeker += offset
 	return pr.Seeker, nil
-	// if offset < 0 {
-	// 	return pr.Seeker, fmt.Errorf("Seek of %d is below zero", offset)
-	// }
-	// switch stat {
-	// case Begin:
-	// 	{
-	// 		pr.Status = Current
-	// 		if offset >= pr.End {
-	// 			pr.Seeker = pr.End
-	// 			pr.Status = End
-	// 		} else {
-	// 			pr.Seeker = offset
-	// 			pr.Status = Current
-	// 		}
-	// 		return pr.Seeker, nil
-	// 	}
-	// case Current:
-	// 	{
-	// 		if pr.Seeker+offset >= pr.End {
-	// 			pr.Seeker = pr.End
-	// 			pr.Status = Current
-	// 		} else {
-	// 			pr.Seeker += offset
-	// 		}
-	// 		return pr.Seeker, nil
-	// 	}
-	// }
-	// return 0, fmt.Errorf("An invalid whence value was submitted")
 }
 
+func (pr *PacketReader) SeekTo(pos int64) bool {
+	if pos >= pr.End {
+		return false
+	}
+	pr.Seeker = pos
+	return true
+}
+
+//CheckForEOF
 func (pr *PacketReader) CheckForEOF() bool {
 	return pr.Seeker >= pr.End
 }
@@ -80,38 +54,18 @@ func (pr *PacketReader) CheckForEOFWithSeek(SeekTo int64) bool {
 	return false
 }
 
-///
-/// Reminder: stat argument isn't needed it's stored in pt.State! remove it
-///
-
 //whence is where the current Seek is and offset is how far the Seek should offset to
-func (pr *PacketReader) SeekWithEOF(offset int64, stat int) (int64, error) {
+func (pr *PacketReader) SeekWithEOF(offset int64) (int64, error) {
 	if offset+pr.Seeker > pr.End {
 		return offset, errors.New("Seek reached End")
 	}
 	//Seek after EOF check
-	offset, err := pr.Seek(offset, stat)
+	offset, err := pr.Seek(offset)
 	if err != nil {
 		return offset, err
 	}
 	return offset, nil
 }
-
-//func (pr *PacketReader) Read(p []byte) (int, error) {
-// if pr.CheckForEOF() {
-// 	return 0, io.EOF
-// }
-//
-// num := copy(p, pr.Data[pr.Seeker:])
-//
-// _, err := pr.SeekWithEOF(int64(num), Current)
-//
-// if err != nil {
-// 	return num, err
-// }
-//
-// return num, nil
-//}
 
 //ReadBoolean - reads a single byte from the packet, and interprets it as a boolean.
 //It throws an error and returns false if it has a problem either reading from the packet or encounters a value outside of the boolean range.
@@ -126,7 +80,7 @@ func (pr *PacketReader) ReadBoolean() (bool, error) {
 	case 0x01:
 		return true, nil
 	default:
-		return false, errors.New("Invalid value found in boolean, likely incorrect seek")
+		return false, errors.New("invalid value found in boolean, likely incorrect seek")
 	}
 }
 
@@ -143,7 +97,7 @@ func (pr *PacketReader) ReadUnsignedByte() (byte, error) {
 	//Get byte from slice
 	Byte := pr.Data[pr.Seeker]
 	//Move the Seek
-	_, err := pr.SeekWithEOF(1, Current)
+	_, err := pr.SeekWithEOF(1)
 	if err != nil {
 		return Byte, err
 	}
@@ -160,7 +114,7 @@ func (pr *PacketReader) ReadUnsignedShort() (uint16, error) {
 		return 0, io.EOF
 	}
 	//Get the 2 bytes that make up the short
-	_, err := pr.SeekWithEOF(2, Current)
+	_, err := pr.SeekWithEOF(2)
 	if err != nil {
 		return 0, err
 	}
@@ -172,12 +126,12 @@ func (pr *PacketReader) ReadUnsignedShort() (uint16, error) {
 
 func (pr *PacketReader) ReadInt() (int32, error) {
 	if pr.CheckForEOFWithSeek(4) {
-		return 0, EOF
+		return 0, io.EOF
 	}
 	//Get the 4 bytes that make up the int
 	Integer := int32(binary.BigEndian.Uint32(pr.Data[pr.Seeker : pr.Seeker+4]))
 	//Move the Seek
-	_, err := pr.SeekWithEOF(4, Current)
+	_, err := pr.SeekWithEOF(4)
 	if err != nil {
 		return Integer, err
 	}
@@ -191,7 +145,7 @@ func (pr *PacketReader) ReadLong() (int64, error) {
 	//Get the 8 bytes that make up the long
 	long := int64(binary.BigEndian.Uint64(pr.Data[pr.Seeker : pr.Seeker+8]))
 	//Move the Seek
-	_, err := pr.SeekWithEOF(8, Current)
+	_, err := pr.SeekWithEOF(8)
 	if err != nil {
 		return long, err
 	}
@@ -226,7 +180,7 @@ func (pr *PacketReader) ReadDouble() (float64, error) {
 
 func (pr *PacketReader) ReadString() (string, error) {
 	if pr.CheckForEOF() {
-		return "", errors.New("Error on begin start string")
+		return "", errors.New("error on begin start string")
 	}
 	//Read string size
 	StringSize, _, err := pr.ReadVarInt()
@@ -234,7 +188,7 @@ func (pr *PacketReader) ReadString() (string, error) {
 		return "", err
 	}
 	if pr.CheckForEOF() {
-		return "", EOF
+		return "", io.EOF
 	}
 	//StringSize check
 	if StringSize < 0 {
@@ -244,12 +198,12 @@ func (pr *PacketReader) ReadString() (string, error) {
 		return "", errors.New("StringSize exceeds EOF")
 	}
 	if int64(StringSize)+pr.Seeker > pr.End {
-		return "", errors.New("String size + seeker = EOF")
+		return "", errors.New("string size + seeker = EOF")
 	}
 	//Read the string
 	StringVal := string(pr.Data[pr.Seeker : pr.Seeker+int64(StringSize)])
 	//move the Seek
-	_, err = pr.SeekWithEOF(int64(StringSize), Current)
+	_, err = pr.SeekWithEOF(int64(StringSize))
 	if err != nil {
 		return StringVal, err
 	}
@@ -319,7 +273,7 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 		}
 		Byte, err = pr.ReadUnsignedByte()
 	}
-	_, err := pr.SeekWithEOF(int64(NumRead), Current)
+	_, err := pr.SeekWithEOF(int64(NumRead))
 	if err != nil {
 		return Result, err
 	}
@@ -331,13 +285,7 @@ func (pr *PacketReader) ReadByteArray(length int32) ([]byte, error) {
 	fmt.Print("Current: ", pr.Seeker, "len: ", length)
 	Data := pr.Data[pr.Seeker : pr.Seeker+int64(length)]
 	fmt.Print("Datalen: ", len(Data))
-	pr.SeekWithEOF(int64(length), 1)
+	pr.SeekWithEOF(int64(length))
 	fmt.Println("seeker: ", pr.Seeker)
 	return Data, nil
 }
-
-const (
-	Begin   = 0
-	Current = 1
-	End     = 2
-)
