@@ -55,19 +55,12 @@ func Console() {
 			if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 2 {
 				Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 			}
-			// if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout == 0 {
-			// 	panic("Please don't be stupid and set the buffers or timeout as 0 :/")
-			// }
 			Log.Critical("If you changed new server to old server this will not be reloaded or changed!")
 		case "GC":
 			runtime.GC()
 			Log.Info("GC invoked")
 		case "mem":
 			utils.PrintDebugStats()
-		// case "SSM":
-		// 	Log.Debug(server.StatusCache)
-		// case "CCM":
-		// 	Log.Debug(server.ClientConnectionMap)
 		case "panic":
 			panic("panicked, you told me to :)")
 		case "cpuprofile":
@@ -142,17 +135,7 @@ func Shutdown() {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	<-shutdown
 	Log.Warning("Starting shutdown")
-	// if !config.GConfig.DEBUGOPTS.NewServer {
-	// 	server.SetNetServerRun(false)
-	// 	server.SetRun(false)
-	// } else {
 	nserver.GlobalServer.Shutdown()
-	//}
-	//if config.GConfig.Performance.EnableGCPlayer { //Don't send on an unintialised channel otherwise it will deadlock
-	//	go func() { nserver.GCPShutdown <- true }()
-	//}
-	//server.ClientConnectionMutex.Lock()
-	//Log.Debug(server.ClientConnectionMap) //Check if any connections are still active in the map, there shouldn't be any left over
 	DEBUG := true
 	if DEBUG {
 		utils.PrintDebugStats()
