@@ -63,6 +63,8 @@ func HandleServer(conn net.Conn) {
 			return
 		}
 		r = data[:n]
+		ServerPackets[SCounter] = r
+		SCounter++
 		//Log.Debug("DATAMITM: ", r)
 		n, err := ClientConn.Write(r)
 		if err != nil {

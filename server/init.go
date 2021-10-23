@@ -2,7 +2,6 @@ package server
 
 import (
 	"HoneyBEE/packet"
-	"HoneyBEE/world"
 	"sync"
 	"time"
 
@@ -25,10 +24,10 @@ func Init() {
 	// go server.StatusSemaphore.Start()
 	// server.StatusSemaphore.FlushAndSetSemaphore(server.StatusCache)
 	// server.CurrentStatus = server.CreateStatusObject(utils.PrimaryMinecraftProtocolVersion, utils.PrimaryMinecraftVersion)
-	go world.Init()
-	if DEBUG {
-		Log.Debug("Server initialised")
-	}
+	//go world.Init()
+	// if DEBUG {
+	// 	Log.Debug("Server initialised")
+	// }
 }
 
 func NewServer(ip string, port string, multicore bool, tick bool, lockosthread bool, reuse bool, sendBuf int, recvBuf int, readBufferCap int) (Server, error) {
@@ -64,7 +63,7 @@ func (S *Server) OnClosed(Conn gnet.Conn, err error) (Action gnet.Action) {
 	Log.Infof("Socket with addr: %s is closing...\n", Conn.RemoteAddr().String())
 	S.ConnectedSockets.Delete(Conn.RemoteAddr().String())
 	C, tmp := Conn.Context().(*Client)
-	if tmp == false {
+	if !tmp {
 		Log.Critical("Conn Context is nil!")
 	} else {
 		C.Close <- true

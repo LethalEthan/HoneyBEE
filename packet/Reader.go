@@ -31,6 +31,12 @@ func (pr *PacketReader) Seek(offset int64) (int64, error) {
 	return pr.Seeker, nil
 }
 
+func (pr *PacketReader) SetData(data []byte) {
+	pr.Seeker = 0
+	pr.Data = data
+	pr.End = int64(len(data))
+}
+
 func (pr *PacketReader) SeekTo(pos int64) bool {
 	if pos >= pr.End {
 		return false
@@ -114,13 +120,11 @@ func (pr *PacketReader) ReadUnsignedShort() (uint16, error) {
 		return 0, io.EOF
 	}
 	//Get the 2 bytes that make up the short
+	short := binary.BigEndian.Uint16(pr.Data[pr.Seeker : pr.Seeker+2])
 	_, err := pr.SeekWithEOF(2)
 	if err != nil {
 		return 0, err
 	}
-	short := binary.BigEndian.Uint16(pr.Data[pr.Seeker : pr.Seeker+2])
-	//Move the Seek
-
 	return short, nil
 }
 
@@ -218,6 +222,7 @@ func (pr *PacketReader) ReadVarInt() (int32, byte, error) {
 	var NumRead byte
 	var Byte byte
 	var val int32
+	var err error
 	Byte, err = pr.ReadUnsignedByte()
 	if err != nil {
 		return 0, 0, err
@@ -251,6 +256,7 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 	var NumRead uint64
 	var Byte byte
 	var val int64
+	var err error
 	Byte, err = pr.ReadUnsignedByte()
 	if err != nil {
 		return 0, err
@@ -273,7 +279,7 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 		}
 		Byte, err = pr.ReadUnsignedByte()
 	}
-	_, err := pr.SeekWithEOF(int64(NumRead))
+	_, err = pr.SeekWithEOF(int64(NumRead))
 	if err != nil {
 		return Result, err
 	}

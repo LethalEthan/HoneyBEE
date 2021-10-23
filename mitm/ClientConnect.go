@@ -34,6 +34,7 @@ func HandleClient(conn net.Conn) {
 	//var state int
 	var n int
 	var r []byte
+	//var PR *packet.PacketReader
 	data := make([]byte, 2097152)
 	for {
 		n, err = conn.Read(data)
@@ -51,6 +52,9 @@ func HandleClient(conn net.Conn) {
 		if len(r) <= 0 {
 			panic("You done fucked up")
 		}
+		ClientPackets[CCounter] = r
+		CCounter++
+		//PR = packet.CreatePacketReader(r)
 		//Log.Critical("Sending: ", r)
 		n, err := ServerConn.Write(r)
 		if err != nil {

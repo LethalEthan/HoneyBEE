@@ -70,6 +70,7 @@ type Login_0x02_SB struct {
 }
 
 func (LS *Login_0x00_SB) Decode() {
+	var err error
 	PR := CreatePacketReader(LS.Packet.PacketData)
 	LS.Name, err = PR.ReadString()
 	if err != nil {
@@ -78,6 +79,7 @@ func (LS *Login_0x00_SB) Decode() {
 }
 
 func (LERSP *Login_0x01_SB) Decode() {
+	var err error
 	PR := CreatePacketReader(LERSP.Packet.PacketData)
 	LERSP.SharedSecretLen, _, err = PR.ReadVarInt()
 	LERSP.SharedSecret, err = PR.ReadByteArray(LERSP.SharedSecretLen)
@@ -91,8 +93,9 @@ func (LERSP *Login_0x01_SB) Decode() {
 }
 
 func (LPR *Login_0x02_SB) Decode() {
-	PR := CreatePacketReader(LPR.Packet.PacketData)
+	var err error
 	var NR byte
+	PR := CreatePacketReader(LPR.Packet.PacketData)
 	LPR.MessageID, NR, err = PR.ReadVarInt()
 	LPR.Successful, err = PR.ReadBoolean()
 	LPR.Data, err = PR.ReadByteArray(int32(len(LPR.Packet.PacketData) - int(NR) - 1))
@@ -111,11 +114,11 @@ func (LERQ *Login_0x01_CB) Encode() *PacketWriter {
 	return PW
 }
 
-func (LoginSucc *Login_0x02_CB) Encode(player string) *PacketWriter {
+func (LoginSucc *Login_0x02_CB) Encode() *PacketWriter {
 	PW := CreatePacketWriter(0x02)
 	PW.WriteString(LoginSucc.UUID)
-	PW.WriteString(player)
-	Log.Info("info:", player, "UUID:", LoginSucc.UUID)
+	PW.WriteString(LoginSucc.Username)
+	Log.Info("Username:", LoginSucc.Username, "UUID:", LoginSucc.UUID)
 	return PW
 }
 

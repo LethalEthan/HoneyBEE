@@ -31,6 +31,6 @@ func SaveServer() {
 			panic(err)
 		}
 		file.Write(v)
+		file.Close()
 	}
-	file.Close()
 }

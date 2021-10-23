@@ -112,6 +112,7 @@ func init() {
 	server.Init()
 	go console.Console()
 	go console.Shutdown()
+	//go server.DebugServer()
 	if conf.DEBUGOPTS.PacketAnal {
 		Log.Warning("MITM Proxy mode enable")
 	}
