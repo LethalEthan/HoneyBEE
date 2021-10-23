@@ -2,6 +2,7 @@ package server
 
 import (
 	"HoneyBEE/packet"
+	"time"
 
 	"github.com/panjf2000/gnet"
 )
@@ -92,6 +93,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					HP.Packet = GP
 					err := HP.Decode()
 					if err != nil {
+						Log.Critical("Error while decoding HP")
 						ClientConn.Conn.Close()
 					}
 					ClientConn.ProtocolVersion = HP.ProtocolVersion
@@ -129,7 +131,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			case LOGIN:
 				switch PacketID {
 				case 0x00:
-					Log.Debug("Play 0x00_SB")
+					Log.Debug("0x00_SB - Login start")
 					LoginStart := new(packet.Login_0x00_SB)
 					LoginStart.Packet = GP
 					LoginStart.Decode()
@@ -138,9 +140,9 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					LERQ := new(packet.Login_0x01_CB)
 					PW := LERQ.Encode()
 					ClientConn.Conn.AsyncWrite(PW.GetPacket())
-					Log.Debug("Sent 0x01_CB")
+					Log.Debug("Sent 0x01_CB - Encryption Request")
 				case 0x01:
-					Log.Debug("Play 0x01_SB") //Login Response
+					Log.Debug("Sent 0x01_SB - Encryption response")
 					LERSP := new(packet.Login_0x01_SB)
 					LERSP.Packet = GP
 					LERSP.Decode()
@@ -151,17 +153,20 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 						ClientConn.Conn.Close()
 					}
 					LS.Username = ClientConn.PlayerName
-					PW := LS.Encode(ClientConn.PlayerName)
+					PW := LS.Encode()
 					ClientConn.Conn.AsyncWrite(PW.GetPacket()) //Send Login Success
-					Log.Debug("Sent 0x02_CB")
+					Log.Debug("Sent 0x02_CB - Login Success")
+					//
 					Log.Debug(PW.GetData())
 					//Set to Play state
 					ClientConn.State = PLAY
 					ClientConn.Conn.SetContext(ClientConn) //Set conn context
-					//JoinGame
+					time.Sleep(500000)
+					//JoinGame - Play 0x26
 					JG := new(packet.JoinGame_CB)
-					PW = JG.Encode(LS.UUID, LS.Username, 0, ClientConn.Conn)
+					PW = JG.Encode(LS.UUID, LS.Username, 0)
 					ClientConn.Conn.AsyncWrite(PW.GetPacket())
+					Log.Debug("Sent Join Game - 0x26 - P")
 					/*
 						//Plugin Message - brand
 						PW = packet.CreatePacketWriterWithCapacity(0x04, 24)

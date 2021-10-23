@@ -28,6 +28,7 @@ var (
 )
 
 func Console() {
+	runtime.LockOSThread()
 	defer DRECOVER()
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {

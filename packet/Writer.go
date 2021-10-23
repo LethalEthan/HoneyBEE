@@ -8,7 +8,7 @@ import (
 type PacketWriter struct {
 	data       []byte
 	packetID   int32
-	packetSize int32
+	packetSize int
 }
 
 func CreatePacketWriter(PacketID int32) *PacketWriter {
@@ -38,23 +38,32 @@ func (pw *PacketWriter) GetData() []byte {
 	return pw.data
 }
 
+func (pw *PacketWriter) ResetData(packetID int32) {
+	pw.data = make([]byte, 0, len(pw.data))
+	pw.packetSize = 0
+	pw.packetID = packetID
+}
+
 func (pw *PacketWriter) GetPacket() []byte {
+	pw.packetSize = len(pw.data)
+	p := append(pw.CreateVarInt(uint32(pw.packetSize)), pw.data...)
 	Log.Debug("PacketSize: ", len(pw.data))
-	return append(pw.CreateVarInt(uint32(pw.packetSize)), pw.data...)
+	Log.Debug("Packet Contents: ", pw.data)
+	return p
 }
 
 func (pw *PacketWriter) GetPacketID() int32 {
 	return pw.packetID
 }
 
-func (pw *PacketWriter) GetPacketSize() int32 {
+func (pw *PacketWriter) GetPacketSize() int {
 	return pw.packetSize
 }
 
 func (pw *PacketWriter) AppendByteSlice(Data []byte) {
 	pw.data = append(pw.data, Data...)
 
-	pw.packetSize += int32(len(Data))
+	pw.packetSize += len(Data)
 }
 
 //WriteBoolean - Write Boolean to packet

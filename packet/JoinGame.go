@@ -3,12 +3,9 @@ package packet
 import (
 	"HoneyBEE/nbt"
 	"HoneyBEE/player"
-
-	"github.com/panjf2000/gnet"
 )
 
-func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet.Conn) *PacketWriter {
-	//JG = &JoinGame_CB{
+func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte) *PacketWriter {
 	JG.EntityID = int32(player.AssignEID(playername))
 	JG.IsHardcore = false
 	JG.Gamemode = GM
@@ -25,7 +22,6 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	JG.EnableRespawnScreen = true
 	JG.IsDebug = false
 	JG.IsFlat = true
-	//}
 	PW := CreatePacketWriterWithCapacity(0x26, 1024)
 	PW.WriteInt(JG.EntityID)
 	PW.WriteBoolean(JG.IsHardcore)
@@ -76,7 +72,7 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	PW.WriteBoolean(true)
 	PW.WriteBoolean(true)
 	PW.WriteBoolean(true)
-	Log.Debug("SENT JOIN GAME")
+	Log.Debug("CREATED JOIN GAME")
 	return PW
 	// f, err := os.Create("testing.nbt")
 	// if err != nil {
@@ -86,7 +82,6 @@ func (JG *JoinGame_CB) Encode(UUID string, playername string, GM byte, Conn gnet
 	// f.Close()
 	// utils.PrintHexFromBytes("DimensionCodec", JG.DimensionCodec.Data)
 	// Log.Info("DimensionCodec", JG.DimensionCodec.Data)
-	//JG.DimensionCodec.
 }
 
 func CreateDimensionTypeRegistry(piglin_safe, natural, respawn_anchor_works, has_skylight, bed_works, has_raids, ultrawarm, has_ceiling byte, ambient_light, coordinate_scale float32, min_y, height, logical_height int32, fixed_time int64, infiniburn, effects string) nbt.TCompound {

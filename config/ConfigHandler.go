@@ -36,10 +36,8 @@ type Config struct {
 		} `yaml:"protocol"`
 	} `yaml:"server"`
 	Performance struct {
-		CPU            int  `yaml:"cpu"`
-		EnableGCPlayer bool `yaml:"enable-gc-player"`
-		GCPlayer       int  `yaml:"gc-player-interval"`
-		GCPercent      int  `yaml:"gc-percent"`
+		CPU       int `yaml:"cpu"`
+		GCPercent int `yaml:"gc-percent"`
 	} `yaml:"performance"`
 	DEBUGOPTS struct {
 		PacketAnal        bool   `yaml:"packet-anal"`

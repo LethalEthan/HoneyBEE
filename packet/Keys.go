@@ -21,6 +21,7 @@ const (
 )
 
 func Keys() {
+	var err error
 	var t time.Time
 	if config.GConfig.Server.DEBUG {
 		t = time.Now()
