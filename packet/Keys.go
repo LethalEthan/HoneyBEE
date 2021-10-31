@@ -6,6 +6,8 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -43,11 +45,11 @@ func Keys() {
 	Log.Info("Key Generated!")
 }
 
-func Auth(username string, sharedSecret []byte) string {
+func Auth(username string, sharedSecret []byte) uuid.UUID {
 	PlayerUUID, autherr := Authenticate(username, "", sharedSecret, publicKeySlice)
 	if autherr != nil {
 		Log.Error("Auth Fail!")
-		return ""
+		return uuid.Nil
 	}
 	return PlayerUUID
 }

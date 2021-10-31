@@ -4,6 +4,7 @@ import (
 	"HoneyBEE/packet"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/panjf2000/gnet"
 )
 
@@ -64,6 +65,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			also known as book banning or any item/block that is used to overload the packet limit*/
 			if PacketSize > 2097151 {
 				ClientConn.Conn.Close() //Disconnect the client until  I find a solution, my idea is a custom mod or client that raises the packet size to a Long
+				return
 			}
 			//
 			if DEBUG {
@@ -79,6 +81,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			//Legacy Ping - drop conn
 			if PacketSize == 0xFE && ClientConn.State == HANDSHAKE {
 				ClientConn.Conn.Close()
+				return
 			}
 			//Packet Logic
 			switch ClientConn.State {
@@ -88,6 +91,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					if PacketDataSize == 0 {
 						Log.Critical("Packet ordering is whack yo, the bees flew into the glass")
 						ClientConn.Conn.Close()
+						return
 					}
 					HP := new(packet.Handshake_0x00)
 					HP.Packet = GP
@@ -95,6 +99,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					if err != nil {
 						Log.Critical("Error while decoding HP")
 						ClientConn.Conn.Close()
+						return
 					}
 					ClientConn.ProtocolVersion = HP.ProtocolVersion
 					ClientConn.State = int(HP.NextState)
@@ -149,8 +154,9 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					//Login Success
 					LS := new(packet.Login_0x02_CB)
 					LS.UUID = packet.Auth(ClientConn.PlayerName, LERSP.SharedSecret)
-					if LS.UUID == "" {
+					if LS.UUID == uuid.Nil {
 						ClientConn.Conn.Close()
+						return
 					}
 					LS.Username = ClientConn.PlayerName
 					PW := LS.Encode()
@@ -164,7 +170,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					time.Sleep(500000)
 					//JoinGame - Play 0x26
 					JG := new(packet.JoinGame_CB)
-					PW = JG.Encode(LS.UUID, LS.Username, 0)
+					PW = JG.Encode(LS.Username, 0)
 					ClientConn.Conn.AsyncWrite(PW.GetPacket())
 					Log.Debug("Sent Join Game - 0x26 - P")
 					/*

@@ -11,7 +11,7 @@ var TestJoinData = []byte{10, 10, 0, 24, 109, 105, 110, 101, 99, 114, 97, 102, 1
 
 func TestJoinGame(T *testing.T) {
 	JG := new(JoinGame_CB)
-	JG.Encode("", "", 0)
+	JG.Encode("", 0)
 	//fmt.Print(JG)
 	if len(JG.DimensionCodec.Data) != len(TestJoinData) {
 		T.Error(nbt.NBTLength)

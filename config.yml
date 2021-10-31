@@ -1,7 +1,7 @@
 server:
   host: "0.0.0.0" #currently doesn't do shit
   port: ":25570" #Set the port
-  debug: true #Wanna see the juicy info?
+  debug: false #Wanna see the juicy info?
   timeout: 15 #In seconds
   multicore: true
   SO_REUSE: true
@@ -14,10 +14,8 @@ server:
     block-players-on-login: true
 performance: #Change me!
    cpu: 8
-   enable-gc-player: false
-   gc-player-interval: 15
    gc-percent: 100
 debug-opts:
     packet-anal: false #switches HoneyBEE into a MITM proxy that captures and decodes packets
-    packet-anal-address: "192.168.0.42:25580" #Server address that HoneyBEE probes
+    packet-anal-address: "127.0.0.1:25567" #Server address that HoneyBEE probes
     maintenance: false

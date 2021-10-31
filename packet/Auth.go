@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 var ErrorAuthFailed = /*errors.New*/ ("Authentication failed")
@@ -21,7 +23,7 @@ type jsonResponse struct {
 	ID string `json:"id"`
 }
 
-func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (string, error) {
+func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (uuid.UUID, error) {
 	//A hash is created using the shared secret and public key and is sent to the mojang sessionserver
 	//The server returns the data about the player including the player's skin blob
 	//Again I cannot thank enough wiki.vg, this is based off one of the linked java gists by Drew DeVault; thank you for the gist that I used to base this off
@@ -44,7 +46,7 @@ func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (st
 
 	response, err := http.Get(fmt.Sprintf("https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s", username, hashString))
 	if err != nil {
-		return "", err
+		return uuid.Nil, err
 	}
 	defer response.Body.Close()
 
@@ -52,15 +54,18 @@ func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (st
 	res := &jsonResponse{}
 	err = dec.Decode(res)
 	if err != nil {
-		return "", errors.New(ErrorAuthFailed)
+		return uuid.Nil, errors.New(ErrorAuthFailed)
 	}
-
 	if len(res.ID) != 32 {
-		return "", errors.New(ErrorAuthFailed)
+		return uuid.Nil, errors.New(ErrorAuthFailed)
 	}
 	hyphenater := res.ID[0:8] + "-" + res.ID[8:12] + "-" + res.ID[12:16] + "-" + res.ID[16:20] + "-" + res.ID[20:]
 	res.ID = hyphenater
-	return res.ID, nil
+	UUID, err := uuid.Parse(res.ID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return UUID, nil
 }
 
 func twosCompliment(p []byte) {

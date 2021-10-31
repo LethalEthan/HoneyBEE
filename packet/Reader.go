@@ -7,6 +7,8 @@ import (
 	"io"
 	"math"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type PacketReader struct {
@@ -284,6 +286,22 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 		return Result, err
 	}
 	return Result, nil
+}
+
+func (pr *PacketReader) ReadUUID() (uuid.UUID, error) {
+	if pr.CheckForEOFWithSeek(16) {
+		return uuid.Nil, io.EOF
+	}
+	UUIDBytes := pr.Data[pr.Seeker : pr.Seeker+16]
+	_, err := pr.SeekWithEOF(16)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	UUID, err := uuid.FromBytes(UUIDBytes)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return UUID, err
 }
 
 //ReadArray - Returns the array (slice) of the packet Data

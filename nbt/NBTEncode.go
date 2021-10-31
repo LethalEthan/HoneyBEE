@@ -9,32 +9,30 @@ func (NBTW *NBTWriter) Encode() {
 
 func (NBTW *NBTWriter) traverseCompound(TC TCompound) {
 	for _, v := range TC.Value {
-		switch v.(type) {
+		switch v := v.(type) {
 		case TEnd:
 			NBTW.writeTag(TagEnd, "")
-			//return
 		case TByte:
-			NBTW.writeByte(v.(TByte).Name, v.(TByte).Value)
+			NBTW.writeByte(v.Name, v.Value)
 		case TShort:
-			NBTW.writeShort(v.(TShort).Name, v.(TShort).Value)
+			NBTW.writeShort(v.Name, v.Value)
 		case TInt:
-			NBTW.writeInt(v.(TInt).Name, v.(TInt).Value)
+			NBTW.writeInt(v.Name, v.Value)
 		case TLong:
-			NBTW.writeLong(v.(TLong).Name, v.(TLong).Value)
+			NBTW.writeLong(v.Name, v.Value)
 		case TFloat:
-			NBTW.writeFloat(v.(TFloat).Name, v.(TFloat).Value)
+			NBTW.writeFloat(v.Name, v.Value)
 		case TDouble:
-			NBTW.writeDouble(v.(TDouble).Name, v.(TDouble).Value)
+			NBTW.writeDouble(v.Name, v.Value)
 		case TByteArray:
-			NBTW.writeByteArray(v.(TByteArray).Name, v.(TByteArray).Value)
+			NBTW.writeByteArray(v.Name, v.Value)
 		case TString:
-			NBTW.writeString(v.(TString).Name, v.(TString).Value)
+			NBTW.writeString(v.Name, v.Value)
 		case TList:
-			NBTW.writeList(v.(TList).Name, v.(TList).Type, v.(TList).Value)
+			NBTW.writeList(v.Name, v.Type, v.Value)
 		case TCompound:
-			//NBTW.writeTag(TagCompound, v.(TCompound).Name)
-			NBTW.writeCompoundTag(v.(TCompound).Name)
-			NBTW.traverseCompound(v.(TCompound))
+			NBTW.writeCompoundTag(v.Name)
+			NBTW.traverseCompound(v)
 		}
 	}
 }

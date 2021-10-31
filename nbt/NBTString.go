@@ -20,13 +20,12 @@ func (NBTW *NBTWriter) writeString(Name string, val string) {
 			NBTW.AppendByteSlice([]byte{0, 0})
 		}
 	}
-	return
 }
 
 func (TS TString) Encode() []byte {
 	Data := make([]byte, 0, len(TS.Name)+len(TS.Value))
 	if TS.Name != "" {
-		Data = append(Data, []byte{TagString}...)
+		Data = append(Data, TagString)
 		Data = append(Data, utils.Int16ToByteArray(int16(len(TS.Name)))...)
 		Data = append(Data, []byte(TS.Name)...)
 	}

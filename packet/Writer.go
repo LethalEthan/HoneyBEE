@@ -3,6 +3,8 @@ package packet
 import (
 	"encoding/binary"
 	"math"
+
+	"github.com/google/uuid"
 )
 
 type PacketWriter struct {
@@ -166,23 +168,6 @@ func (pw *PacketWriter) WriteVarLong(val int64) {
 	pw.AppendByteSlice(pw.CreateVarLong(uint64(val)))
 }
 
-//CreateVarLong - Creates a VarLong, requires uint to move the sign bit
-func (pw *PacketWriter) CreateVarLong(val uint64) []byte {
-	var buff = make([]byte, 0, 10)
-	for {
-		temp := byte(val & 0x7F)
-		val = val >> 7
-		if val != 0 {
-			temp |= 0x80
-		}
-		buff = append(buff, temp)
-		if val == 0 {
-			break
-		}
-	}
-	return buff
-}
-
 //CreateVarInt - creates VarInt, requires uint to move the sign bit
 func (pw *PacketWriter) CreateVarInt(val uint32) []byte {
 	var buff = make([]byte, 0, 5)
@@ -203,4 +188,29 @@ func (pw *PacketWriter) CreateVarInt(val uint32) []byte {
 		}
 	}
 	return buff
+}
+
+//CreateVarLong - Creates a VarLong, requires uint to move the sign bit
+func (pw *PacketWriter) CreateVarLong(val uint64) []byte {
+	var buff = make([]byte, 0, 10)
+	for {
+		temp := byte(val & 0x7F)
+		val = val >> 7
+		if val != 0 {
+			temp |= 0x80
+		}
+		buff = append(buff, temp)
+		if val == 0 {
+			break
+		}
+	}
+	return buff
+}
+
+func (pw *PacketWriter) WriteUUID(val uuid.UUID) {
+	BU, err := val.MarshalBinary()
+	if err != nil {
+		Log.Debug("Could not marshal UUID!")
+	}
+	pw.AppendByteSlice(BU)
 }

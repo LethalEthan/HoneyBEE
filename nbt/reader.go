@@ -27,17 +27,22 @@ func CreateNBTReader(Data []byte) (*NBTReader, error) {
 }
 
 func (NBTR *NBTReader) seek(offset int) {
-	NBTR.seeker += offset
+	if NBTR.seeker+offset < NBTR.end {
+		NBTR.seeker += offset
+	}
 }
 
-// func (NBTR *NBTReader) SeekWithEOF(offset int) error {
-// 	if offset+NBTR.seeker > NBTR.end {
-// 		return fmt.Errorf("Seek reached end: %d offset: %d", NBTR.seeker, offset) //errors.New("Seek reached End")
-// 	} else {
-// 		NBTR.seeker += offset
-// 		return nil
-// 	}
-// }
+func (NBTR *NBTReader) readWithEOFSeek(offset int) ([]byte, error) {
+	//Check if offset overflows
+	if NBTR.seeker+offset > NBTR.end {
+		utils.PrintHexFromBytes("overflow", NBTR.data)
+		return []byte{0}, fmt.Errorf("offset: %d seeker: %d end: %d", offset, NBTR.seeker, NBTR.end)
+	}
+	//Return data
+	Data := NBTR.data[NBTR.seeker : NBTR.seeker+offset]
+	NBTR.seek(offset)
+	return Data, nil
+}
 
 func (NBTR *NBTReader) AutoRead() ([]interface{}, error) {
 	for {
@@ -127,8 +132,7 @@ func (NBTR *NBTReader) readTagType() (byte, string, error) {
 }
 
 func (NBTR *NBTReader) readByte() (byte, error) {
-	Byte, err := NBTR.readWithEOFSeek(1) //NBTR.data[NBTR.seeker]
-	//err := NBTR.SeekWithEOF(1)
+	Byte, err := NBTR.readWithEOFSeek(1)
 	if err != nil {
 		return 0, err
 	}
@@ -137,7 +141,9 @@ func (NBTR *NBTReader) readByte() (byte, error) {
 
 func (NBTR *NBTReader) readShort() (int16, error) {
 	ShortBytes, err := NBTR.readWithEOFSeek(2)
-	//NBTR.SeekWithEOF(2)
+	if err != nil {
+		return 0, err
+	}
 	Short, err := utils.ByteArrayToInt16(ShortBytes)
 	if err != nil {
 		return 0, err
@@ -147,6 +153,9 @@ func (NBTR *NBTReader) readShort() (int16, error) {
 
 func (NBTR *NBTReader) readInt() (int32, error) {
 	IntBytes, err := NBTR.readWithEOFSeek(4)
+	if err != nil {
+		return 0, err
+	}
 	Int, err := utils.ByteArrayToInt32(IntBytes)
 	if err != nil {
 		return 0, err
@@ -156,6 +165,9 @@ func (NBTR *NBTReader) readInt() (int32, error) {
 
 func (NBTR *NBTReader) readLong() (int64, error) {
 	LongBytes, err := NBTR.readWithEOFSeek(8)
+	if err != nil {
+		return 0, err
+	}
 	Long, err := utils.ByteArrayToInt64(LongBytes)
 	if err != nil {
 		return 0, err
@@ -198,25 +210,13 @@ func (NBTR *NBTReader) readString() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	String, err := NBTR.readWithEOFSeek(int(StringLength)) /*NBTR.data[NBTR.seeker : NBTR.seeker+int(StringLength)]*/
+	String, err := NBTR.readWithEOFSeek(int(StringLength))
 	if err != nil {
 		return "", err
 	}
 	return string(String), nil
 }
 
-func (NBTR *NBTReader) readWithEOFSeek(offset int) ([]byte, error) {
-	//Check if offset overflows
-	if NBTR.seeker+offset > NBTR.end {
-		utils.PrintHexFromBytes("overflow", NBTR.data) //fmt.Print(NBTR.data)
-		return []byte{0}, fmt.Errorf("offset: %d seeker: %d end: %d", offset, NBTR.seeker, NBTR.end)
-	}
-	//Return data
-	Data := NBTR.data[NBTR.seeker : NBTR.seeker+offset]
-	NBTR.seek(offset)
-	return Data, nil
-}
+func readList() {
 
-// func (NBTR *NBTReader) AppendByteSlice(Data []byte) {
-// 	NBTR.data = append(NBTR.data, Data...)
-// }
+}
