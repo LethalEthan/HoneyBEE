@@ -84,22 +84,22 @@ func TestString(T *testing.T) {
 	fmt.Println(Test)
 }
 
-func TestThis(T *testing.T) {
-	bruh := []byte{2, 36, 52, 101, 100, 48, 99, 53, 53, 100, 45, 99, 97, 97, 57, 45, 52, 54, 54, 57, 45, 56, 98, 101, 97, 45, 102, 51, 97, 48, 48, 53, 50, 101, 54, 102, 49, 102, 12, 76, 101, 116, 104, 97, 108, 69, 116, 104, 97, 110, 56}
-	PR := CreatePacketReader(bruh)
-	fmt.Println(len(bruh))
-	PS, _, _ := PR.ReadVarInt()
-	fmt.Println("Size:", PS)
-	PID, _, _ := PR.ReadVarInt()
-	fmt.Println("ID: ", PID)
-	Test, err := PR.ReadString()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(Test)
-	Test2, err := PR.ReadString()
-	fmt.Println(Test2)
-}
+// func TestThis(T *testing.T) {
+// 	bruh := []byte{2, 36, 52, 101, 100, 48, 99, 53, 53, 100, 45, 99, 97, 97, 57, 45, 52, 54, 54, 57, 45, 56, 98, 101, 97, 45, 102, 51, 97, 48, 48, 53, 50, 101, 54, 102, 49, 102, 12, 76, 101, 116, 104, 97, 108, 69, 116, 104, 97, 110, 56}
+// 	PR := CreatePacketReader(bruh)
+// 	fmt.Println(len(bruh))
+// 	PS, _, _ := PR.ReadVarInt()
+// 	fmt.Println("Size:", PS)
+// 	PID, _, _ := PR.ReadVarInt()
+// 	fmt.Println("ID: ", PID)
+// 	Test, err := PR.ReadString()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	fmt.Println(Test)
+// 	Test2, err := PR.ReadString()
+// 	fmt.Println(Test2)
+// }
 
 func TestLoginSuccess(T *testing.T) {
 	LS := new(Login_0x02_CB)
