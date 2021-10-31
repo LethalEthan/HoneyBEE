@@ -117,14 +117,19 @@ func TestLoginSuccess(T *testing.T) {
 	fmt.Println("Size:", PS)
 	PID, _, _ := PR.ReadVarInt()
 	fmt.Println("ID: ", PID)
-	Test, err := PR.ReadString()
+	Test, err := PR.ReadUUID()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(Test)
-	Test2, err := PR.ReadString()
+	Test2, err := Test.MarshalText()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(Test2)
+	Test3, err := PR.ReadString()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(Test3)
+
 }
