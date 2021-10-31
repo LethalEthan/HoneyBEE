@@ -255,7 +255,7 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 		return 0, errors.New("EOF: ReadVarLong")
 	}
 	var Result int64
-	var NumRead uint64
+	var NumRead byte
 	var Byte byte
 	var val int64
 	var err error
