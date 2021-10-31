@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 
+	"github.com/google/uuid"
 	"github.com/panjf2000/gnet"
 )
 
@@ -24,7 +25,7 @@ type Login_0x01_CB struct {
 
 //Login_0x02_CB - Login Success
 type Login_0x02_CB struct {
-	UUID     string
+	UUID     uuid.UUID
 	Username string
 }
 
@@ -116,9 +117,13 @@ func (LERQ *Login_0x01_CB) Encode() *PacketWriter {
 
 func (LoginSucc *Login_0x02_CB) Encode() *PacketWriter {
 	PW := CreatePacketWriter(0x02)
-	PW.WriteString(LoginSucc.UUID)
+	PW.WriteUUID(LoginSucc.UUID)
 	PW.WriteString(LoginSucc.Username)
-	Log.Info("Username:", LoginSucc.Username, "UUID:", LoginSucc.UUID)
+	T, err := LoginSucc.UUID.MarshalText()
+	if err != nil {
+		panic(err)
+	}
+	Log.Info("Username:", LoginSucc.Username, "UUID:", string(T))
 	return PW
 }
 

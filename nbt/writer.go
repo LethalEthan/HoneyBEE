@@ -38,33 +38,33 @@ func CreateNBTWriter(Name string) *NBTWriter {
 This can be dangerous to use unless you know what you're doing, try to keep to safe functions like AddTagBasedOnValue
 Compound tags are automatically ended when added do not end the tag youself, the encoder will ignore it anyway*/
 func (NBTW *NBTWriter) AddTag(Val interface{}) error {
-	switch Val.(type) {
+	switch Val := Val.(type) {
 	case TEnd:
 		NBTW.CurrentTag.AddTag(TEnd{})
 	case TByte:
-		NBTW.CurrentTag.AddTag(Val /*.(TByte)*/)
+		NBTW.CurrentTag.AddTag(Val)
 	case TShort:
-		NBTW.CurrentTag.AddTag(Val /*.(TShort)*/)
+		NBTW.CurrentTag.AddTag(Val)
 	case TInt:
-		NBTW.CurrentTag.AddTag(Val /*.(TInt)*/)
+		NBTW.CurrentTag.AddTag(Val)
 	case TLong:
-		NBTW.CurrentTag.AddTag(Val /*.(TLong)*/)
+		NBTW.CurrentTag.AddTag(Val)
 	case TFloat:
-		NBTW.CurrentTag.AddTag(Val /*.(TFloat)*/)
+		NBTW.CurrentTag.AddTag(Val)
 	case TDouble:
-		NBTW.CurrentTag.AddTag(Val /*.(TDouble)*/)
+		NBTW.CurrentTag.AddTag(Val)
 	case TByteArray:
-		BA := Val.(TByteArray)
+		BA := Val
 		BA.length = len(BA.Value)
-		NBTW.CurrentTag.AddTag(Val /*.(TByteArray)*/)
+		NBTW.CurrentTag.AddTag(Val)
 	case TString:
-		NBTW.CurrentTag.AddTag(Val /*.(TString)*/)
+		NBTW.CurrentTag.AddTag(Val)
 	case TList:
-		List := Val.(TList)
+		List := Val
 		List.length = len(List.Value)
 		NBTW.CurrentTag.AddTag(List)
 	case TCompound:
-		TC := Val.(TCompound)
+		TC := Val
 		TC.NumEntries = len(TC.Value)
 		TC.PreviousTag = NBTW.CurrentTag
 		TC.AddTag(TEnd{})
@@ -74,11 +74,11 @@ func (NBTW *NBTWriter) AddTag(Val interface{}) error {
 		//NBTW.CurrentTag.Index++
 		NBTW.CurrentTag.NumEntries++ //= len(TC.Value)
 	case TIntArray:
-		TIA := Val.(TIntArray)
+		TIA := Val
 		TIA.length = len(TIA.Value)
 		NBTW.CurrentTag.AddTag(TIA)
 	case TLongArray:
-		TLA := Val.(TLongArray)
+		TLA := Val
 		TLA.length = len(TLA.Value)
 		NBTW.CurrentTag.AddTag(TLA)
 	default:
@@ -95,28 +95,28 @@ func (NBTW *NBTWriter) AddTagBasedOnValue(Name string, Val interface{}) error {
 	if Name == "" {
 		return NBTEmptyName
 	}
-	switch Val.(type) {
+	switch Val := Val.(type) {
 	case nil:
 		return NBTnil
 	case byte:
-		NBTW.CurrentTag.AddTag(TByte{Name, Val.(byte)})
+		NBTW.CurrentTag.AddTag(TByte{Name, Val})
 	case int16:
-		NBTW.CurrentTag.AddTag(TShort{Name, Val.(int16)})
+		NBTW.CurrentTag.AddTag(TShort{Name, Val})
 	case int32:
-		NBTW.CurrentTag.AddTag(TInt{Name, Val.(int32)})
+		NBTW.CurrentTag.AddTag(TInt{Name, Val})
 	case int64:
-		NBTW.CurrentTag.AddTag(TLong{Name, Val.(int64)})
+		NBTW.CurrentTag.AddTag(TLong{Name, Val})
 	case float32:
-		NBTW.CurrentTag.AddTag(TFloat{Name, Val.(float32)})
+		NBTW.CurrentTag.AddTag(TFloat{Name, Val})
 	case float64:
-		NBTW.CurrentTag.AddTag(TDouble{Name, Val.(float64)})
+		NBTW.CurrentTag.AddTag(TDouble{Name, Val})
 	case []byte:
-		NBTW.CurrentTag.AddTag(TByteArray{Name, Val.([]byte), len(Val.([]byte)), 0})
+		NBTW.CurrentTag.AddTag(TByteArray{Name, Val, len(Val), 0})
 	case string:
-		NBTW.CurrentTag.AddTag(TString{Name, Val.(string)})
+		NBTW.CurrentTag.AddTag(TString{Name, Val})
 	case map[string]interface{}: //All types, iterated through, this will not accept compounds or lists since they cannot be detected via primitives
 		var err error
-		for i, v := range Val.(map[string]interface{}) {
+		for i, v := range Val {
 			Log.Info("key: ", i, " Value: ", v)
 			e := NBTW.AddTagBasedOnValue(i, v)
 			if e != nil {
@@ -125,9 +125,9 @@ func (NBTW *NBTWriter) AddTagBasedOnValue(Name string, Val interface{}) error {
 		}
 		return err
 	case []int32:
-		NBTW.CurrentTag.AddTag(TIntArray{Name, Val.([]int32), len(Val.([]int32)), 0})
+		NBTW.CurrentTag.AddTag(TIntArray{Name, Val, len(Val), 0})
 	case []int64:
-		NBTW.CurrentTag.AddTag(TLongArray{Name, Val.([]int64), len(Val.([]int64)), 0})
+		NBTW.CurrentTag.AddTag(TLongArray{Name, Val, len(Val), 0})
 	default:
 		return fmt.Errorf("NBTTypeUnknown: %s, Value: %v", Name, Val)
 	}
@@ -160,7 +160,6 @@ func (NBTW *NBTWriter) AppendByteSlice(Data []byte) {
 	//if cap(NBTW.Data)-len(Data) >= 10 {
 	NBTW.Data = append(NBTW.Data, Data...)
 	NBTW.size += len(Data)
-	return
 	//}
 	// NBTW.Data = append(NBTW.Data, make([]byte, 0, len(Data)+256)...)
 	// NBTW.Data = append(NBTW.Data, Data...)
@@ -171,9 +170,3 @@ func (NBTW *NBTWriter) writeTag(Type byte, Name string) {
 	NBTW.AppendByteSlice([]byte{Type})
 	NBTW.writeString("", Name) //This works with the tests with 30% coverage I believe it's fine to do this
 }
-
-// func (NBTW *NBTWriter) TestingShit() {
-// 	NBTW.writeTag(TagString, "name")
-// 	NBTW.writeString("", "Bananrama")
-// 	NBTW.writeTag(TagEnd, "")
-// }

@@ -7,11 +7,9 @@ import (
 	"HoneyBEE/server"
 	"HoneyBEE/utils"
 	"fmt"
-	"log"
 	"os"
 	"runtime"
 	"runtime/debug"
-	"runtime/pprof"
 	"time"
 
 	logging "github.com/op/go-logging"
@@ -45,7 +43,12 @@ func init() {
 	B1 := logging.NewLogBackend(os.Stderr, "", 0)       //New Backend
 	B1Format := logging.NewBackendFormatter(B1, format) //Set Format
 	B1LF := logging.AddModuleLevel(B1Format)            //Add formatting Levels
-	B1LF.SetLevel(logging.DEBUG, "")
+	conf = config.ConfigStart()
+	if conf.Server.DEBUG {
+		B1LF.SetLevel(logging.DEBUG, "")
+	} else {
+		B1LF.SetLevel(logging.INFO, "")
+	}
 	logging.SetBackend(B1LF)
 	//Logger Creation END
 	Log.Info("HoneyBEE", utils.GetVersionString(), "starting...")
@@ -53,22 +56,12 @@ func init() {
 	//Remove unused Ascii strings for less memory cosumption
 	utils.Ascii = ""
 	utils.Ascii2 = ""
-	//
-	conf = config.ConfigStart()
 	//MemProf
 	if config.Memprofile != "" {
 		hprof, err = os.Create(config.Memprofile)
 		if err != nil {
 			Log.Fatal(err)
 		}
-	}
-	//CPUProf
-	if config.Cpuprofile != "" {
-		cprof, err = os.Create(config.Cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		pprof.StartCPUProfile(cprof)
 	}
 	//SetGCPercent
 	debug.SetGCPercent(conf.Performance.GCPercent)
