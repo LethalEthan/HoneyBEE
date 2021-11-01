@@ -3,8 +3,6 @@ package packet
 import (
 	"fmt"
 	"testing"
-
-	"github.com/google/uuid"
 )
 
 func TestCreatePacketWriter(T *testing.T) {
@@ -68,68 +66,106 @@ func TestVarInt(T *testing.T) {
 	fmt.Println("NUM: ", NUM, "NR: ", NR2)
 }
 
+func TestVarLong(T *testing.T) {
+	PW := CreatePacketWriter(0x00)
+	PW.WriteVarLong(9223372036854775807)
+	P := PW.GetPacket()
+	fmt.Println(P)
+	PR := CreatePacketReader(P)
+	PS, _, err := PR.ReadVarInt()
+	if err != nil {
+		T.Error(err)
+	}
+	fmt.Println("PS: ", PS)
+	PID, _, err := PR.ReadVarInt()
+	if err != nil {
+		T.Error(err)
+	}
+	fmt.Println("PID: ", PID)
+	NUM, err := PR.ReadVarLong()
+	if err != nil {
+		T.Error(err)
+	}
+	if NUM != 9223372036854775807 {
+		T.Error(errWriterValue)
+	}
+	fmt.Println("NUM: ", NUM)
+}
+
 func TestString(T *testing.T) {
 	PW := CreatePacketWriter(0x00)
 	PW.WriteString("Hello World!")
 	fmt.Println(PW.GetPacket())
 	PR := CreatePacketReader(PW.GetPacket())
-	PS, _, _ := PR.ReadVarInt()
+	PS, _, err := PR.ReadVarInt()
+	if err != nil {
+		T.Error(err)
+	}
 	fmt.Println("Size:", PS)
-	PID, _, _ := PR.ReadVarInt()
+	PID, _, err := PR.ReadVarInt()
+	if err != nil {
+		T.Error(err)
+	}
 	fmt.Println("ID: ", PID)
 	Test, err := PR.ReadString()
 	if err != nil {
-		panic(err)
+		T.Error(err)
 	}
 	fmt.Println(Test)
 }
 
-// func TestThis(T *testing.T) {
-// 	bruh := []byte{2, 36, 52, 101, 100, 48, 99, 53, 53, 100, 45, 99, 97, 97, 57, 45, 52, 54, 54, 57, 45, 56, 98, 101, 97, 45, 102, 51, 97, 48, 48, 53, 50, 101, 54, 102, 49, 102, 12, 76, 101, 116, 104, 97, 108, 69, 116, 104, 97, 110, 56}
-// 	PR := CreatePacketReader(bruh)
-// 	fmt.Println(len(bruh))
-// 	PS, _, _ := PR.ReadVarInt()
-// 	fmt.Println("Size:", PS)
-// 	PID, _, _ := PR.ReadVarInt()
-// 	fmt.Println("ID: ", PID)
-// 	Test, err := PR.ReadString()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	fmt.Println(Test)
-// 	Test2, err := PR.ReadString()
-// 	fmt.Println(Test2)
-// }
-
-func TestLoginSuccess(T *testing.T) {
-	LS := new(Login_0x02_CB)
-	var PW *PacketWriter
-	var err error
-	LS.UUID, err = uuid.Parse("4ed0c55d-caa9-4669-8bea-f3a0052e6f1f")
+func TestDouble(T *testing.T) {
+	PW := CreatePacketWriter(0x00)
+	PW.WriteDouble(20.0)
+	P := PW.GetPacket()
+	fmt.Println(P)
+	PR := CreatePacketReader(P)
+	PS, _, err := PR.ReadVarInt()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("PS: ", PS)
+	PID, _, err := PR.ReadVarInt()
 	if err != nil {
 		T.Error(err)
-		panic(err)
 	}
-	LS.Username = "LethalEthan8"
-	PW = LS.Encode()
+	fmt.Println("PID: ", PID)
+	NUM, err := PR.ReadDouble()
+	if err != nil {
+		T.Error(err)
+	}
+	fmt.Println("NUM: ", NUM)
+	if NUM != 20 {
+		T.Error(errWriterValue)
+	}
+}
+
+func CauseEOF(T *testing.T) {
+	PW := CreatePacketWriter(0x00)
+	PW.WriteBoolean(false)
 	PR := CreatePacketReader(PW.GetPacket())
-	PS, _, _ := PR.ReadVarInt()
-	fmt.Println("Size:", PS)
-	PID, _, _ := PR.ReadVarInt()
-	fmt.Println("ID: ", PID)
-	Test, err := PR.ReadUUID()
+	PS, _, err := PR.ReadVarInt()
 	if err != nil {
 		panic(err)
 	}
-	Test2, err := Test.MarshalText()
+	fmt.Println("PS: ", PS)
+	PID, _, err := PR.ReadVarInt()
 	if err != nil {
-		panic(err)
+		T.Error(err)
 	}
-	fmt.Println(Test2)
-	Test3, err := PR.ReadString()
+	fmt.Println("PID: ", PID)
+	B, err := PR.ReadUnsignedByte()
 	if err != nil {
-		panic(err)
+		T.Error(err)
 	}
-	fmt.Println(Test3)
+	B, err = PR.ReadUnsignedByte()
+	if err == nil {
+		T.Error(errWriterExpectedError)
+	}
+	B, err = PR.ReadUnsignedByte()
+	if err == nil {
+		T.Error(errWriterExpectedError)
+	}
+	fmt.Print(B)
 
 }

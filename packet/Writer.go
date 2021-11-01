@@ -182,10 +182,6 @@ func (pw *PacketWriter) CreateVarInt(val uint32) []byte {
 		if val == 0 {
 			break
 		}
-		if len(buff) >= 5 {
-			Log.Critical("Buff over 5!")
-			break
-		}
 	}
 	return buff
 }

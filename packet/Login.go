@@ -86,7 +86,7 @@ func (LERSP *Login_0x01_SB) Decode() {
 	if err != nil {
 		Log.Error(err)
 	}
-	LERSP.SharedSecret, err = PR.ReadByteArray(LERSP.SharedSecretLen)
+	LERSP.SharedSecret, err = PR.ReadByteArray(int(LERSP.SharedSecretLen))
 	if err != nil {
 		Log.Error(err)
 	}
@@ -94,7 +94,7 @@ func (LERSP *Login_0x01_SB) Decode() {
 	if err != nil {
 		Log.Error(err)
 	}
-	LERSP.VerifyToken, err = PR.ReadByteArray(LERSP.VerifyTokenLen)
+	LERSP.VerifyToken, err = PR.ReadByteArray(int(LERSP.VerifyTokenLen))
 	if err != nil {
 		Log.Error(err)
 	}
@@ -120,7 +120,7 @@ func (LPR *Login_0x02_SB) Decode() {
 	if err != nil {
 		Log.Error(err)
 	}
-	LPR.Data, err = PR.ReadByteArray(int32(len(LPR.Packet.PacketData) - int(NR) - 1))
+	LPR.Data, err = PR.ReadByteArray(len(LPR.Packet.PacketData) - int(NR) - 1)
 	if err != nil {
 		Log.Error(err)
 	}
