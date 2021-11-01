@@ -83,13 +83,28 @@ func (LERSP *Login_0x01_SB) Decode() {
 	var err error
 	PR := CreatePacketReader(LERSP.Packet.PacketData)
 	LERSP.SharedSecretLen, _, err = PR.ReadVarInt()
+	if err != nil {
+		Log.Error(err)
+	}
 	LERSP.SharedSecret, err = PR.ReadByteArray(LERSP.SharedSecretLen)
+	if err != nil {
+		Log.Error(err)
+	}
 	LERSP.VerifyTokenLen, _, err = PR.ReadVarInt()
+	if err != nil {
+		Log.Error(err)
+	}
 	LERSP.VerifyToken, err = PR.ReadByteArray(LERSP.VerifyTokenLen)
+	if err != nil {
+		Log.Error(err)
+	}
 	LERSP.SharedSecret, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, LERSP.SharedSecret)
+	if err != nil {
+		Log.Error(err)
+	}
 	LERSP.VerifyToken, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, LERSP.VerifyToken)
 	if err != nil {
-		panic(err)
+		Log.Error(err)
 	}
 }
 
@@ -98,10 +113,16 @@ func (LPR *Login_0x02_SB) Decode() {
 	var NR byte
 	PR := CreatePacketReader(LPR.Packet.PacketData)
 	LPR.MessageID, NR, err = PR.ReadVarInt()
+	if err != nil {
+		Log.Error(err)
+	}
 	LPR.Successful, err = PR.ReadBoolean()
+	if err != nil {
+		Log.Error(err)
+	}
 	LPR.Data, err = PR.ReadByteArray(int32(len(LPR.Packet.PacketData) - int(NR) - 1))
 	if err != nil {
-		panic(err)
+		Log.Error(err)
 	}
 }
 
@@ -121,7 +142,7 @@ func (LoginSucc *Login_0x02_CB) Encode() *PacketWriter {
 	PW.WriteString(LoginSucc.Username)
 	T, err := LoginSucc.UUID.MarshalText()
 	if err != nil {
-		panic(err)
+		Log.Error(err)
 	}
 	Log.Info("Username:", LoginSucc.Username, "UUID:", string(T))
 	return PW

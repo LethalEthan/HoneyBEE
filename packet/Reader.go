@@ -220,10 +220,10 @@ func (pr *PacketReader) ReadVarInt() (int32, byte, error) {
 	if pr.CheckForEOF() {
 		return 0, 0, errors.New("EOF: ReadVarInt")
 	}
-	var Result int32
+	var Result uint32
 	var NumRead byte
 	var Byte byte
-	var val int32
+	var val uint32
 	var err error
 	Byte, err = pr.ReadUnsignedByte()
 	if err != nil {
@@ -231,9 +231,9 @@ func (pr *PacketReader) ReadVarInt() (int32, byte, error) {
 	}
 	for {
 		if err != nil {
-			return Result, NumRead, err
+			return int32(Result), NumRead, err
 		}
-		val = int32((Byte & 0x7F))
+		val = uint32(Byte & 0x7F)
 		Result |= (val << (7 * NumRead))
 		//Increment
 		NumRead++
@@ -247,17 +247,17 @@ func (pr *PacketReader) ReadVarInt() (int32, byte, error) {
 		}
 		Byte, err = pr.ReadUnsignedByte()
 	}
-	return Result, NumRead, nil
+	return int32(Result), NumRead, nil
 }
 
 func (pr *PacketReader) ReadVarLong() (int64, error) {
 	if pr.CheckForEOF() {
 		return 0, errors.New("EOF: ReadVarLong")
 	}
-	var Result int64
+	var Result uint64
 	var NumRead byte
 	var Byte byte
-	var val int64
+	var val uint64
 	var err error
 	Byte, err = pr.ReadUnsignedByte()
 	if err != nil {
@@ -265,9 +265,9 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 	}
 	for {
 		if err != nil {
-			return Result, err
+			return int64(Result), err
 		}
-		val = int64((Byte & 0x7F))
+		val = uint64(Byte & 0x7F)
 		Result |= (val << (7 * NumRead))
 		//Increment
 		NumRead++
@@ -283,9 +283,9 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 	}
 	_, err = pr.SeekWithEOF(int64(NumRead))
 	if err != nil {
-		return Result, err
+		return int64(Result), err
 	}
-	return Result, nil
+	return int64(Result), nil
 }
 
 func (pr *PacketReader) ReadUUID() (uuid.UUID, error) {
