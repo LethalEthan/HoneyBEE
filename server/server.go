@@ -74,7 +74,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 			Log.Debug("ClientConn ", ClientConn, "Conn: ", ClientConn.Conn.RemoteAddr().String())
 			Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "State: ", ClientConn.State)
 			//Make GeneralPacket
-			GP := &packet.GeneralPacket{PacketSize, PacketID, PR, nil} //new(packet.GeneralPacket)
+			GP := &packet.GeneralPacket{PacketSize, PacketID, &PR, nil} //new(packet.GeneralPacket)
 			Log.Debug("Frame: ", Frame)
 			//Legacy Ping - drop conn
 			if PacketSize == 0xFE && ClientConn.State == HANDSHAKE {
