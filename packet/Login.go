@@ -72,7 +72,7 @@ type Login_0x02_SB struct {
 
 func (LS *Login_0x00_SB) Decode() {
 	var err error
-	PR := CreatePacketReader(LS.Packet.PacketData)
+	PR := LS.Packet.PacketReader //CreatePacketReader(LS.Packet.PacketData)
 	LS.Name, err = PR.ReadString()
 	if err != nil {
 		panic(err)
@@ -81,7 +81,7 @@ func (LS *Login_0x00_SB) Decode() {
 
 func (LERSP *Login_0x01_SB) Decode() {
 	var err error
-	PR := CreatePacketReader(LERSP.Packet.PacketData)
+	PR := LERSP.Packet.PacketReader
 	LERSP.SharedSecretLen, _, err = PR.ReadVarInt()
 	if err != nil {
 		Log.Error(err)
@@ -111,7 +111,7 @@ func (LERSP *Login_0x01_SB) Decode() {
 func (LPR *Login_0x02_SB) Decode() {
 	var err error
 	var NR byte
-	PR := CreatePacketReader(LPR.Packet.PacketData)
+	PR := LPR.Packet.PacketReader //CreatePacketReader(LPR.Packet.PacketData)
 	LPR.MessageID, NR, err = PR.ReadVarInt()
 	if err != nil {
 		Log.Error(err)
@@ -120,7 +120,7 @@ func (LPR *Login_0x02_SB) Decode() {
 	if err != nil {
 		Log.Error(err)
 	}
-	LPR.Data, err = PR.ReadByteArray(len(LPR.Packet.PacketData) - int(NR) - 1)
+	LPR.Data, err = PR.ReadByteArray(len(LPR.Packet.PacketReader.data) - int(NR) - 1)
 	if err != nil {
 		Log.Error(err)
 	}

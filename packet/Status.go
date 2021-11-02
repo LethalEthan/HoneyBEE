@@ -33,7 +33,7 @@ type Stat_Ping struct {
 }
 
 func (SP *Stat_Ping) Decode() {
-	PR := CreatePacketReader(SP.Packet.PacketData)
+	PR := SP.Packet.PacketReader //CreatePacketReader(SP.Packet.PacketData)
 	var err error
 	SP.Ping, err = PR.ReadLong()
 	if err != nil {
@@ -42,7 +42,6 @@ func (SP *Stat_Ping) Decode() {
 }
 
 func (SP *Stat_Response) Encode() (*PacketWriter, error) {
-	//if SP.Packet.PacketSize == 1 {
 	writer := CreatePacketWriter(0x00)
 	SP.Response = CreateStatusObject(SP.ProtocolVersion, "1.17")
 	Log.Debug("ProtoVER: ", SP.ProtocolVersion)

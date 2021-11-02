@@ -27,7 +27,7 @@ type Client struct {
 func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	//CC, tmp := S.ConnectedSockets.Load(Conn.RemoteAddr().String())
 	ClientConn, tmp := Conn.Context().(*Client) //Get the client object from conn context
-	if tmp == false {
+	if !tmp {
 		Conn.Close()
 		Log.Critical("Client Connection context was not Client object!")
 		return
@@ -38,7 +38,6 @@ func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Ac
 		Log.Warning("Frame is 0?!")
 	}
 	Conn.SetContext(ClientConn)
-	//Log.Critical("Sent FrameChannel")
 	return
 }
 
@@ -46,21 +45,25 @@ func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Ac
 it listens continuously to make sure packets are in sequence by using a channel*/
 func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 	//
+	var PR = packet.CreatePacketReader([]byte{0})
 	for {
 		select {
 		case Frame := <-FrameChan:
-			//Log.Debug("RECV Frame")
 			if len(Frame) == 0 {
 				ClientConn.Conn.Close()
 				return
 			}
 			//Get PacketSize and Data
 			PacketSize, NR, err := packet.DecodeVarInt(Frame) //NR = Numread, used to note the position in the frame where it read to
+			if err != nil {
+				panic(err)
+			}
 			PacketDataSize := PacketSize - 1
 			PacketID, NR2, err := packet.DecodeVarInt(Frame[NR:]) //NR2 is the second numread so the Decoder later on will correctly
 			if err != nil {
 				panic(err)
 			}
+			PR.Setdata(Frame[NR2+NR:])
 			/*Size check - packets cannot be bigger than this which can lead to the server and client crashing
 			also known as book banning or any item/block that is used to overload the packet limit*/
 			if PacketSize > 2097151 {
@@ -68,15 +71,10 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 				return
 			}
 			//
-			if DEBUG {
-				Log.Debug("ClientConn ", ClientConn, "Conn: ", ClientConn.Conn.RemoteAddr().String())
-				Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "State: ", ClientConn.State)
-			}
+			Log.Debug("ClientConn ", ClientConn, "Conn: ", ClientConn.Conn.RemoteAddr().String())
+			Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "State: ", ClientConn.State)
 			//Make GeneralPacket
-			GP := new(packet.GeneralPacket)
-			GP.PacketSize = PacketSize
-			GP.PacketID = PacketID
-			GP.PacketData = Frame[NR2+NR:] //Uses the Numreads from earlier to correctly know where the data starts since VarInts are variable in size
+			GP := &packet.GeneralPacket{PacketSize, PacketID, PR, nil} //new(packet.GeneralPacket)
 			Log.Debug("Frame: ", Frame)
 			//Legacy Ping - drop conn
 			if PacketSize == 0xFE && ClientConn.State == HANDSHAKE {
@@ -97,7 +95,7 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 					HP.Packet = GP
 					err := HP.Decode()
 					if err != nil {
-						Log.Critical("Error while decoding HP")
+						Log.Critical("Error while decoding HP: ", err)
 						ClientConn.Conn.Close()
 						return
 					}
@@ -205,14 +203,14 @@ func (ClientConn *Client) React(FrameChan chan []byte, Close chan bool) {
 						ClientConn.Conn.AsyncWrite(PW.GetPacket())
 						Log.Debug("TIME: ", PW.GetPacket())
 						Log.Debug("Sent Time")*/
-				default:
-					Log.Debug("Recieved some shit")
 				case 0x02:
 					Log.Debug("Play 0x02_SB")
 				case 0x03:
 					Log.Debug("Recived 0x03")
 				case 0x04:
 					Log.Debug("Recived 0x04")
+				default:
+					Log.Debug("Recieved packet login")
 				}
 			case PLAY:
 				switch PacketID {

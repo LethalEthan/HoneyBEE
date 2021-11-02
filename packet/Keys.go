@@ -20,7 +20,7 @@ const (
 	VerifyTokenLen = 4
 )
 
-func Keys() {
+func GenerateKeys() {
 	var err error
 	privateKey, err = rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {

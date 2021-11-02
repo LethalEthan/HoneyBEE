@@ -40,7 +40,7 @@ func (pr *PacketReader) Setdata(data []byte) {
 }
 
 func (pr *PacketReader) SeekTo(pos int) bool {
-	if pos >= pr.end {
+	if pos > pr.end {
 		return false
 	}
 	pr.seeker = pos
@@ -191,7 +191,7 @@ func (pr *PacketReader) ReadString() (string, error) {
 		return "", err
 	}
 	if pr.CheckForEOF() {
-		return "", io.EOF
+		return "", errors.New("error on second EOF check")
 	}
 	//StringSize check
 	if StringSize < 0 {

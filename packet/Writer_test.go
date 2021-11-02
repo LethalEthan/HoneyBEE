@@ -167,5 +167,25 @@ func CauseEOF(T *testing.T) {
 		T.Error(errWriterExpectedError)
 	}
 	fmt.Print(B)
+}
 
+func WriteShort(T *testing.T) {
+	PW := CreatePacketWriter(0x00)
+	PW.WriteShort(32767)
+	PR := CreatePacketReader(PW.GetPacket())
+	_, _, err := PR.ReadVarInt()
+	if err != nil {
+		T.Errorf("err: %d and %d", errWriterValue, err)
+	}
+	_, _, err = PR.ReadVarInt()
+	if err != nil {
+		T.Errorf("err: %d and %d", errWriterValue, err)
+	}
+	NUM, err := PR.ReadDouble()
+	if err != nil {
+		T.Errorf("err: %d and %d", errWriterValue, err)
+	}
+	if NUM != 32767 {
+		T.Errorf("err: %d and %d", errWriterValue, err)
+	}
 }

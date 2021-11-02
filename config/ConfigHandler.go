@@ -11,9 +11,10 @@ import (
 
 var (
 	log        = logging.MustGetLogger("HoneyBEE")
-	GConfig    *Config
+	GConfig    Config
 	Memprofile string
 	Cpuprofile string
+	configPath string
 )
 
 // Config struct for HoneyBEE config
@@ -48,23 +49,21 @@ type Config struct {
 }
 
 // NewConfig returns a new decoded Config struct
-func NewConfig(configPath string) (*Config, error) {
+func NewConfig(configPath string) error {
 	//Create config structure
-	config := &Config{}
-
+	GConfig = *new(Config)
 	//Open config file
 	file, err := os.Open(configPath)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer file.Close()
 	d := yaml.NewDecoder(file) //Create new YAML decode
 	//Start YAML decoding from file
-	if err := d.Decode(&config); err != nil {
-		return nil, err
+	if err := d.Decode(&GConfig); err != nil {
+		return err
 	}
-
-	return config, nil
+	file.Close()
+	return nil
 }
 
 //ValidateConfigPath - makes sure that the path provided is a file that can be read
@@ -78,8 +77,6 @@ func ValidateConfigPath(path string) error {
 	}
 	return nil
 }
-
-var configPath string
 
 //ParseFlags - will create and parse the CLI flags and return the path to be used
 func ParseFlags() (string, error) {
@@ -99,33 +96,24 @@ func ParseFlags() (string, error) {
 }
 
 //ConfigStart - Handles the config struct creation
-func ConfigStart() *Config {
+func ConfigStart() error {
 	//Create config struct
 	cfgPath, err := ParseFlags()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	cfg, err := NewConfig(cfgPath)
+	err = NewConfig(cfgPath)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	GConfig = cfg
-	if cfg.Server.DEBUG {
-		log.Debug("cfg: ", cfg)
+	if GConfig.Server.DEBUG {
+		fmt.Println("cfg: ", GConfig)
 	}
-	return cfg
-}
-
-func GetConfig() *Config {
-	return GConfig
-}
-
-func GetSPort() string {
-	return GConfig.Server.Port
+	return nil
 }
 
 func ConfigReload() {
-	GConfig, err := NewConfig(configPath)
+	err := NewConfig(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}

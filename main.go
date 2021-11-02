@@ -4,6 +4,7 @@ import (
 	"HoneyBEE/config"
 	"HoneyBEE/console"
 	"HoneyBEE/mitm"
+	"HoneyBEE/packet"
 	"HoneyBEE/server"
 	"HoneyBEE/utils"
 	"fmt"
@@ -27,24 +28,22 @@ import (
 var (
 	format   = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
 	Log      = logging.MustGetLogger("HoneyBEE")
-	conf     *config.Config
 	err      error
 	Panicked bool = false
-	hprof    *os.File
-	cprof    *os.File
 )
 
 func init() {
 	//Hello from HoneyBEE
 	//Logger Creation Start
-	debug.SetMaxThreads(1024)
-	debug.SetMaxStack(4294967296)
 	defer console.DRECOVER()
 	B1 := logging.NewLogBackend(os.Stderr, "", 0)       //New Backend
 	B1Format := logging.NewBackendFormatter(B1, format) //Set Format
 	B1LF := logging.AddModuleLevel(B1Format)            //Add formatting Levels
-	conf = config.ConfigStart()
-	if conf.Server.DEBUG {
+	err := config.ConfigStart()
+	if err != nil {
+		panic(err)
+	}
+	if config.GConfig.Server.DEBUG {
 		B1LF.SetLevel(logging.DEBUG, "")
 	} else {
 		B1LF.SetLevel(logging.INFO, "")
@@ -56,57 +55,40 @@ func init() {
 	//Remove unused Ascii strings for less memory cosumption
 	utils.Ascii = ""
 	utils.Ascii2 = ""
-	//MemProf
-	if config.Memprofile != "" {
-		hprof, err = os.Create(config.Memprofile)
-		if err != nil {
-			Log.Fatal(err)
-		}
-	}
 	//SetGCPercent
-	debug.SetGCPercent(conf.Performance.GCPercent)
+	if config.GConfig.Performance.GCPercent > 0 {
+		debug.SetGCPercent(config.GConfig.Performance.GCPercent)
+	}
 	if config.GConfig.Server.Port == "" {
 		panic("Server port not defined!")
 	}
-	// pr := packet.CreatePacketReader([]byte{0xCC, 0x16, 0xC4, 0xF6, 0x01, 0x78, 0x9C, 0xED, 0x9D, 0x5F, 0x6C, 0x1C, 0x47, 0x19, 0xC0, 0xE7}) //0x03, 0x03, 0x80, 0x02}) //[]byte{0x03, 0xC4, 0x80})
-	// T, NR, err := pr.ReadVarInt()
-	// Log.Debug("T: ", T, "NR", NR, "err", err)
-	// T2, NR2, err := pr.ReadVarInt()
-	// Log.Debug("T2: ", T2, "NR", NR2, "err", err)
-	// T3, NR3, err := pr.ReadVarInt()
-	// Log.Debug("T3: ", T3, "NR", NR3, "err", err)
-	//Log.Debug("Test", (0xC4 & 0x7F))
-	// err = nil
-
 	//Server Config Check
 	Log.Info("Server Network Listener Started on port ", config.GConfig.Server.Port)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
-	if conf.Performance.CPU == 0 {
+	if config.GConfig.Performance.CPU == 0 {
 		Log.Info("Setting GOMAXPROCS to all available logical CPU's")
 		runtime.GOMAXPROCS(runtime.NumCPU())
 	} else {
-		Log.Info("Setting GOMAXPROCS to config: ", conf.Performance.CPU)
-		runtime.GOMAXPROCS(conf.Performance.CPU)
+		Log.Info("Setting GOMAXPROCS to config: ", config.GConfig.Performance.CPU)
+		runtime.GOMAXPROCS(config.GConfig.Performance.CPU)
 	}
-	if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 3 {
+	if runtime.NumCPU() <= 3 || config.GConfig.Performance.CPU <= 3 {
 		Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 	}
+	packet.GenerateKeys()
 	//Log.Info("Generating Key Chain")
 	//Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
-	if conf.DEBUGOPTS.PacketAnal {
+	if config.GConfig.DEBUGOPTS.PacketAnal {
 		Log.Warning("Packet Analysis enabled, server will not be initialised")
 		go mitm.StartClient()
 		if err != nil {
 			panic(err)
 		}
-	} else {
-		server.Init()
 	}
-	server.Init()
 	go console.Console()
 	go console.Shutdown()
 	//go server.DebugServer()
-	if conf.DEBUGOPTS.PacketAnal {
+	if config.GConfig.DEBUGOPTS.PacketAnal {
 		Log.Warning("MITM Proxy mode enable")
 	}
 	runtime.GC()
