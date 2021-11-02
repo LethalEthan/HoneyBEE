@@ -10,7 +10,6 @@ import (
 )
 
 var Log = logging.MustGetLogger("HoneyBEE")
-var DEBUG = true
 var GlobalServer *Server
 
 type Server struct {
@@ -19,20 +18,9 @@ type Server struct {
 	ConnectedSockets sync.Map
 }
 
-//Bri-ish init bruv
-func Init() {
-	// go server.StatusSemaphore.Start()
-	// server.StatusSemaphore.FlushAndSetSemaphore(server.StatusCache)
-	// server.CurrentStatus = server.CreateStatusObject(utils.PrimaryMinecraftProtocolVersion, utils.PrimaryMinecraftVersion)
-	//go world.Init()
-	// if DEBUG {
-	// 	Log.Debug("Server initialised")
-	// }
-}
-
 func NewServer(ip string, port string, multicore bool, tick bool, lockosthread bool, reuse bool, sendBuf int, recvBuf int, readBufferCap int) (Server, error) {
 	Log.Info("Generating Key chain")
-	packet.Keys()
+	packet.GenerateKeys()
 	S := new(Server)
 	GlobalServer = S
 	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))

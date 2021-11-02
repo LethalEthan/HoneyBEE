@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 
 	"github.com/google/uuid"
-	"github.com/panjf2000/gnet"
 )
 
 //Login_0x00_CB - Disconnect (login)
@@ -25,19 +24,20 @@ type Login_0x01_CB struct {
 
 //Login_0x02_CB - Login Success
 type Login_0x02_CB struct {
+	Packet   *GeneralPacket
 	UUID     uuid.UUID
 	Username string
 }
 
 //Login_0x03_CB - SetCompression
 type Login_0x03_CB struct {
-	Packet    GeneralPacket
+	Packet    *GeneralPacket
 	Threshold int32
 }
 
 //Login_0x04_CB - LoadPluginRequest
 type Login_0x04_CB struct {
-	Packet    GeneralPacket
+	Packet    *GeneralPacket
 	MessageID int32
 	Channel   string
 	Data      []byte
@@ -72,7 +72,7 @@ type Login_0x02_SB struct {
 
 func (LS *Login_0x00_SB) Decode() {
 	var err error
-	PR := CreatePacketReader(LS.Packet.PacketData)
+	PR := LS.Packet.PacketReader //CreatePacketReader(LS.Packet.PacketData)
 	LS.Name, err = PR.ReadString()
 	if err != nil {
 		panic(err)
@@ -81,31 +81,52 @@ func (LS *Login_0x00_SB) Decode() {
 
 func (LERSP *Login_0x01_SB) Decode() {
 	var err error
-	PR := CreatePacketReader(LERSP.Packet.PacketData)
+	PR := LERSP.Packet.PacketReader
 	LERSP.SharedSecretLen, _, err = PR.ReadVarInt()
-	LERSP.SharedSecret, err = PR.ReadByteArray(LERSP.SharedSecretLen)
+	if err != nil {
+		Log.Error(err)
+	}
+	LERSP.SharedSecret, err = PR.ReadByteArray(int(LERSP.SharedSecretLen))
+	if err != nil {
+		Log.Error(err)
+	}
 	LERSP.VerifyTokenLen, _, err = PR.ReadVarInt()
-	LERSP.VerifyToken, err = PR.ReadByteArray(LERSP.VerifyTokenLen)
+	if err != nil {
+		Log.Error(err)
+	}
+	LERSP.VerifyToken, err = PR.ReadByteArray(int(LERSP.VerifyTokenLen))
+	if err != nil {
+		Log.Error(err)
+	}
 	LERSP.SharedSecret, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, LERSP.SharedSecret)
+	if err != nil {
+		Log.Error(err)
+	}
 	LERSP.VerifyToken, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, LERSP.VerifyToken)
 	if err != nil {
-		panic(err)
+		Log.Error(err)
 	}
 }
 
 func (LPR *Login_0x02_SB) Decode() {
 	var err error
 	var NR byte
-	PR := CreatePacketReader(LPR.Packet.PacketData)
+	PR := LPR.Packet.PacketReader //CreatePacketReader(LPR.Packet.PacketData)
 	LPR.MessageID, NR, err = PR.ReadVarInt()
-	LPR.Successful, err = PR.ReadBoolean()
-	LPR.Data, err = PR.ReadByteArray(int32(len(LPR.Packet.PacketData) - int(NR) - 1))
 	if err != nil {
-		panic(err)
+		Log.Error(err)
+	}
+	LPR.Successful, err = PR.ReadBoolean()
+	if err != nil {
+		Log.Error(err)
+	}
+	LPR.Data, err = PR.ReadByteArray(len(LPR.Packet.PacketReader.data) - int(NR) - 1)
+	if err != nil {
+		Log.Error(err)
 	}
 }
 
-func (LERQ *Login_0x01_CB) Encode() *PacketWriter {
+func (LERQ *Login_0x01_CB) Encode() PacketWriter {
 	PW := CreatePacketWriter(0x01)
 	PW.WriteString("")
 	PW.WriteVarInt(int32(len(publicKeySlice)))
@@ -115,28 +136,28 @@ func (LERQ *Login_0x01_CB) Encode() *PacketWriter {
 	return PW
 }
 
-func (LoginSucc *Login_0x02_CB) Encode() *PacketWriter {
+func (LoginSucc *Login_0x02_CB) Encode() PacketWriter {
 	PW := CreatePacketWriter(0x02)
 	PW.WriteUUID(LoginSucc.UUID)
 	PW.WriteString(LoginSucc.Username)
 	T, err := LoginSucc.UUID.MarshalText()
 	if err != nil {
-		panic(err)
+		Log.Error(err)
 	}
 	Log.Info("Username:", LoginSucc.Username, "UUID:", string(T))
 	return PW
 }
 
-func (SC *Login_0x03_CB) Encode(Conn *gnet.Conn) *PacketWriter {
-	PW := CreatePacketWriter(0x03)
-	SC.Threshold = -1
-	return PW
+func (SC *Login_0x03_CB) Encode() []byte {
+	//PW := CreatePacketWriter(0x03)
+	//SC.Threshold = -1
+	return []byte{0}
 }
 
-func (LPR *Login_0x04_CB) Encode(Conn gnet.Conn) {
-	PW := CreatePacketWriter(0x04)
-	LPR.MessageID = 8
-	LPR.Channel = "Honey"
-	LPR.Data = []byte{0, 0, 0}
-	Conn.AsyncWrite(PW.GetPacket())
+func (LPR *Login_0x04_CB) Encode() []byte {
+	//PW := CreatePacketWriter(0x04)
+	// LPR.MessageID = 8
+	// LPR.Channel = "Honey"
+	// LPR.Data = []byte{0, 0, 0}
+	return []byte{0}
 }

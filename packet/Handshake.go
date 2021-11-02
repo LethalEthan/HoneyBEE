@@ -8,32 +8,24 @@ type Handshake_0x00 struct {
 	NextState       int32
 }
 
-func (P *Handshake_0x00) Encode() *PacketWriter {
-	return nil
+func (P *Handshake_0x00) Encode() ([]byte, error) {
+	return nil, nil
 }
 
 func (P *Handshake_0x00) Decode() error {
 	var err error
-	PR := CreatePacketReader(P.Packet.PacketData)
-	//fmt.Print("pl: ", P.Packet.PacketSize, "pd: ", P.Packet.PacketData)
-	//var NR uint32
-	P.ProtocolVersion, _, err = PR.ReadVarInt()
-	if err != nil {
+	PR := P.Packet.PacketReader
+	if P.ProtocolVersion, _, err = PR.ReadVarInt(); err != nil {
 		return err
 	}
-	//print("PV: ", P.ProtocolVersion, "NR: ", NR)
-	P.ServerAddress, err = PR.ReadString()
-	if err != nil {
+	if P.ServerAddress, err = PR.ReadString(); err != nil {
 		return err
 	}
-	P.ServerPort, err = PR.ReadUnsignedShort()
-	if err != nil {
+	if P.ServerPort, err = PR.ReadUnsignedShort(); err != nil {
 		return err
 	}
-	P.NextState, _, err = PR.ReadVarInt()
-	if err != nil {
+	if P.NextState, _, err = PR.ReadVarInt(); err != nil {
 		return err
 	}
 	return nil
-	//print("DECODED: ", "PV: ", P.ProtocolVersion, " SA: ", P.ServerAddress, " SP: ", P.ServerPort, " NS: ", P.NextState)
 }

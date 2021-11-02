@@ -5,7 +5,7 @@ import (
 	"HoneyBEE/player"
 )
 
-func (JG *JoinGame_CB) Encode(playername string, GM byte) *PacketWriter {
+func (JG *JoinGame_CB) Encode(playername string, GM byte) PacketWriter {
 	JG.EntityID = int32(player.AssignEID(playername))
 	JG.IsHardcore = false
 	JG.Gamemode = GM

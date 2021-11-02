@@ -13,8 +13,8 @@ type PacketWriter struct {
 	packetSize int
 }
 
-func CreatePacketWriter(PacketID int32) *PacketWriter {
-	pw := new(PacketWriter)        //new packet with data struct Above
+func CreatePacketWriter(PacketID int32) PacketWriter {
+	pw := *new(PacketWriter)       //new packet with data struct Above
 	pw.packetID = PacketID         //PacketID passed via function arguments
 	pw.data = make([]byte, 0, 128) //Data is created with a byte array
 	pw.WriteVarInt(PacketID)       //write PacketID to packet
@@ -23,8 +23,8 @@ func CreatePacketWriter(PacketID int32) *PacketWriter {
 
 /*CreatePacketWriterWithCapacity - Create a packet writer with capacity on the data slice
 max 2097151 if over it will default to a capacity of 128*/
-func CreatePacketWriterWithCapacity(PacketID int32, Capacity int) *PacketWriter {
-	pw := new(PacketWriter)
+func CreatePacketWriterWithCapacity(PacketID int32, Capacity int) PacketWriter {
+	pw := *new(PacketWriter)
 	pw.packetID = PacketID
 	if Capacity > 0 && Capacity < 2097151 {
 		pw.data = make([]byte, 0, Capacity)
@@ -41,7 +41,7 @@ func (pw *PacketWriter) GetData() []byte {
 }
 
 func (pw *PacketWriter) ResetData(packetID int32) {
-	pw.data = make([]byte, 0, len(pw.data))
+	pw.data = make([]byte, 0, cap(pw.data))
 	pw.packetSize = 0
 	pw.packetID = packetID
 }
@@ -180,10 +180,6 @@ func (pw *PacketWriter) CreateVarInt(val uint32) []byte {
 		}
 		buff = append(buff, tmp)
 		if val == 0 {
-			break
-		}
-		if len(buff) >= 5 {
-			Log.Critical("Buff over 5!")
 			break
 		}
 	}

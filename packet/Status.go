@@ -33,7 +33,7 @@ type Stat_Ping struct {
 }
 
 func (SP *Stat_Ping) Decode() {
-	PR := CreatePacketReader(SP.Packet.PacketData)
+	PR := SP.Packet.PacketReader //CreatePacketReader(SP.Packet.PacketData)
 	var err error
 	SP.Ping, err = PR.ReadLong()
 	if err != nil {
@@ -41,22 +41,20 @@ func (SP *Stat_Ping) Decode() {
 	}
 }
 
-func (SP *Stat_Response) Encode() (*PacketWriter, error) {
-	//if SP.Packet.PacketSize == 1 {
+func (SP *Stat_Response) Encode() (PacketWriter, error) {
 	writer := CreatePacketWriter(0x00)
 	SP.Response = CreateStatusObject(SP.ProtocolVersion, "1.17")
 	Log.Debug("ProtoVER: ", SP.ProtocolVersion)
-	marshaledStatus, err := SP.Response.MarshalJSON() //(SP.Response) //Sends status via json
+	marshaledStatus, err := SP.Response.MarshalJSON() //Sends status via json
 	if err != nil {
 		Log.Error(err)
-		return nil, err
+		return writer, err
 	}
 	writer.WriteString(string(marshaledStatus)) //WriteString(string(marshaledStatus))
 	return writer, nil
 }
 
-func (SP *Stat_Pong) Encode(PingData int64) *PacketWriter {
-	//SP.Pong = SP.Packet.OptionalData.(int64)
+func (SP *Stat_Pong) Encode(PingData int64) PacketWriter {
 	writer := CreatePacketWriter(0x01)
 	writer.WriteLong(SP.Pong)
 	return writer

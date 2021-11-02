@@ -1,11 +1,9 @@
 package packet
 
 import (
-	"HoneyBEE/config"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -22,12 +20,8 @@ const (
 	VerifyTokenLen = 4
 )
 
-func Keys() {
+func GenerateKeys() {
 	var err error
-	var t time.Time
-	if config.GConfig.Server.DEBUG {
-		t = time.Now()
-	}
 	privateKey, err = rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
 		Log.Error(err.Error())
@@ -39,9 +33,6 @@ func Keys() {
 		panic(err)
 	}
 	rand.Read(VerifyToken)
-	if config.GConfig.Server.DEBUG {
-		Log.Info("Took Keys(): ", time.Since(t))
-	}
 	Log.Info("Key Generated!")
 }
 

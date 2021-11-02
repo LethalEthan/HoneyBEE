@@ -9,7 +9,7 @@ const (
 	MajorVersion = 0
 	MinorVersion = 0
 	PatchVersion = 1
-	BuildVersion = 2
+	BuildVersion = 3
 	StateVersion = "P-ALPHA" //PreAlpha, Alpha, Beta, Release Candidate, Release
 )
 
@@ -20,7 +20,6 @@ func GetVersion() (int, int, int, int, string) {
 
 //GetVersionString - Returns stringified version
 func GetVersionString() string {
-	//version := string(MajorVersion) + "." + string(MinorVersion) + "." + string(PatchVersion) + string(BuildVersion) + StateVersion
 	version := fmt.Sprintf("%d.%d.%d.%d STATE: %s", MajorVersion, MinorVersion, PatchVersion, BuildVersion, StateVersion)
 	return version
 }
