@@ -9,7 +9,7 @@ import (
 
 func TestLoginSuccess(T *testing.T) {
 	LS := new(Login_0x02_CB)
-	var PW *PacketWriter
+	var PW PacketWriter
 	var err error
 	LS.UUID, err = uuid.Parse("4ed0c55d-caa9-4669-8bea-f3a0052e6f1f")
 	if err != nil {
@@ -44,7 +44,7 @@ func TestLoginSuccess(T *testing.T) {
 
 func TestFaultyLoginSuccess(T *testing.T) {
 	LS := new(Login_0x02_CB)
-	var PW *PacketWriter
+	var PW PacketWriter
 	var err error
 	LS.UUID, err = uuid.Parse("4e342333534d0c55d-caa9345435563523-4669-8bea-f3a0052e6f1f")
 	if LS.UUID != uuid.Nil {

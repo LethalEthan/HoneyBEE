@@ -19,8 +19,8 @@ type PacketReader struct {
 }
 
 //CreatePacketReader - Creates Packet Reader
-func CreatePacketReader(data []byte) *PacketReader {
-	pr := new(PacketReader)
+func CreatePacketReader(data []byte) PacketReader {
+	pr := *new(PacketReader)
 	pr.data = data
 	pr.seeker = 0
 	pr.end = len(data)
