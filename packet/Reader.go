@@ -28,7 +28,7 @@ func CreatePacketReader(data []byte) PacketReader {
 }
 
 //Seek - Seek through the data array
-func (pr *PacketReader) Seek(offset int) int {
+func (pr *PacketReader) seek(offset int) int {
 	pr.seeker += offset
 	return pr.seeker
 }
@@ -40,11 +40,14 @@ func (pr *PacketReader) Setdata(data []byte) {
 }
 
 func (pr *PacketReader) SeekTo(pos int) bool {
-	if pos > pr.end {
-		return false
+	if pos > 0 {
+		if pos > pr.end {
+			return false
+		}
+		pr.seeker = pos
+		return true
 	}
-	pr.seeker = pos
-	return true
+	return false
 }
 
 //CheckForEOF
@@ -52,24 +55,30 @@ func (pr *PacketReader) CheckForEOF() bool {
 	return pr.seeker > pr.end
 }
 
-func (pr *PacketReader) CheckForEOFWithSeek(offset int) bool {
-	if pr.seeker > pr.end {
-		return true
+func (pr *PacketReader) CheckEOFOffset(offset int) bool {
+	if offset > 0 {
+		if pr.seeker > pr.end {
+			return true
+		}
+		if pr.seeker+offset > pr.end {
+			return true
+		}
+		return false
 	}
-	if pr.seeker+offset > pr.end {
-		return true
-	}
-	return false
+	return true
 }
 
 //whence is where the current Seek is and offset is how far the Seek should offset to
-func (pr *PacketReader) SeekWithEOF(offset int) (int, error) {
-	if pr.seeker+offset > pr.end {
-		return offset, errors.New("Seek reached end")
+func (pr *PacketReader) Seek(offset int) (int, error) {
+	if offset > 0 {
+		if pr.seeker+offset > pr.end {
+			return 0, errors.New("Seek reached end")
+		}
+		//Seek after EOF check
+		pr.seek(offset)
+		return offset, nil
 	}
-	//Seek after EOF check
-	pr.Seek(offset)
-	return offset, nil
+	return 0, errors.New("offset is negative!")
 }
 
 //ReadBoolean - reads a single byte from the packet, and interprets it as a boolean.
@@ -96,13 +105,13 @@ func (pr *PacketReader) ReadByte() (byte, error) {
 }
 
 func (pr *PacketReader) ReadUnsignedByte() (byte, error) {
-	if pr.CheckForEOFWithSeek(1) {
+	if pr.CheckEOFOffset(1) {
 		return 0, errors.New("EOF: UnsignedByte")
 	}
 	//Get byte from slice
 	Byte := pr.data[pr.seeker]
 	//Move the Seek
-	_, err := pr.SeekWithEOF(1)
+	_, err := pr.Seek(1)
 	if err != nil {
 		return Byte, err
 	}
@@ -115,12 +124,12 @@ func (pr *PacketReader) ReadShort() (int16, error) {
 }
 
 func (pr *PacketReader) ReadUnsignedShort() (uint16, error) {
-	if pr.CheckForEOFWithSeek(2) {
+	if pr.CheckEOFOffset(2) {
 		return 0, io.EOF
 	}
 	//Get the 2 bytes that make up the short
 	short := binary.BigEndian.Uint16(pr.data[pr.seeker : pr.seeker+2])
-	_, err := pr.SeekWithEOF(2)
+	_, err := pr.Seek(2)
 	if err != nil {
 		return 0, err
 	}
@@ -128,13 +137,13 @@ func (pr *PacketReader) ReadUnsignedShort() (uint16, error) {
 }
 
 func (pr *PacketReader) ReadInt() (int32, error) {
-	if pr.CheckForEOFWithSeek(4) {
+	if pr.CheckEOFOffset(4) {
 		return 0, io.EOF
 	}
 	//Get the 4 bytes that make up the int
 	Integer := int32(binary.BigEndian.Uint32(pr.data[pr.seeker : pr.seeker+4]))
 	//Move the Seek
-	_, err := pr.SeekWithEOF(4)
+	_, err := pr.Seek(4)
 	if err != nil {
 		return Integer, err
 	}
@@ -142,13 +151,13 @@ func (pr *PacketReader) ReadInt() (int32, error) {
 }
 
 func (pr *PacketReader) ReadLong() (int64, error) {
-	if pr.CheckForEOFWithSeek(8) {
+	if pr.CheckEOFOffset(8) {
 		return 0, io.EOF
 	}
 	//Get the 8 bytes that make up the long
 	long := int64(binary.BigEndian.Uint64(pr.data[pr.seeker : pr.seeker+8]))
 	//Move the Seek
-	_, err := pr.SeekWithEOF(8)
+	_, err := pr.Seek(8)
 	if err != nil {
 		return long, err
 	}
@@ -156,7 +165,7 @@ func (pr *PacketReader) ReadLong() (int64, error) {
 }
 
 func (pr *PacketReader) ReadFloat() (float32, error) {
-	if pr.CheckForEOFWithSeek(4) {
+	if pr.CheckEOFOffset(4) {
 		return 0, io.EOF
 	}
 	//Read the Int
@@ -169,7 +178,7 @@ func (pr *PacketReader) ReadFloat() (float32, error) {
 }
 
 func (pr *PacketReader) ReadDouble() (float64, error) {
-	if pr.CheckForEOFWithSeek(8) {
+	if pr.CheckEOFOffset(8) {
 		return 0, io.EOF
 	}
 	//Read the long
@@ -200,13 +209,13 @@ func (pr *PacketReader) ReadString() (string, error) {
 	if int(StringSize) > pr.end {
 		return "", errors.New("StringSize exceeds EOF")
 	}
-	if int(StringSize)+pr.seeker > pr.end {
-		return "", errors.New("string size + seeker = EOF")
+	if pr.CheckEOFOffset(int(StringSize)) {
+		return "", errors.New("StringSize exceeds EOF")
 	}
 	//Read the string
 	StringVal := string(pr.data[pr.seeker : pr.seeker+int(StringSize)])
 	//move the Seek
-	_, err = pr.SeekWithEOF(int(StringSize))
+	_, err = pr.Seek(int(StringSize))
 	if err != nil {
 		return StringVal, err
 	}
@@ -285,11 +294,11 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 }
 
 func (pr *PacketReader) ReadUUID() (uuid.UUID, error) {
-	if pr.CheckForEOFWithSeek(16) {
+	if pr.CheckEOFOffset(16) {
 		return uuid.Nil, io.EOF
 	}
 	UUIDBytes := pr.data[pr.seeker : pr.seeker+16]
-	_, err := pr.SeekWithEOF(16)
+	_, err := pr.Seek(16)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -305,7 +314,7 @@ func (pr *PacketReader) ReadByteArray(length int) ([]byte, error) {
 	fmt.Print("Current: ", pr.seeker, "len: ", length)
 	data := pr.data[pr.seeker : pr.seeker+length]
 	fmt.Print("datalen: ", len(data))
-	pr.SeekWithEOF(length)
+	pr.Seek(length)
 	fmt.Println("seeker: ", pr.seeker)
 	return data, nil
 }
