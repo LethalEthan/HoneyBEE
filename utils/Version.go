@@ -3,13 +3,13 @@ package utils
 import "fmt"
 
 const (
-	PrimaryMinecraftVersion               = "1.17.1" //Primary Supported MC version
-	PrimaryMinecraftProtocolVersion int32 = 756      //Primary Supported MC protocol Version
+	PrimaryMinecraftVersion         = "1.17.1" //Primary Supported MC version
+	PrimaryMinecraftProtocolVersion = 756      //Primary Supported MC protocol Version
 	//HoneyBEEVersion                       = "1.1.1 (Build 141)"
 	MajorVersion = 0
 	MinorVersion = 0
 	PatchVersion = 1
-	BuildVersion = 3
+	BuildVersion = 4
 	StateVersion = "P-ALPHA" //PreAlpha, Alpha, Beta, Release Candidate, Release
 )
 
