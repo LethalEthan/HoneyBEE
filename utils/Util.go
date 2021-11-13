@@ -57,7 +57,7 @@ func Int64ToByteArray(val int64) []byte {
 }
 
 func ByteArrayToInt16(val []byte) (int16, error) {
-	if len(val) > 2 {
+	if len(val) > 2 || len(val) < 2 {
 		return 0, errbytearrayconversion
 	} else {
 		conval := int16(binary.BigEndian.Uint16(val))
@@ -66,7 +66,7 @@ func ByteArrayToInt16(val []byte) (int16, error) {
 }
 
 func ByteArrayToInt32(val []byte) (int32, error) {
-	if len(val) > 4 {
+	if len(val) > 4 || len(val) < 4 {
 		return 0, errbytearrayconversion
 	}
 	conval := int32(binary.BigEndian.Uint32(val))
@@ -74,7 +74,7 @@ func ByteArrayToInt32(val []byte) (int32, error) {
 }
 
 func ByteArrayToInt64(val []byte) (int64, error) {
-	if len(val) > 8 {
+	if len(val) > 8 || len(val) < 8 {
 		return 0, errbytearrayconversion
 	} else {
 		conval := int64(binary.BigEndian.Uint64(val))
