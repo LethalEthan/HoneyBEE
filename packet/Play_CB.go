@@ -347,8 +347,8 @@ type (
 		PreviousGamemode    int8
 		WorldCount          int
 		WorldNames          []Identifier
-		DimensionCodec      *nbt.NBTWriter
-		Dimension           *nbt.NBTWriter
+		DimensionCodec      nbt.NBTEncoder
+		Dimension           nbt.NBTEncoder
 		WorldName           Identifier
 		HashedSeed          int64
 		MaxPlayers          int32

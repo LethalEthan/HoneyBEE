@@ -7,7 +7,7 @@ type ChunkPacket struct {
 	ChunkZ                int64
 	FullChunk             bool
 	PBitMask              int32
-	HeightMaps            nbt.NBTWriter
+	HeightMaps            nbt.NBTEncoder
 	Biomes                []byte //Optional array of integers
 	Size                  int32
 	Data                  []byte //Number of elements is equal to the number of bits set in PBitMask. Sections Sent from top to bottom, i.e first section is Y=0 to Y=15

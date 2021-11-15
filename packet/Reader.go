@@ -14,8 +14,6 @@ import (
 type PacketReader struct {
 	data   []byte
 	seeker int
-	end    int
-	FP     interface{}
 }
 
 //CreatePacketReader - Creates Packet Reader
@@ -23,7 +21,6 @@ func CreatePacketReader(data []byte) PacketReader {
 	pr := *new(PacketReader)
 	pr.data = data
 	pr.seeker = 0
-	pr.end = len(data)
 	return pr
 }
 
@@ -36,12 +33,18 @@ func (pr *PacketReader) seek(offset int) int {
 func (pr *PacketReader) Setdata(data []byte) {
 	pr.seeker = 0
 	pr.data = data
-	pr.end = len(data)
+}
+
+func (pr *PacketReader) GetSeeker() int {
+	return pr.seeker
+}
+func (pr *PacketReader) GetEnd() int {
+	return len(pr.data)
 }
 
 func (pr *PacketReader) SeekTo(pos int) bool {
 	if pos > 0 {
-		if pos > pr.end {
+		if pos > len(pr.data) {
 			return false
 		}
 		pr.seeker = pos
@@ -52,15 +55,15 @@ func (pr *PacketReader) SeekTo(pos int) bool {
 
 //CheckForEOF
 func (pr *PacketReader) CheckForEOF() bool {
-	return pr.seeker > pr.end
+	return pr.seeker > len(pr.data)
 }
 
 func (pr *PacketReader) CheckEOFOffset(offset int) bool {
 	if offset > 0 {
-		if pr.seeker > pr.end {
+		if pr.seeker > len(pr.data) {
 			return true
 		}
-		if pr.seeker+offset > pr.end {
+		if pr.seeker+offset > len(pr.data) {
 			return true
 		}
 		return false
@@ -71,7 +74,7 @@ func (pr *PacketReader) CheckEOFOffset(offset int) bool {
 //whence is where the current Seek is and offset is how far the Seek should offset to
 func (pr *PacketReader) Seek(offset int) (int, error) {
 	if offset > 0 {
-		if pr.seeker+offset > pr.end {
+		if pr.seeker+offset > len(pr.data) {
 			return 0, errors.New("Seek reached end")
 		}
 		//Seek after EOF check
@@ -206,9 +209,6 @@ func (pr *PacketReader) ReadString() (string, error) {
 	if StringSize < 0 {
 		return "", errors.New("string size of %d invalid" + strconv.Itoa(int(StringSize)))
 	}
-	if int(StringSize) > pr.end {
-		return "", errors.New("StringSize exceeds EOF")
-	}
 	if pr.CheckEOFOffset(int(StringSize)) {
 		return "", errors.New("StringSize exceeds EOF")
 	}
@@ -248,8 +248,7 @@ func (pr *PacketReader) ReadVarInt() (int32, byte, error) {
 		if Byte&0x80 == 0 {
 			break
 		}
-		Byte, err = pr.ReadUnsignedByte()
-		if err != nil {
+		if Byte, err = pr.ReadUnsignedByte(); err != nil {
 			return 0, NumRead, err
 		}
 	}
@@ -282,13 +281,9 @@ func (pr *PacketReader) ReadVarLong() (int64, error) {
 		if Byte&0x80 == 0 {
 			break
 		}
-		Byte, err = pr.ReadUnsignedByte()
-		if err != nil {
+		if Byte, err = pr.ReadUnsignedByte(); err != nil {
 			return 0, err
 		}
-	}
-	if err != nil {
-		return int64(Result), err
 	}
 	return int64(Result), nil
 }
@@ -311,10 +306,53 @@ func (pr *PacketReader) ReadUUID() (uuid.UUID, error) {
 
 //ReadArray - Returns the array (slice) of the packet data
 func (pr *PacketReader) ReadByteArray(length int) ([]byte, error) {
-	fmt.Print("Current: ", pr.seeker, "len: ", length)
+	//fmt.Print("Current: ", pr.seeker, "len: ", length)
+	if pr.CheckEOFOffset(length) {
+		return []byte{0}, io.EOF
+	}
 	data := pr.data[pr.seeker : pr.seeker+length]
-	fmt.Print("datalen: ", len(data))
-	pr.Seek(length)
-	fmt.Println("seeker: ", pr.seeker)
+	//fmt.Print("datalen: ", len(data))
+	if _, err := pr.Seek(length); err != nil {
+		return []byte{0}, io.EOF
+	}
+	//fmt.Println("seeker: ", pr.seeker)
 	return data, nil
+}
+
+func (pr *PacketReader) ReadVarIntArray(length int) ([]int32, error) {
+	var data = make([]int32, 0, length)
+	for i := 0; i < length; i++ {
+		l, _, err := pr.ReadVarInt()
+		if err != nil {
+			panic(err)
+		}
+		data = append(data, l)
+	}
+	Log.Debug("Seeker: ", pr.seeker)
+	return data, nil
+}
+
+func (pr *PacketReader) ReadLongArray(length int) ([]int64, error) {
+	if pr.CheckEOFOffset(length * 8) {
+		panic("318")
+		return []int64{0}, io.EOF
+	}
+	var data = make([]int64, 0, length)
+	for i := 0; i < length; i++ {
+		l, err := pr.ReadLong()
+		if err != nil {
+			panic(err)
+		}
+		data = append(data, l)
+	}
+	// if _, err := pr.Seek(length * 8); err != nil {
+	// 	panic("326 ")
+	// }
+	Log.Debug("Seeker: ", pr.seeker)
+	return data, nil
+}
+
+func (pr *PacketReader) ReadRestOfByteArrayNoSeek() []byte {
+	data := pr.data[pr.seeker:]
+	return data
 }
