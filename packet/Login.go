@@ -73,8 +73,7 @@ type Login_0x02_SB struct {
 func (LS *Login_0x00_SB) Decode() {
 	var err error
 	PR := LS.Packet.PacketReader //CreatePacketReader(LS.Packet.PacketData)
-	LS.Name, err = PR.ReadString()
-	if err != nil {
+	if LS.Name, err = PR.ReadString(); err != nil {
 		panic(err)
 	}
 }
@@ -129,10 +128,10 @@ func (LPR *Login_0x02_SB) Decode() {
 func (LERQ *Login_0x01_CB) Encode() PacketWriter {
 	PW := CreatePacketWriter(0x01)
 	PW.WriteString("")
-	PW.WriteVarInt(int32(len(publicKeySlice)))
+	PW.WriteVarInt(len(publicKeySlice))
 	PW.WriteArray(publicKeySlice)
-	PW.WriteVarInt(int32(len(privateKeySlice)))
-	PW.WriteArray(privateKeySlice)
+	PW.WriteVarInt(4)
+	PW.WriteArray([]byte{0, 9, 40, 200})
 	return PW
 }
 
