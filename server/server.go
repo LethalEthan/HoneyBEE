@@ -31,12 +31,6 @@ type ServerCodec struct{}
 func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	//CC, tmp := S.ConnectedSockets.Load(Conn.RemoteAddr().String())
 	Log.Debug("React hit!")
-	ClientConn, tmp := Conn.Context().(*Client) //Get the client object from conn context
-	if !tmp {
-		Conn.Close()
-		Log.Critical("Client Connection context was not Client object!")
-		return nil, gnet.Close
-	}
 	if len(Frame) > 0 {
 		Out = Frame //ClientConn.FrameChannel <- Frame
 		Action = gnet.None
@@ -45,9 +39,6 @@ func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Ac
 		Log.Warning("Frame is 0?!")
 		return nil, gnet.Close
 	}
-	Conn.SetContext(ClientConn)
-	//Out = Frame
-	return nil, gnet.Close
 }
 
 func (SC *ServerCodec) Encode(c gnet.Conn, buf []byte) (out []byte, err error) {
