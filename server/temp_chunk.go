@@ -10,8 +10,8 @@ func (ClientConn *Client) ChunkLoad() {
 	Chunk.ChunkX = 0
 	Chunk.ChunkZ = 0
 	Chunk.BitMaskLength = 1
-	Chunk.PrimaryBitMask = append(Chunk.PrimaryBitMask, 0b00000001) //only 1 section
-	NBTW := nbt.CreateNBTEncoder()
+	Chunk.PrimaryBitMask = append(Chunk.PrimaryBitMask, 1) //only 1 section
+	NBTE := nbt.CreateNBTEncoder()
 	BA := make([]int64, 37)
 	for i := 0; i < len(BA); i++ { //Setup static heightmap
 		if i < 512 {
@@ -30,11 +30,11 @@ func (ClientConn *Client) ChunkLoad() {
 		}
 	}
 	Log.Debug("HeightMapL:", len(BA))
-	NBTW.AddTag(nbt.LongArray{"MOTION_BLOCKING", BA}) //BasedOnValue("MOTION_BLOCKING", BA)
-	NBTW.EndCompoundTag()
-	NBTW.Encode()
-	Log.Debug("NBTD: ", NBTW.GetData())
-	Chunk.HeightMaps = NBTW.GetData()
+	NBTE.AddTag(nbt.CreateLongArrayTag("MOTION_BLOCKING", BA)) //BasedOnValue("MOTION_BLOCKING", BA)
+	NBTE.EndCompoundTag()
+	NBTE.Encode()
+	Log.Debug("NBTD: ", NBTE.GetData())
+	Chunk.HeightMaps = NBTE.GetData()
 	Chunk.BiomeLength = 0
 	CS := packet.CreateWriterWithCapacity(32800) //Chunk Section
 	CS.WriteShort(4096)
@@ -60,15 +60,16 @@ func (ClientConn *Client) ChunkLoad() {
 	//
 	tmpCL := packet.CreateWriterWithCapacity(16) //temp chunk location writer
 	tmpCL.WriteInt(0)
-	tmpCL.WriteVarInt(0)
+	tmpCL.WriteInt(0)
 	//
 	PW := packet.CreatePacketWriterWithCapacity(0x22, 34768)
-	PW.WriteArray(tmpCL.GetData())
-	PW.WriteArray(C.GetData())
+	PW.WriteArray(tmpCL.GetData()) //Write X and Z
+	PW.WriteArray(C.GetData())     // Add other chunk data
 	if err := ClientConn.Conn.AsyncWrite(PW.GetPacket()); err != nil {
-		ClientConn.Conn.Close()
+		ClientConn.Conn.Close() //send
 		return
 	}
+	Log.Debug("Packet Size: ", len(PW.GetData()))
 	var j int
 	var i int
 	for i = 0; i < 12; i++ {
@@ -164,10 +165,10 @@ func (ClientConn *Client) ChunkLoad() {
 		}
 	}
 	PW.ResetData(0x20) //Initialise World Border
-	PW.WriteVarInt(2000.0)
-	PW.WriteVarInt(2000.0)
-	PW.WriteVarInt(2001.0)
-	PW.WriteVarInt(2001.0)
+	PW.WriteDouble(2000.0)
+	PW.WriteDouble(2000.0)
+	PW.WriteDouble(2001.0)
+	PW.WriteDouble(2001.0)
 	PW.WriteVarLong(0)
 	PW.WriteVarInt(29999984)
 	PW.WriteVarInt(0)
@@ -184,10 +185,10 @@ func TRYChunkLoad() {
 	Chunk.ChunkX = 0
 	Chunk.ChunkZ = 0
 	Chunk.BitMaskLength = 1
-	Chunk.PrimaryBitMask = append(Chunk.PrimaryBitMask, 0b00001111)
-	NBTW := nbt.CreateNBTEncoder()
-	NBTW.AddTag(nbt.CreateLongArrayTag("MOTION_BLOCKING", make([]int64, 37)))
-	NBTW.Encode()
+	Chunk.PrimaryBitMask = append(Chunk.PrimaryBitMask, 0b00000001)
+	NBTE := nbt.CreateNBTEncoder()
+	NBTE.AddTag(nbt.CreateLongArrayTag("MOTION_BLOCKING", make([]int64, 37)))
+	NBTE.Encode()
 	Log.Debug("X: ", 0, "Z: ", 0)
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 2; j++ {

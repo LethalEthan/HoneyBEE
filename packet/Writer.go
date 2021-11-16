@@ -8,9 +8,9 @@ import (
 )
 
 type PacketWriter struct {
-	data       []byte
-	packetID   int
-	packetSize int
+	data     []byte
+	packetID int
+	// packetSize int
 }
 
 func CreatePacketWriter(PacketID int) PacketWriter {
@@ -47,19 +47,18 @@ func (pw *PacketWriter) GetData() []byte {
 }
 
 func (pw *PacketWriter) ClearData() {
-	pw.data = make([]byte, 0, cap(pw.data))
+	pw.data = pw.data[:0]
 }
 
 func (pw *PacketWriter) ResetData(packetID int) {
-	pw.data = make([]byte, 0, cap(pw.data))
-	pw.packetSize = 0
+	pw.data = pw.data[:0] //set length to 0, keep cap same
 	pw.packetID = packetID
 	pw.WriteVarInt(packetID)
 }
 
 func (pw *PacketWriter) GetPacket() []byte {
-	pw.packetSize = len(pw.data)
-	p := append(pw.CreateVarInt(uint32(pw.packetSize)), pw.data...)
+	PacketSize := uint32(len(pw.data))
+	p := append(pw.CreateVarInt(PacketSize), pw.data...)
 	// Log.Debug("PacketSize: ", len(pw.data))
 	// Log.Debug("Packet Contents: ", p)
 	return p
@@ -70,13 +69,12 @@ func (pw *PacketWriter) GetPacketID() int {
 }
 
 func (pw *PacketWriter) GetPacketSize() int {
-	return pw.packetSize
+	return len(pw.data)
 }
 
 func (pw *PacketWriter) AppendByteSlice(Data []byte) {
 	pw.data = append(pw.data, Data...)
-
-	pw.packetSize += len(Data)
+	// pw.packetSize += len(Data)
 }
 
 //WriteBoolean - Write Boolean to packet
@@ -107,7 +105,6 @@ func (pw *PacketWriter) WriteShort(val int16) {
 func (pw *PacketWriter) WriteUnsignedShort(val uint16) {
 	buff := make([]byte, 2)
 	binary.BigEndian.PutUint16(buff, val)
-
 	pw.AppendByteSlice(buff)
 }
 
@@ -120,7 +117,6 @@ func (pw *PacketWriter) WriteInt(val int) {
 func (pw *PacketWriter) writeUnsignedInt(val uint32) {
 	buff := make([]byte, 4)
 	binary.BigEndian.PutUint32(buff, val)
-
 	pw.AppendByteSlice(buff)
 }
 
@@ -133,7 +129,6 @@ func (pw *PacketWriter) WriteLong(val int64) {
 func (pw *PacketWriter) writeUnsignedLong(val uint64) {
 	buff := make([]byte, 8)
 	binary.BigEndian.PutUint64(buff, val)
-
 	pw.AppendByteSlice(buff)
 }
 
