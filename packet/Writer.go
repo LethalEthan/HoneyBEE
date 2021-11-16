@@ -8,12 +8,12 @@ import (
 )
 
 type PacketWriter struct {
-	data       []byte
-	packetID   int32
-	packetSize int
+	data     []byte
+	packetID int
+	// packetSize int
 }
 
-func CreatePacketWriter(PacketID int32) PacketWriter {
+func CreatePacketWriter(PacketID int) PacketWriter {
 	pw := *new(PacketWriter)       //new packet with data struct Above
 	pw.packetID = PacketID         //PacketID passed via function arguments
 	pw.data = make([]byte, 0, 128) //Data is created with a byte array
@@ -23,7 +23,7 @@ func CreatePacketWriter(PacketID int32) PacketWriter {
 
 /*CreatePacketWriterWithCapacity - Create a packet writer with capacity on the data slice
 max 2097151 if over it will default to a capacity of 128*/
-func CreatePacketWriterWithCapacity(PacketID int32, Capacity int) PacketWriter {
+func CreatePacketWriterWithCapacity(PacketID, Capacity int) PacketWriter {
 	pw := *new(PacketWriter)
 	pw.packetID = PacketID
 	if Capacity > 0 && Capacity < 2097151 {
@@ -36,36 +36,45 @@ func CreatePacketWriterWithCapacity(PacketID int32, Capacity int) PacketWriter {
 	return pw
 }
 
+func CreateWriterWithCapacity(Capacity int) PacketWriter {
+	pw := *new(PacketWriter)
+	pw.data = make([]byte, 0, Capacity)
+	return pw
+}
+
 func (pw *PacketWriter) GetData() []byte {
 	return pw.data
 }
 
-func (pw *PacketWriter) ResetData(packetID int32) {
-	pw.data = make([]byte, 0, cap(pw.data))
-	pw.packetSize = 0
+func (pw *PacketWriter) ClearData() {
+	pw.data = pw.data[:0]
+}
+
+func (pw *PacketWriter) ResetData(packetID int) {
+	pw.data = pw.data[:0] //set length to 0, keep cap same
 	pw.packetID = packetID
+	pw.WriteVarInt(packetID)
 }
 
 func (pw *PacketWriter) GetPacket() []byte {
-	pw.packetSize = len(pw.data)
-	p := append(pw.CreateVarInt(uint32(pw.packetSize)), pw.data...)
-	Log.Debug("PacketSize: ", len(pw.data))
-	Log.Debug("Packet Contents: ", pw.data)
+	PacketSize := uint32(len(pw.data))
+	p := append(pw.CreateVarInt(PacketSize), pw.data...)
+	// Log.Debug("PacketSize: ", len(pw.data))
+	// Log.Debug("Packet Contents: ", p)
 	return p
 }
 
-func (pw *PacketWriter) GetPacketID() int32 {
+func (pw *PacketWriter) GetPacketID() int {
 	return pw.packetID
 }
 
 func (pw *PacketWriter) GetPacketSize() int {
-	return pw.packetSize
+	return len(pw.data)
 }
 
 func (pw *PacketWriter) AppendByteSlice(Data []byte) {
 	pw.data = append(pw.data, Data...)
-
-	pw.packetSize += len(Data)
+	// pw.packetSize += len(Data)
 }
 
 //WriteBoolean - Write Boolean to packet
@@ -96,12 +105,11 @@ func (pw *PacketWriter) WriteShort(val int16) {
 func (pw *PacketWriter) WriteUnsignedShort(val uint16) {
 	buff := make([]byte, 2)
 	binary.BigEndian.PutUint16(buff, val)
-
 	pw.AppendByteSlice(buff)
 }
 
 //WriteInt - Write Integer to packet (int32)
-func (pw *PacketWriter) WriteInt(val int32) {
+func (pw *PacketWriter) WriteInt(val int) {
 	pw.writeUnsignedInt(uint32(val))
 }
 
@@ -109,7 +117,6 @@ func (pw *PacketWriter) WriteInt(val int32) {
 func (pw *PacketWriter) writeUnsignedInt(val uint32) {
 	buff := make([]byte, 4)
 	binary.BigEndian.PutUint32(buff, val)
-
 	pw.AppendByteSlice(buff)
 }
 
@@ -122,7 +129,6 @@ func (pw *PacketWriter) WriteLong(val int64) {
 func (pw *PacketWriter) writeUnsignedLong(val uint64) {
 	buff := make([]byte, 8)
 	binary.BigEndian.PutUint64(buff, val)
-
 	pw.AppendByteSlice(buff)
 }
 
@@ -143,12 +149,12 @@ func (pw *PacketWriter) WriteArray(val []byte) {
 
 //WriteString - Write String to packet (string)
 func (pw *PacketWriter) WriteString(val string) {
-	pw.WriteVarInt(int32(len(val)))
+	pw.WriteVarInt(len(val))
 	pw.AppendByteSlice([]byte(val))
 }
 
 func (pw *PacketWriter) WriteIdentifier(val Identifier) {
-	pw.WriteVarInt(int32(len(val)))
+	pw.WriteVarInt(len(val))
 	pw.AppendByteSlice([]byte(val))
 }
 
@@ -159,12 +165,12 @@ func (pw *PacketWriter) WriteArrayIdentifier(val []Identifier) {
 }
 
 //WriteVarInt - Write VarInt to packet (int32)
-func (pw *PacketWriter) WriteVarInt(val int32) {
+func (pw *PacketWriter) WriteVarInt(val int) {
 	pw.AppendByteSlice(pw.CreateVarInt(uint32(val)))
 }
 
 //WriteVarLong - Write VarLong (int64)
-func (pw *PacketWriter) WriteVarLong(val int64) {
+func (pw *PacketWriter) WriteVarLong(val int) {
 	pw.AppendByteSlice(pw.CreateVarLong(uint64(val)))
 }
 
@@ -209,4 +215,15 @@ func (pw *PacketWriter) WriteUUID(val uuid.UUID) {
 		Log.Debug("Could not marshal UUID!")
 	}
 	pw.AppendByteSlice(BU)
+}
+
+func (pw *PacketWriter) WritePosition(X uint64, Y uint64, Z uint64) {
+	var Location uint64 = ((X & 0x3FFFFFF) << 38) | ((Z & 0x3FFFFFF) << 12) | (Y & 0xFFF)
+	pw.writeUnsignedLong(Location)
+}
+
+func (pw *PacketWriter) WriteLongArray(val []int64) {
+	for _, v := range val {
+		pw.WriteLong(v)
+	}
 }

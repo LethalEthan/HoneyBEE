@@ -363,11 +363,3 @@ type Block struct {
 
 	// WaterLogged   bool -
 }
-
-func GetBlockID(ID int) Block {
-	if BlockID == nil {
-		InitGlobalID()
-	}
-	I := Blocks[ID] //BlockID[ID]
-	return I
-}

@@ -22,8 +22,9 @@ func NewServer(ip string, port string, multicore bool, tick bool, lockosthread b
 	Log.Info("Generating Key chain")
 	packet.GenerateKeys()
 	S := new(Server)
+	SC := new(ServerCodec)
 	GlobalServer = S
-	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))
+	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second), gnet.WithCodec(SC))
 	return *S, err
 }
 
@@ -35,28 +36,23 @@ func (S *Server) OnInitComplete(Srv gnet.Server) (Action gnet.Action) {
 func (S *Server) OnOpened(Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	Log.Infof("Socket with addr: %s has been opened...\n", Conn.RemoteAddr().String())
 	C := new(Client)
-	C.Name = Conn.RemoteAddr().String()
+	C.RemoteAddr = Conn.RemoteAddr().String()
 	C.Conn = Conn
 	C.State = HANDSHAKE
-	C.FrameChannel = make(chan []byte, 10)
-	C.Close = make(chan bool)
 	S.ConnectedSockets.Store(Conn.RemoteAddr().String(), C)
 	Conn.SetContext(C)
 	Log.Debug(Conn.RemoteAddr().String())
-	go C.React(C.FrameChannel, C.Close) //the goroutine that does packet logic
 	return
 }
 
 func (S *Server) OnClosed(Conn gnet.Conn, err error) (Action gnet.Action) {
 	Log.Infof("Socket with addr: %s is closing...\n", Conn.RemoteAddr().String())
 	S.ConnectedSockets.Delete(Conn.RemoteAddr().String())
-	C, tmp := Conn.Context().(*Client)
+	CC, tmp := Conn.Context().(*Client)
 	if !tmp {
 		Log.Critical("Conn Context is nil!")
 	} else {
-		C.Close <- true
-		close(C.FrameChannel)
-		close(C.Close)
+		CC.SetClosed(true)
 	}
 	Conn.SetContext(nil)
 	Log.Infof("Socket with addr: %s is closed\n", Conn.RemoteAddr().String())

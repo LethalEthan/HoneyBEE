@@ -1,67 +1,81 @@
 package nbt
 
-//CreateCompoundTag - Create compound tag and sets it in NBTWriter so objects are written to it
-func (NBTW *NBTWriter) AddCompoundTag(Name string) {
-	TC := new(TCompound)
-	TC.Name = Name
-	TC.Value = make([]interface{}, 0, 8)
-	TC.PreviousTag = NBTW.CurrentTag
-	TC.PreviousTags = NBTW.CurrentTag.PreviousTags
-	NBTW.CurrentTag.NextTags = append(NBTW.CurrentTag.NextTags, TC.NextTags...) //Finish me
-	// NBTW.CurrentTag.TagsIndex[Name] = NBTW.CurrentTag.Index
-	// NBTW.CurrentTag.TagsIDIndex[NBTW.CurrentTag.Index] = Name
-	NBTW.currentTagIndex++
-	//NBTW.CurrentTag.Index++
-	NBTW.CurrentTag = TC
-	NBTW.numCompounds++
+type Compound struct {
+	name        string
+	value       []interface{}
+	previousTag *Compound //To go back
 }
 
-/*CreateCompoundTagObject - Creates Compound tag and returns it, this does not change anything in writer/reader
-compound tag will have to be added to NBTWriter with NBTW.AddTag(TCompound)
+// AddCompoundTag -Add compound tag and sets it in NBTWriter so objects are written to it
+func CreateCompoundTag(name string) Compound {
+	C := *new(Compound)
+	C.name = name
+	C.value = make([]interface{}, 0, 16)
+	return C
+}
 
-Capacity is for the []interface{} slice that stores the objects, the capacity is how many objects can be appended without needing a new slice to be re-allocated*/
-func CreateCompoundTag(Name string, Capacity int) TCompound {
-	TC := new(TCompound)
-	TC.Name = Name
-	if Capacity > 0 {
-		TC.Value = make([]interface{}, 0, Capacity)
-	} else {
-		TC.Value = make([]interface{}, 0, 8)
+// AddCompoundTag -Add compound tag and sets it in NBTWriter so objects are written to it
+func (NBTE *NBTEncoder) AddCompoundTag(name string) {
+	C := new(Compound)
+	C.name = name
+	C.value = make([]interface{}, 0, 16)
+	C.previousTag = NBTE.currentCompound
+	NBTE.currentCompound = C
+}
+
+func (NBTE *NBTEncoder) EndCompoundTag() {
+	if NBTE.currentCompound.previousTag != nil { // if nil then it's root tag
+		NBTE.currentCompound.EndTag()
+		NBTE.currentCompound.previousTag.value = append(NBTE.currentCompound.previousTag.value, *NBTE.currentCompound)
+		NBTE.currentCompound = NBTE.currentCompound.previousTag // go back
+	} else { // if in root tag
+		NBTE.currentCompound.EndTag()
 	}
-	return *TC
 }
 
-func (NBTW *NBTWriter) EndCompoundTag() {
-	if NBTW.CurrentTag.PreviousTag != nil {
-		NBTW.CurrentTag.AddTag(TEnd{})
-		NBTW.CurrentTag.NumEntries = len(NBTW.CurrentTag.Value) //NumEntries is updated every time when AddTag is called, this is just for fool-proofing
-		NBTW.CurrentTag.PreviousTag.AddTag(*NBTW.CurrentTag)
-		NBTW.CurrentTag = NBTW.CurrentTag.PreviousTag
-		NBTW.totalNumEntries += NBTW.CurrentTag.NumEntries
-		return
+func (NBTE *NBTEncoder) EncodeCompound(C *Compound) {
+	NBTE.EncodeTag(TagCompound, C.name)
+	for _, v := range C.value {
+		switch val := v.(type) {
+		case End:
+			NBTE.data = append(NBTE.data, TagEnd)
+			return
+		case Byte:
+			NBTE.EncodeByte(val.Name, val.Value)
+		case Short:
+			NBTE.EncodeShort(val.Name, val.Value)
+		case Int:
+			NBTE.EncodeInt(val.Name, val.Value)
+		case Long:
+			NBTE.EncodeLong(val.Name, val.Value)
+		case Float:
+			NBTE.EncodeFloat(val.Name, val.Value)
+		case Double:
+			NBTE.EncodeDouble(val.Name, val.Value)
+		case ByteArray:
+			NBTE.EncodeByteArray(val.Name, val.Value)
+		case String:
+			NBTE.EncodeString(val.Name, val.Value)
+		case List:
+			NBTE.EncodeList(val)
+		case Compound:
+			NBTE.EncodeCompound(&val)
+		case IntArray:
+			NBTE.EncodeIntArray(val.Name, val.Value)
+		case LongArray:
+			NBTE.EncodeLongArray(val.Name, val.Value)
+		}
 	}
-	NBTW.CurrentTag.NumEntries = len(NBTW.CurrentTag.Value)
-	NBTW.CurrentTag.AddTag(TEnd{})
 }
 
-func (NBTW *NBTWriter) writeCompoundTag(Name string) {
-	NBTW.writeTag(TagCompound, Name)
+func (TC *Compound) AddTag(val interface{}) {
+	TC.value = append(TC.value, val)
 }
 
-func (TC *TCompound) AddTag(val interface{}) {
-	//TC.Index++
-	TC.Value = append(TC.Value, val)
-	// TC.NumEntries = len(TC.Value)
-	// TC.TagsIDIndex[TC.NumEntries] = Name
-	// TC.TagsIndex[Name] = TC.NumEntries
+func (TC *Compound) EndTag() {
+	TC.value = append(TC.value, End{})
 }
 
-func (TC *TCompound) EndTag() {
-	TC.Value = append(TC.Value, TEnd{})
-}
-
-func (TC *TCompound) AddMultipleTags(val []interface{}) {
-	for _, v := range val {
-		TC.Value = append(TC.Value, v)
-	}
+func (TC *Compound) AddMultipleTags(val []interface{}) {
+	TC.value = append(TC.value, val...)
 }

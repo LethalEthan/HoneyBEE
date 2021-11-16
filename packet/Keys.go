@@ -16,10 +16,6 @@ var (
 	VerifyToken     = make([]byte, 4)
 )
 
-const (
-	VerifyTokenLen = 4
-)
-
 func GenerateKeys() {
 	var err error
 	privateKey, err = rsa.GenerateKey(rand.Reader, 1024)

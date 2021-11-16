@@ -3,13 +3,14 @@ package packet
 import (
 	"HoneyBEE/jsonstruct"
 	"HoneyBEE/nbt"
+
+	"github.com/google/uuid"
 )
 
 ///
 ///ClientBound
 ///
 
-type UUID string
 type Identifier string //Change me
 type NBT int64         //Change me too
 type Position int64    //Change me too aswell
@@ -19,7 +20,7 @@ type Angle byte        //Change me too aswell aswell
 type (
 	SpawnEntity_CB struct {
 		EntityID   int32
-		ObjectUUID UUID
+		ObjectUUID uuid.UUID
 		Type       int32
 		X          float64
 		Y          float64
@@ -44,7 +45,7 @@ type (
 	//Play_0x02_CB - Spawn Living Entity
 	SpawnLivingEntity_CB struct {
 		EntityID   int32
-		EntityUUID UUID
+		EntityUUID uuid.UUID
 		Type       int32
 		X          float64
 		Y          float64
@@ -60,7 +61,7 @@ type (
 	//Play_0x03_CB - Spawn Painting
 	SpawnPainting_CB struct {
 		EntityID   int32
-		EntityUUID UUID
+		EntityUUID uuid.UUID
 		Motive     int32
 		Location   int64
 		Direction  byte
@@ -69,7 +70,7 @@ type (
 	//Play_0x04_CB - Spawn Player
 	SpawnPlayer_CB struct {
 		EntityID   int32
-		PlayerUUID UUID
+		PlayerUUID uuid.UUID
 		X          float64
 		Y          float64
 		Z          float64
@@ -135,7 +136,7 @@ type (
 
 	//Play_0x0D_CB - Boss Bar
 	BossBar_CB struct {
-		UUID   UUID
+		UUID   uuid.UUID
 		Action int32 //Const
 		//Finish ME
 	}
@@ -150,7 +151,7 @@ type (
 	ChatMessage_CB struct {
 		Chat     *jsonstruct.ChatComponent
 		Position byte
-		Sender   UUID
+		Sender   uuid.UUID
 	}
 
 	//Play 0x10
@@ -276,16 +277,16 @@ type (
 
 	//Play 0x22
 	ChunkData_CB struct {
-		ChunkX              int32
-		ChunkZ              int32
-		BitMaskLength       int32
+		ChunkX              int
+		ChunkZ              int
+		BitMaskLength       int
 		PrimaryBitMask      []int64
-		HeightMaps          NBT
-		BiomeLength         int32
+		HeightMaps          []byte
+		BiomeLength         int
 		Biomes              []int32
-		Size                int32
+		Size                int
 		Data                []byte
-		NumberBlockEntities int32
+		NumberBlockEntities int
 		BlockEntities       NBT
 	}
 
@@ -340,14 +341,14 @@ type (
 
 	//Play 0x26
 	JoinGame_CB struct {
-		EntityID            int32
+		EntityID            int
 		IsHardcore          bool
 		Gamemode            byte
 		PreviousGamemode    int8
-		WorldCount          int32
+		WorldCount          int
 		WorldNames          []Identifier
-		DimensionCodec      *nbt.NBTWriter
-		Dimension           *nbt.NBTWriter
+		DimensionCodec      nbt.NBTEncoder
+		Dimension           nbt.NBTEncoder
 		WorldName           Identifier
 		HashedSeed          int64
 		MaxPlayers          int32
@@ -473,7 +474,7 @@ type (
 		Action        int32
 		NumberPlayers int32
 		Player        struct {
-			UUID     UUID
+			UUID     uuid.UUID
 			ActionID byte
 			Action   struct{}
 		}

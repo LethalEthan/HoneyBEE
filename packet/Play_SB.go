@@ -1,5 +1,7 @@
 package packet
 
+import "github.com/google/uuid"
+
 ///
 ///Serverbound
 ///
@@ -282,7 +284,7 @@ type (
 	}
 
 	Spectate_SB struct {
-		TargetPlayer UUID
+		TargetPlayer uuid.UUID
 	}
 
 	PlayerBlockPlacement_SB struct {
