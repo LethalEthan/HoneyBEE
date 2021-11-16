@@ -2,7 +2,6 @@ package console
 
 import (
 	"HoneyBEE/config"
-	"HoneyBEE/mitm"
 	"HoneyBEE/utils"
 	"bufio"
 	"crypto/md5"
@@ -101,11 +100,6 @@ func Console() {
 			} else {
 				Log.Critical("memprofile flag not specified! not writing a cpuprofile")
 			}
-		case "savepackets":
-			Log.Critical("Saving packets...")
-			mitm.SaveClient()
-			mitm.SaveServer()
-			Log.Critical("Saved packets!")
 		default:
 			Log.Warning("Unknown command")
 		}

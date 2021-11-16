@@ -3,7 +3,6 @@ package main
 import (
 	"HoneyBEE/config"
 	"HoneyBEE/console"
-	"HoneyBEE/mitm"
 	"HoneyBEE/packet"
 	"HoneyBEE/server"
 	"HoneyBEE/utils"
@@ -78,13 +77,6 @@ func init() {
 	packet.GenerateKeys()
 	//Log.Info("Generating Key Chain")
 	//Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
-	if config.GConfig.DEBUGOPTS.PacketAnal {
-		Log.Warning("Packet Analysis enabled, server will not be initialised")
-		go mitm.StartClient()
-		if err != nil {
-			panic(err)
-		}
-	}
 	go console.Console()
 	go console.Shutdown()
 	//go server.DebugServer()
