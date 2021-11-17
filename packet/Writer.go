@@ -110,11 +110,11 @@ func (pw *PacketWriter) WriteUnsignedShort(val uint16) {
 
 //WriteInt - Write Integer to packet (int32)
 func (pw *PacketWriter) WriteInt(val int) {
-	pw.writeUnsignedInt(uint32(val))
+	pw.WriteUnsignedInt(uint32(val))
 }
 
 //writeUnsignedInt - Write Unsigned Integer to packet (uint32)
-func (pw *PacketWriter) writeUnsignedInt(val uint32) {
+func (pw *PacketWriter) WriteUnsignedInt(val uint32) {
 	buff := make([]byte, 4)
 	binary.BigEndian.PutUint32(buff, val)
 	pw.AppendByteSlice(buff)
@@ -122,11 +122,11 @@ func (pw *PacketWriter) writeUnsignedInt(val uint32) {
 
 //WriteLong - Write Long to packet (int64)
 func (pw *PacketWriter) WriteLong(val int64) {
-	pw.writeUnsignedLong(uint64(val))
+	pw.WriteUnsignedLong(uint64(val))
 }
 
 //writeUnsignedLong - Write Unsigned Long (unint64)
-func (pw *PacketWriter) writeUnsignedLong(val uint64) {
+func (pw *PacketWriter) WriteUnsignedLong(val uint64) {
 	buff := make([]byte, 8)
 	binary.BigEndian.PutUint64(buff, val)
 	pw.AppendByteSlice(buff)
@@ -134,12 +134,12 @@ func (pw *PacketWriter) writeUnsignedLong(val uint64) {
 
 //WriteFloat - Write Float to packet (float32)
 func (pw *PacketWriter) WriteFloat(val float32) {
-	pw.writeUnsignedInt(math.Float32bits(val))
+	pw.WriteUnsignedInt(math.Float32bits(val))
 }
 
 //WriteDouble - Write Double to packet (float64)
 func (pw *PacketWriter) WriteDouble(val float64) {
-	pw.writeUnsignedLong(math.Float64bits(val))
+	pw.WriteUnsignedLong(math.Float64bits(val))
 }
 
 //WriteArray - Write an array of bytes ([]byte)
@@ -219,7 +219,7 @@ func (pw *PacketWriter) WriteUUID(val uuid.UUID) {
 
 func (pw *PacketWriter) WritePosition(X uint64, Y uint64, Z uint64) {
 	var Location uint64 = ((X & 0x3FFFFFF) << 38) | ((Z & 0x3FFFFFF) << 12) | (Y & 0xFFF)
-	pw.writeUnsignedLong(Location)
+	pw.WriteUnsignedLong(Location)
 }
 
 func (pw *PacketWriter) WriteLongArray(val []int64) {
