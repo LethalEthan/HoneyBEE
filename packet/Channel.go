@@ -1,11 +1,8 @@
 package packet
 
-func (PM *PluginMessage_CB) Encode() PacketWriter {
-	PM.Channel = "minecraft:brand"
-	PM.Data = []byte("HoneyBEE!")
-	PW := CreatePacketWriterWithCapacity(0x18, 32)
+func (PM *PluginMessage_CB) Encode(PW *PacketWriter, Channel Identifier, Data []byte) {
+	PW.ResetData(0x18)
 	PW.WriteIdentifier(PM.Channel)
 	PW.WriteArray(PM.Data)
 	Log.Debug("Created PM")
-	return PW
 }
