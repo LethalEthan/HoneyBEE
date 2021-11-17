@@ -25,9 +25,8 @@ import (
 
 //Most things defined in main have moved
 var (
-	format   = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
-	Log      = logging.MustGetLogger("HoneyBEE")
-	err      error
+	format        = logging.MustStringFormatter("%{color}[%{time:01-02-2006 15:04:05.000}] [%{level}] [%{shortfunc}]%{color:reset} %{message}")
+	Log           = logging.MustGetLogger("HoneyBEE")
 	Panicked bool = false
 )
 

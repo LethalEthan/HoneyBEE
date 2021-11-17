@@ -8,14 +8,10 @@ server:
   send-buffer: 64
   recv-buffer: 64
   read-buffer-cap: 64
-  client-frame-buffer: 10 #Sets the limit on the buffered channel that handles frames
+  net-event-loop: 8
   protocol:
     AvailableProtocols: []
     block-players-on-login: true
 performance: #Change me!
    cpu: 8
    gc-percent: 100
-debug-opts:
-    packet-anal: false #switches HoneyBEE into a MITM proxy that captures and decodes packets
-    packet-anal-address: "127.0.0.1:25567" #Server address that HoneyBEE probes
-    maintenance: false
