@@ -2,7 +2,7 @@ package server
 
 import (
 	"HoneyBEE/packet"
-	"sync"
+	"HoneyBEE/player"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,28 +11,22 @@ import (
 
 type Client struct {
 	RemoteAddr      string
-	PlayerName      string
-	UUID            uuid.UUID
+	Player          player.PlayerObject
+	PW              packet.PacketWriter
+	PR              packet.PacketReader
 	Conn            gnet.Conn
 	ProtocolVersion int32
 	State           int
-	Closed          bool
-	ClosedMutex     sync.Mutex
 	OptionalData    interface{}
 }
 
 type ServerCodec struct{}
 
-///
-///Optimise me, try not to use channels, maybe try a zero sized struct{} channel in worst case
-///Do not use a seperate go routine for every client as per gnet I can use ants a go pool but this needs testing
-///
-
 func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	//CC, tmp := S.ConnectedSockets.Load(Conn.RemoteAddr().String())
 	Log.Debug("React hit!")
 	if len(Frame) > 0 {
-		Out = Frame //ClientConn.FrameChannel <- Frame
+		Out = Frame //Client.FrameChannel <- Frame
 		Action = gnet.None
 		return
 	} else {
@@ -47,11 +41,15 @@ func (SC *ServerCodec) Encode(c gnet.Conn, buf []byte) (out []byte, err error) {
 }
 
 func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
-	Log.Debug("Decode hit!")
+	// Log.Debug("Decode hit!")
 	Frame := c.Read()
 	c.ResetBuffer()
-	ClientConn := c.Context().(*Client)
-	var PR = packet.CreatePacketReader([]byte{0})
+	Client, _ := c.Context().(*Client) //GlobalServer.ConnectedSockets.Load(c.RemoteAddr().String())
+	var PR = &Client.PR                //packet.CreatePacketReader([]byte{0})
+	var PW = &Client.PW
+	if PR == nil || PW == nil || Client == nil {
+		panic("SOMETHING IS NIL!")
+	}
 	//Get PacketSize and Data
 	PacketSize, NR, err := packet.DecodeVarInt(Frame) //NR = Numread, used to note the position in the frame where it read to
 	if err != nil {
@@ -70,17 +68,15 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 		return
 	}
 	//
-	//Log.Debug("ClientConn ", ClientConn, "Conn: ", c.RemoteAddr().String())
-	//Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "State: ", ClientConn.State)
-	//Make GeneralPacket
-	GP := &packet.GeneralPacket{PacketSize, PacketID, &PR, nil} //new(packet.GeneralPacket)
-	//Legacy Ping - drop conn
-	if PacketSize == 0xFE && ClientConn.State == HANDSHAKE {
+	//Log.Debug("Client ", Client, "Conn: ", c.RemoteAddr().String())
+	//Log.Debug("PSize: ", PacketSize, "PDS: ", PacketDataSize, " PID: ", PacketID, "State: ", Client.State)
+	// Legacy Ping - drop conn
+	if PacketSize == 0xFE && Client.State == HANDSHAKE {
 		c.Close()
 		return
 	}
-	//Packet Logic
-	switch ClientConn.State {
+	// Packet Logic
+	switch Client.State {
 	case HANDSHAKE:
 		switch PacketID {
 		case 0x00:
@@ -90,16 +86,17 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 				return
 			}
 			HP := new(packet.Handshake_0x00)
-			HP.Packet = GP
-			err := HP.Decode()
-			if err != nil {
+			if err := HP.Decode(PR); err != nil {
 				Log.Critical("Error while decoding HP: ", err)
 				c.Close()
 				return nil, err
 			}
-			ClientConn.ProtocolVersion = HP.ProtocolVersion
-			ClientConn.State = int(HP.NextState)
-			c.SetContext(ClientConn)
+			Client.ProtocolVersion = HP.ProtocolVersion
+			if Client.ProtocolVersion != 756 {
+				c.Close()
+			}
+			Client.State = int(HP.NextState)
+			c.SetContext(Client)
 		}
 	case STATUS:
 		switch PacketID {
@@ -107,26 +104,24 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 			Log.Debug("status 0x00_SB")
 			if PacketSize == 1 {
 				SP := new(packet.Stat_Response)
-				SP.ProtocolVersion = ClientConn.ProtocolVersion
-				writer, err := SP.Encode()
-				if err != nil {
-					panic(err)
-				}
-				c.AsyncWrite(writer.GetPacket())
+				SP.ProtocolVersion = Client.ProtocolVersion
+				SP.Encode(PW)
+				c.AsyncWrite(PW.GetPacket())
 			} else {
 				Log.Warning("Packet is bigger than expected")
 			}
 		case 0x01:
 			Log.Debug("status 0x01_SB")
 			StatP := new(packet.Stat_Ping)
-			GP.OptionalData = StatP.Ping
-			StatP.Packet = GP
-			StatP.Decode()
+			if err := StatP.Decode(PR); err != nil {
+				Log.Error(err)
+				c.Close()
+				return nil, err
+			}
 			StatPClient := new(packet.Stat_Pong)
-			StatPClient.Packet = GP
 			StatPClient.Pong = StatP.Ping
-			writer := StatPClient.Encode(StatP.Ping)
-			c.AsyncWrite(writer.GetPacket())
+			StatPClient.Encode(PW)
+			c.AsyncWrite(PW.GetPacket())
 			//Log.Debug("WRITER NOTICE ME", writer.GetPacket())
 		}
 	case LOGIN:
@@ -134,10 +129,13 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 		case 0x00:
 			Log.Debug("0x00_SB - Login start")
 			LoginStart := new(packet.Login_0x00_SB)
-			LoginStart.Packet = GP
-			LoginStart.Decode()
+			if err := LoginStart.Decode(PR); err != nil {
+				Log.Error(err)
+				c.Close()
+				return nil, err
+			}
 			Log.Info("Name decoded: ", LoginStart.Name)
-			ClientConn.PlayerName = LoginStart.Name
+			Client.Player.PlayerName = LoginStart.Name
 			// LERQ := new(packet.Login_0x01_CB)
 			// PW := LERQ.Encode()
 			// c.AsyncWrite(PW.GetPacket())
@@ -145,15 +143,15 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 			PWC := packet.CreatePacketWriter(0x03)
 			PWC.WriteVarInt(-1)
 			c.AsyncWrite(PWC.GetPacket())
-			PW := packet.CreatePacketWriter(0x02)                                    //LS.Encode()
-			ClientConn.UUID = uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6") //"f41f9506-e8f7-4a2b-bd4d-4db421620bff")
-			PW.WriteUUID(uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6"))     //"f41f9506-e8f7-4a2b-bd4d-4db421620bff"))
-			PW.WriteString(ClientConn.PlayerName)
+			PW := packet.CreatePacketWriter(0x02)                                       //LS.Encode()
+			Client.Player.UUID = uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6") //"f41f9506-e8f7-4a2b-bd4d-4db421620bff")
+			PW.WriteUUID(uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6"))        //"f41f9506-e8f7-4a2b-bd4d-4db421620bff"))
+			PW.WriteString(Client.Player.PlayerName)
 			c.AsyncWrite(PW.GetPacket()) //Send Login Success
 			Log.Debug("Data: ", PW.GetPacket())
 			Log.Debug("Sent 0x02_CB - Login Success")
-			ClientConn.State = PLAY
-			ClientConn.Conn.SetContext(ClientConn)
+			Client.State = PLAY
+			c.SetContext(Client)
 			time.Sleep(1 * time.Second)
 			//
 			//JG := new(packet.JoinGame_CB) //JoinGame - Play 0x26
@@ -235,8 +233,8 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 			PW.ResetData(0x36) //PlayerInfo
 			PW.WriteVarInt(0)
 			PW.WriteVarInt(1)
-			PW.WriteUUID(ClientConn.UUID)
-			PW.WriteString(ClientConn.PlayerName)
+			PW.WriteUUID(Client.Player.UUID)
+			PW.WriteString(Client.Player.PlayerName)
 			PW.WriteVarInt(0)
 			PW.WriteVarInt(1)
 			PW.WriteVarInt(0)
@@ -272,8 +270,8 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 			Log.Debug("Sent Spawn position")
 			c.AsyncWrite(PW.GetPacket())
 
-			go ClientConn.ChunkLoad() //Load chunks
-			PW.ResetData(0x38)        //Player pos and look
+			go ChunkLoad(c)    //Load chunks
+			PW.ResetData(0x38) //Player pos and look
 			PW.WriteDouble(0.0)
 			PW.WriteDouble(64.0)
 			PW.WriteDouble(0.0)
@@ -314,25 +312,25 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 			// LERSP.Decode()
 			// //Login Success
 			// LS := new(packet.Login_0x02_CB)
-			// LS.UUID = packet.Auth(ClientConn.PlayerName, LERSP.SharedSecret)
+			// LS.UUID = packet.Auth(Client.PlayerName, LERSP.SharedSecret)
 			// if LS.UUID == uuid.Nil {
 			// 	c.Close()
 			// 	return
 			// }
 			// //time.Sleep(3 * time.Second)
-			// LS.Username = ClientConn.PlayerName
+			// LS.Username = Client.PlayerName
 			// PW := packet.CreatePacketWriter(0x02) //LS.Encode()
 			// PW.WriteUUID(uuid.MustParse("f41f9506-e8f7-4a2b-bd4d-4db421620bff"))
-			// PW.WriteString(ClientConn.PlayerName)
+			// PW.WriteString(Client.PlayerName)
 			// c.AsyncWrite(PW.GetPacket()) //Send Login Success
 			// Log.Debug("Sent 0x02_CB - Login Success")
 			// time.Sleep(3 * time.Second)
-			// ClientConn.UUID = LS.UUID
-			// ClientConn.State = PLAY
-			// c.SetContext(ClientConn) //Set conn context
+			// Client.UUID = LS.UUID
+			// Client.State = PLAY
+			// c.SetContext(Client) //Set conn context
 
 			JG := new(packet.JoinGame_CB) //JoinGame - Play 0x26
-			PW := JG.Encode(ClientConn.PlayerName, 0)
+			PW := JG.Encode(Client.Player.PlayerName, 0)
 			c.AsyncWrite(PW.GetPacket())
 			Log.Debug("Sent Join Game - 0x26 - P")
 
@@ -409,8 +407,8 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 			PW.ResetData(0x36) //PlayerInfo
 			PW.WriteVarInt(0)
 			PW.WriteVarInt(1)
-			PW.WriteUUID(ClientConn.UUID)
-			PW.WriteString(ClientConn.PlayerName)
+			PW.WriteUUID(Client.Player.UUID)
+			PW.WriteString(Client.Player.PlayerName)
 			PW.WriteVarInt(0)
 			PW.WriteVarInt(1)
 			PW.WriteVarInt(0)
@@ -434,7 +432,7 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 			Log.Debug("Sent Entity Metadata")
 			c.AsyncWrite(PW.GetPacket())
 
-			//ClientConn.ChunkLoad() //Load chunks
+			//Client.ChunkLoad() //Load chunks
 
 			PW.ResetData(0x58) //Time Update
 			PW.WriteLong(0)
@@ -497,9 +495,29 @@ func (SC *ServerCodec) Decode(c gnet.Conn) (out []byte, err error) {
 		case 0x00:
 			Log.Info("Recieved 0x00")
 		case 0x05:
+
 			Log.Info("Recieved 0x05")
 		case 0x0A:
 			Log.Info("Recieved 0x0A")
+		case 0x11:
+			Log.Debug("Recieved 0x11 player position")
+			X, err := PR.ReadDouble()
+			if err != nil {
+				Log.Error(err)
+			}
+			Y, err := PR.ReadDouble()
+			if err != nil {
+				Log.Error(err)
+			}
+			Z, err := PR.ReadDouble()
+			if err != nil {
+				Log.Error(err)
+			}
+			OnGround, err := PR.ReadByte()
+			if err != nil {
+				Log.Error(err)
+			}
+			Log.Debugf("X: %.10F Y: %.10F Z: %.10F ONGROUND: %t", X, Y, Z, OnGround)
 		default:
 			Log.Debug("Recieved packet play:", PacketID)
 		}

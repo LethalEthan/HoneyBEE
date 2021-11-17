@@ -9,14 +9,14 @@ import (
 
 func TestLoginSuccess(T *testing.T) {
 	LS := new(Login_0x02_CB)
-	var PW PacketWriter
+	PW := CreatePacketWriter(0x02)
 	var err error
 	LS.UUID, err = uuid.Parse("4ed0c55d-caa9-4669-8bea-f3a0052e6f1f")
 	if err != nil {
 		T.Error(err)
 	}
 	LS.Username = "LethalEthan8"
-	PW = LS.Encode()
+	LS.Encode(&PW)
 	PR := CreatePacketReader(PW.GetPacket())
 	PS, _, _ := PR.ReadVarInt()
 	fmt.Println("Size:", PS)
@@ -47,11 +47,16 @@ func TestFaultyLoginSuccess(T *testing.T) {
 	var PW PacketWriter
 	var err error
 	LS.UUID, err = uuid.Parse("4e342333534d0c55d-caa9345435563523-4669-8bea-f3a0052e6f1f")
+	if err != nil {
+		panic(err)
+	}
 	if LS.UUID != uuid.Nil {
 		T.Error(errWriterExpectedError)
 	}
 	LS.Username = "LethalEthan8"
-	PW = LS.Encode()
+	if err := LS.Encode(&PW); err != nil {
+		panic(err)
+	}
 	PR := CreatePacketReader(PW.GetPacket())
 	_, _, _ = PR.ReadVarInt()
 	_, _, _ = PR.ReadVarInt()

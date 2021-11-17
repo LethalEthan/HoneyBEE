@@ -1,6 +1,7 @@
 package server
 
 import (
+	"HoneyBEE/config"
 	"HoneyBEE/packet"
 	"sync"
 	"time"
@@ -24,7 +25,7 @@ func NewServer(ip string, port string, multicore bool, tick bool, lockosthread b
 	S := new(Server)
 	SC := new(ServerCodec)
 	GlobalServer = S
-	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second), gnet.WithCodec(SC))
+	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithNumEventLoop(config.GConfig.Server.NumEventLoop), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second), gnet.WithCodec(SC))
 	return *S, err
 }
 
@@ -37,8 +38,10 @@ func (S *Server) OnOpened(Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	Log.Infof("Socket with addr: %s has been opened...\n", Conn.RemoteAddr().String())
 	C := new(Client)
 	C.RemoteAddr = Conn.RemoteAddr().String()
-	C.Conn = Conn
+	// C.Conn = Conn
 	C.State = HANDSHAKE
+	C.PR = packet.CreatePacketReader([]byte{0x00})
+	C.PW = packet.CreatePacketWriterWithCapacity(0x00, 8192)
 	S.ConnectedSockets.Store(Conn.RemoteAddr().String(), C)
 	Conn.SetContext(C)
 	Log.Debug(Conn.RemoteAddr().String())
@@ -46,14 +49,12 @@ func (S *Server) OnOpened(Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 }
 
 func (S *Server) OnClosed(Conn gnet.Conn, err error) (Action gnet.Action) {
-	Log.Infof("Socket with addr: %s is closing...\n", Conn.RemoteAddr().String())
+	Log.Debugf("Socket with addr: %s is closing...\n", Conn.RemoteAddr().String())
 	S.ConnectedSockets.Delete(Conn.RemoteAddr().String())
-	CC, tmp := Conn.Context().(*Client)
-	if !tmp {
-		Log.Critical("Conn Context is nil!")
-	} else {
-		CC.SetClosed(true)
-	}
+	// _, tmp := Conn.Context().(*Client)
+	// if !tmp {
+	// 	Log.Critical("Conn Context is nil!")
+	// }
 	Conn.SetContext(nil)
 	Log.Infof("Socket with addr: %s is closed\n", Conn.RemoteAddr().String())
 	return
