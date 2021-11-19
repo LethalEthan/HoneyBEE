@@ -130,7 +130,7 @@ func (LPR *Login_0x02_SB) Decode(PR *PacketReader) error {
 func (LERQ *Login_0x01_CB) Encode(PW *PacketWriter) {
 	PW.ResetData(0x01)
 	PW.WriteString("")
-	PW.WriteVarInt(len(publicKeySlice))
+	PW.WriteVarInt(int32(len(publicKeySlice)))
 	PW.WriteArray(publicKeySlice)
 	PW.WriteVarInt(4)
 	PW.WriteArray([]byte{0, 9, 40, 200})
@@ -149,7 +149,7 @@ func (LoginSucc *Login_0x02_CB) Encode(PW *PacketWriter) error {
 	return nil
 }
 
-func (SC *Login_0x03_CB) Encode(PW *PacketWriter, Threshold int) []byte {
+func (SC *Login_0x03_CB) Encode(PW *PacketWriter, Threshold int32) []byte {
 	PW.ResetData(0x03)
 	PW.WriteVarInt(Threshold)
 	return []byte{0}

@@ -15,7 +15,7 @@ func (P *Handshake_0x00) Decode(PR *PacketReader) error {
 	if P.ServerAddress, err = PR.ReadString(); err != nil {
 		return err
 	}
-	if P.ServerPort, err = PR.ReadUnsignedShort(); err != nil {
+	if P.ServerPort, err = PR.ReadUShort(); err != nil {
 		return err
 	}
 	if P.NextState, _, err = PR.ReadVarInt(); err != nil {

@@ -17,6 +17,16 @@ func TestCompoundTag(T *testing.T) {
 	fmt.Print(NBTE.rootCompound.value)
 }
 
+func TestCompoundTagNoEnding(T *testing.T) {
+	NBTE := CreateNBTEncoder()
+	NBTE.AddCompoundTag("TEST")
+	NBTE.AddTag(Byte{"", 128})
+	NBTE.Encode()
+	fmt.Println(NBTE.data)
+	fmt.Println("NBTEVAL: ")
+	fmt.Print(NBTE.rootCompound.value)
+}
+
 func BenchmarkCompoundTag(B *testing.B) {
 	B.ReportAllocs()
 	B.ResetTimer()

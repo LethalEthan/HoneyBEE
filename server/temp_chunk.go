@@ -40,7 +40,7 @@ func ChunkLoad(c gnet.Conn) {
 	Chunk.BiomeLength = 0
 	CS := packet.CreateWriterWithCapacity(32800) //Chunk Section
 	CS.WriteShort(4096)
-	CS.WriteUnsignedByte(8)
+	CS.WriteUByte(8)
 	CS.WriteVarInt(0)
 	CS.WriteVarInt(512)
 	AL := make([]byte, 32768)
@@ -55,8 +55,8 @@ func ChunkLoad(c gnet.Conn) {
 	C.WriteVarInt(Chunk.BitMaskLength)
 	C.WriteLongArray(Chunk.PrimaryBitMask)
 	C.WriteArray(Chunk.HeightMaps)
-	C.WriteVarInt(int(Chunk.BiomeLength))
-	C.WriteVarInt(Chunk.Size)
+	C.WriteVarInt(Chunk.BiomeLength)
+	C.WriteVarInt(int32(Chunk.Size))
 	C.WriteArray(ChunkSection)
 	C.WriteVarInt(0)
 	//
@@ -78,20 +78,20 @@ func ChunkLoad(c gnet.Conn) {
 	UL.WriteLong(1)
 	// Empty Sky light mask
 	UL.WriteVarInt(1)
-	UL.WriteUnsignedLong(0b1111111111111111111111111111111111111111111111111111111111111110)
+	UL.WriteULong(0b1111111111111111111111111111111111111111111111111111111111111110)
 	// Empty Block light mask
 	UL.WriteVarInt(1)
-	UL.WriteUnsignedLong(0b1111111111111111111111111111111111111111111111111111111111111110) //111111111111111111111111111111111111111111111111111111111111110
+	UL.WriteULong(0b1111111111111111111111111111111111111111111111111111111111111110) //111111111111111111111111111111111111111111111111111111111111110
 	//SkyLight array
 	UL.WriteVarInt(1)
 	UL.WriteVarInt(2048)
 	for i := 0; i < 2048; i++ {
-		UL.WriteUnsignedByte(0xFF)
+		UL.WriteUByte(0xFF)
 	}
 	UL.WriteVarInt(1)
 	UL.WriteVarInt(2048)
 	for i := 0; i < 2048; i++ {
-		UL.WriteUnsignedByte(0xFF)
+		UL.WriteUByte(0xFF)
 	}
 	//Send chunk
 	PW := packet.CreatePacketWriterWithCapacity(0x25, 8192)
@@ -109,8 +109,8 @@ func ChunkLoad(c gnet.Conn) {
 		return
 	}
 	Log.Debug("Packet Size: ", len(PW.GetData()))
-	var j int
-	var i int
+	var j int32
+	var i int32
 	for i = 0; i < 12; i++ {
 		for j = 0; j < 12; j++ {
 			if i != 0 || j != 0 {

@@ -6,7 +6,7 @@ import (
 )
 
 func (JG *JoinGame_CB) Encode(playername string, GM byte) PacketWriter {
-	JG.EntityID = int(player.AssignEID(playername))
+	JG.EntityID = int32(player.AssignEID(playername))
 	JG.IsHardcore = false
 	JG.Gamemode = GM
 	JG.PreviousGamemode = -1
@@ -25,7 +25,7 @@ func (JG *JoinGame_CB) Encode(playername string, GM byte) PacketWriter {
 	PW := CreatePacketWriterWithCapacity(0x26, 1024)
 	PW.WriteInt(JG.EntityID)
 	PW.WriteBoolean(JG.IsHardcore)
-	PW.WriteUnsignedByte(JG.Gamemode)
+	PW.WriteUByte(JG.Gamemode)
 	PW.WriteByte(JG.PreviousGamemode)
 	PW.WriteVarInt(JG.WorldCount)
 	PW.WriteArrayIdentifier(JG.WorldNames)

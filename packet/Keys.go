@@ -30,6 +30,9 @@ func GenerateKeys() {
 	}
 	rand.Read(VerifyToken)
 	Log.Info("Key Generated!")
+	//Get rid of vscode warnings
+	_ = publicKey
+	_ = privateKeySlice
 }
 
 func Auth(username string, sharedSecret []byte) uuid.UUID {

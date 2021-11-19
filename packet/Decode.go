@@ -34,11 +34,11 @@ func DecodeUnsignedByte(D byte) byte {
 }
 
 func DecodeShort(D []byte) (int16, error) {
-	short, err := DecodeUnsignedShort(D)
+	short, err := DecodeUShort(D)
 	return int16(short), err
 }
 
-func DecodeUnsignedShort(D []byte) (uint16, error) {
+func DecodeUShort(D []byte) (uint16, error) {
 	if len(D) > 2 {
 		return 0, errors.New("data greater than 2 for short")
 	}

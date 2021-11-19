@@ -207,7 +207,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteDouble(0.0)
 				PW.WriteFloat(0.0)
 				PW.WriteFloat(0.0)
-				PW.WriteUnsignedByte(0)
+				PW.WriteUByte(0)
 				PW.WriteVarInt(0)
 				PW.WriteBoolean(true)
 				Log.Debug("Sent Player pos and look")
@@ -278,7 +278,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				c.AsyncWrite(PW.GetPacket())
 
 				PW.ResetData(0x14) //Window Items
-				PW.WriteUnsignedByte(0)
+				PW.WriteUByte(0)
 				PW.WriteVarInt(1)
 				PW.WriteVarInt(46)
 				PW.WriteArray(make([]byte, 46))
@@ -362,7 +362,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 
 				PW.ResetData(0x1B) //Entity Status
 				PW.WriteInt(2)
-				PW.WriteUnsignedByte(28)
+				PW.WriteUByte(28)
 				Log.Debug("Sent Entity Status")
 				c.AsyncWrite(PW.GetPacket())
 
@@ -381,7 +381,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteDouble(0.0)
 				PW.WriteFloat(0.0)
 				PW.WriteFloat(0.0)
-				PW.WriteUnsignedByte(0)
+				PW.WriteUByte(0)
 				PW.WriteVarInt(0)
 				PW.WriteBoolean(true)
 				Log.Debug("Sent Player pos and look")
@@ -453,7 +453,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				c.AsyncWrite(PW.GetPacket())
 
 				PW.ResetData(0x14) //Window Items
-				PW.WriteUnsignedByte(0)
+				PW.WriteUByte(0)
 				PW.WriteVarInt(1)
 				PW.WriteVarInt(46)
 				PW.WriteArray(make([]byte, 46))
