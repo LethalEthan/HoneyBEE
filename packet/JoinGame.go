@@ -2,11 +2,11 @@ package packet
 
 import (
 	"HoneyBEE/nbt"
-	"HoneyBEE/player"
 )
 
-func (JG *JoinGame_CB) Encode(playername string, GM byte) PacketWriter {
-	JG.EntityID = int32(player.AssignEID(playername))
+func (JG *JoinGame_CB) Encode(PW *PacketWriter, playername string, GM byte) {
+	PW.ResetData(0x26)
+	JG.EntityID = 2 //int32(player.AssignEID(playername))
 	JG.IsHardcore = false
 	JG.Gamemode = GM
 	JG.PreviousGamemode = -1
@@ -22,7 +22,7 @@ func (JG *JoinGame_CB) Encode(playername string, GM byte) PacketWriter {
 	JG.EnableRespawnScreen = true
 	JG.IsDebug = false
 	JG.IsFlat = true
-	PW := CreatePacketWriterWithCapacity(0x26, 1024)
+	// PW := CreatePacketWriterWithCapacity(0x26, 1024)
 	PW.WriteInt(JG.EntityID)
 	PW.WriteBoolean(JG.IsHardcore)
 	PW.WriteUByte(JG.Gamemode)
@@ -72,7 +72,6 @@ func (JG *JoinGame_CB) Encode(playername string, GM byte) PacketWriter {
 	PW.WriteBoolean(true)
 	PW.WriteBoolean(true)
 	Log.Debug("CREATED JOIN GAME")
-	return PW
 	// f, err := os.Create("testing.nbt")
 	// if err != nil {
 	// 	panic(err)

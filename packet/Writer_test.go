@@ -286,5 +286,5 @@ func TestAllRWValues(T *testing.T) {
 	PW.GetPacketID()
 	PW.GetPacketSize()
 	PW.ClearData()
-	PR.Setdata([]byte{0})
+	PR.SetData([]byte{0})
 }

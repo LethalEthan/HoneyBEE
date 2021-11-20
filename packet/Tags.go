@@ -7,24 +7,17 @@ type TagsArray struct {
 }
 
 type Tag struct {
-	Length  int32
+	// Length  int32
 	TagName Identifier
 	Count   int
 	Entries []int32
 }
 
-func CreateTag(Length int32, TagName Identifier, Entries []int32) Tag {
-	// T := *new(Tag)
-	// T.TagName = TagName
-	// T.Entries = append(T.Entries, Entries...)
-	return Tag{Length, TagName, len(Entries), Entries}
+func CreateTag(TagName Identifier, Entries []int32) Tag {
+	return Tag{TagName, len(Entries), Entries}
 }
 
 func CreateTagsArray(Type Identifier, TagArray []Tag) TagsArray {
-	// TA := *new(TagsArray)
-	// TA.Type = Type
-	// TA.TagArray = TagArray
-	// TA.Length = len(TagArray)
 	return TagsArray{len(TagArray), Type, TagArray}
 }
 
@@ -66,7 +59,7 @@ func (pr *PacketReader) ReadTags() []Tag {
 		if err != nil {
 			panic(err)
 		}
-		T[i] = CreateTag(Length, TagName, Entries)
+		T[i] = CreateTag(TagName, Entries)
 	}
 	return T
 }

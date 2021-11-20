@@ -156,6 +156,13 @@ func (pw *PacketWriter) WriteString(val string) {
 	pw.AppendByteSlice([]byte(val))
 }
 
+//WriteString - Write String to packet (string)
+func (pw *PacketWriter) WriteStringArray(val []string) {
+	for i := range val {
+		pw.WriteString(val[i])
+	}
+}
+
 func (pw *PacketWriter) WriteIdentifier(val Identifier) {
 	pw.WriteVarInt(int32(len(val)))
 	pw.AppendByteSlice([]byte(val))
@@ -173,7 +180,7 @@ func (pw *PacketWriter) WriteVarInt(val int32) {
 }
 
 //WriteVarLong - Write VarLong (int64)
-func (pw *PacketWriter) WriteVarLong(val int) {
+func (pw *PacketWriter) WriteVarLong(val int64) {
 	pw.AppendByteSlice(CreateVarLong(uint64(val)))
 }
 
@@ -212,6 +219,12 @@ func CreateVarLong(val uint64) []byte {
 	return buff
 }
 
+func (pw *PacketWriter) WriteLongArray(val []int64) {
+	for _, v := range val {
+		pw.WriteLong(v)
+	}
+}
+
 func (pw *PacketWriter) WriteUUID(val uuid.UUID) {
 	BU, err := val.MarshalBinary()
 	if err != nil {
@@ -220,17 +233,21 @@ func (pw *PacketWriter) WriteUUID(val uuid.UUID) {
 	pw.AppendByteSlice(BU)
 }
 
-func (pw *PacketWriter) WritePosition(X uint64, Y uint64, Z uint64) {
-	if X < 33554432 && Y < 2048 && -Y > 2048 && Z < 33554432 {
-		var Location uint64 = ((X & 0x3FFFFFF) << 38) | ((Z & 0x3FFFFFF) << 12) | (Y & 0xFFF)
-		pw.WriteULong(Location)
-	} else {
-		return
-	}
+func (pw *PacketWriter) WritePosition(X, Y, Z int64) {
+	// if X < 33554432 && Y < 2048 && -Y > 2048 && Z < 33554432 {
+	var Location uint64 = ((uint64(X) & 0x3FFFFFF) << 38) | ((uint64(Z) & 0x3FFFFFF) << 12) | (uint64(Y) & 0xFFF)
+	pw.WriteULong(Location)
+	// } else {
+	// 	return
+	// }
 }
 
-func (pw *PacketWriter) WriteLongArray(val []int64) {
-	for _, v := range val {
-		pw.WriteLong(v)
-	}
+func (pw *PacketWriter) WriteChunkSectionPosition(X, Y, Z int64) {
+	var Location uint64 = ((uint64(X) & 0x3FFFFF) << 42) | (uint64(Y) & 0xFFFFF) | ((uint64(Z) & 0x3FFFFF) << 20)
+	pw.WriteULong(Location)
+}
+
+func (pw *PacketWriter) WriteBlockPosition(BlockState, X, Y, Z uint) {
+	Block := BlockState<<12 | (X<<8 | Z<<4 | Y)
+	pw.WriteULong(uint64(Block))
 }

@@ -55,7 +55,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 		if err != nil {
 			panic(err)
 		}
-		PR.Setdata(Frame[NR2+NR:])
+		PR.SetData(Frame[NR2+NR:])
 		/*Size check - packets cannot be bigger than this which can lead to the server and client crashing
 		also known as book banning or any item/block that is used to overload the packet limit*/
 		if PacketSize > 2097151 {
@@ -148,8 +148,8 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				c.SetContext(Client)
 				time.Sleep(1 * time.Second)
 				//
-				//JG := new(packet.JoinGame_CB) //JoinGame - Play 0x26
-				//PW := JG.Encode(LoginStart.Name, 0)
+				// JG := new(packet.JoinGame_CB) //JoinGame - Play 0x26
+				// JG.Encode(&PW, LoginStart.Name, 0)
 				c.AsyncWrite(JoinGamePacket) //PW.GetPacket())
 
 				Log.Debug("Sent Join Game - 0x26 - P")
@@ -185,6 +185,12 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 
 				Log.Debug("Sent Tags")
 				c.AsyncWrite(TagsPacket)
+
+				PW.ResetData(0x1B) //Entity Status
+				PW.WriteInt(2)
+				PW.WriteByte(23)
+				Log.Debug("Sent Entity Status")
+				c.AsyncWrite(PW.GetPacket())
 
 				PW.ResetData(0x1B) //Entity Status
 				PW.WriteInt(2)
@@ -229,10 +235,10 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteVarInt(1)
 				PW.WriteUUID(Client.Player.UUID)
 				PW.WriteString(Client.Player.PlayerName)
-				PW.WriteVarInt(0)
-				PW.WriteVarInt(1)
-				PW.WriteVarInt(0)
-				PW.WriteBoolean(false)
+				PW.WriteVarInt(0)      //num properties
+				PW.WriteVarInt(1)      //gamemode
+				PW.WriteVarInt(0)      //ping
+				PW.WriteBoolean(false) //has display name
 				Log.Debug("Sent Player info")
 				c.AsyncWrite(PW.GetPacket())
 
@@ -252,12 +258,6 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				// Log.Debug("Sent Entity Metadata")
 				// c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x58) //Time Update
-				PW.WriteLong(0)
-				PW.WriteLong(-12000)
-				Log.Debug("Sent Time update")
-				c.AsyncWrite(PW.GetPacket())
-
 				PW.ResetData(0x4B) //Spawn Position
 				PW.WritePosition(0, 0, 64)
 				PW.WriteFloat(0.0)
@@ -275,6 +275,12 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteVarInt(0)
 				PW.WriteBoolean(true)
 				Log.Debug("Sent Player pos and look")
+				c.AsyncWrite(PW.GetPacket())
+
+				PW.ResetData(0x58) //Time Update
+				PW.WriteLong(0)
+				PW.WriteLong(-12000)
+				Log.Debug("Sent Time update")
 				c.AsyncWrite(PW.GetPacket())
 
 				PW.ResetData(0x14) //Window Items
@@ -300,181 +306,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				Log.Debug("Sent Set Experience")
 				c.AsyncWrite(PW.GetPacket())
 			case 0x01:
-				// Log.Debug("Sent 0x01_SB - Encryption response")
-				// LERSP := new(packet.Login_0x01_SB)
-				// LERSP.Packet = GP
-				// LERSP.Decode()
-				// //Login Success
-				// LS := new(packet.Login_0x02_CB)
-				// LS.UUID = packet.Auth(Client.PlayerName, LERSP.SharedSecret)
-				// if LS.UUID == uuid.Nil {
-				// 	c.Close()
-				// 	return
-				// }
-				// //time.Sleep(3 * time.Second)
-				// LS.Username = Client.PlayerName
-				// PW := packet.CreatePacketWriter(0x02) //LS.Encode()
-				// PW.WriteUUID(uuid.MustParse("f41f9506-e8f7-4a2b-bd4d-4db421620bff"))
-				// PW.WriteString(Client.PlayerName)
-				// c.AsyncWrite(PW.GetPacket()) //Send Login Success
-				// Log.Debug("Sent 0x02_CB - Login Success")
-				// time.Sleep(3 * time.Second)
-				// Client.UUID = LS.UUID
-				// Client.State = PLAY
-				// c.SetContext(Client) //Set conn context
-
-				JG := new(packet.JoinGame_CB) //JoinGame - Play 0x26
-				PW := JG.Encode(Client.Player.PlayerName, 0)
-				c.AsyncWrite(PW.GetPacket())
-				Log.Debug("Sent Join Game - 0x26 - P")
-
-				// PW.ResetData(0x48) //Server brand
-				// PW.WriteString("minecraft:brand")
-				// PW.WriteString("HoneyBEE")
-				// Log.Debug("Sent held item change")
-				// c.AsyncWrite(PW.GetPacket())
-
-				// PW.ResetData(0x0E) //Difficulty
-				// PW.WriteByte(0)
-				// PW.WriteBoolean(true)
-				// Log.Debug("Sent Difficulty")
-				// c.AsyncWrite(PW.GetPacket())
-
-				// PW.ResetData(0x32) //Player Abilities
-				// PW.WriteByte(0x0F)
-				// PW.WriteFloat(0.05)
-				// PW.WriteFloat(0.1)
-				// Log.Debug("Sent Player Abilities")
-				// c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x48) //Held Item Change
-				PW.WriteByte(0)
-				Log.Debug("Sent held item change")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x65) //Declare Recipes - investigate
-				PW.WriteVarInt(0)
-				Log.Debug("Sent recipe")
-				c.AsyncWrite(PW.GetPacket())
-
-				Log.Debug("Sent Tags")
-				c.AsyncWrite(TagsPacket)
-
-				PW.ResetData(0x1B) //Entity Status
-				PW.WriteInt(2)
-				PW.WriteUByte(28)
-				Log.Debug("Sent Entity Status")
-				c.AsyncWrite(PW.GetPacket())
-
-				// PW.ResetData(0x12) //Declare commands
-				// PW.WriteVarInt(0)
-				// PW.WriteVarInt(0)
-				// Log.Debug("Sent Declare commands")
-				// c.AsyncWrite(PW.GetPacket())
-
-				Log.Debug("Sent Unlock Recipes")
-				c.AsyncWrite(UnlockRecipesPacket) //Unlock Recipes
-
-				PW.ResetData(0x38) //Player pos and look
-				PW.WriteDouble(0.0)
-				PW.WriteDouble(64.0)
-				PW.WriteDouble(0.0)
-				PW.WriteFloat(0.0)
-				PW.WriteFloat(0.0)
-				PW.WriteUByte(0)
-				PW.WriteVarInt(0)
-				PW.WriteBoolean(true)
-				Log.Debug("Sent Player pos and look")
-				c.AsyncWrite(PW.GetPacket())
-
-				// PW.ResetData(0x0F) //Chat Message
-				// CM := new(packet.ChatMessage_CB)
-				// CM.Chat = new(jsonstruct.ChatComponent)
-				// CM.Chat.Text = "Hello"
-				// CMB := CM.Chat.MarshalChatComponent()
-				// PW.WriteArray(CMB)
-				// PW.WriteByte(1)
-				// PW.WriteUUID(LS.UUID)
-				// Log.Debug("Sent Chat message")
-				// c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x36) //PlayerInfo
-				PW.WriteVarInt(0)
-				PW.WriteVarInt(1)
-				PW.WriteUUID(Client.Player.UUID)
-				PW.WriteString(Client.Player.PlayerName)
-				PW.WriteVarInt(0)
-				PW.WriteVarInt(1)
-				PW.WriteVarInt(0)
-				PW.WriteBoolean(false)
-				Log.Debug("Sent Player info")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x49) //Update view position
-				PW.WriteVarInt(0)
-				PW.WriteVarInt(0)
-				Log.Debug("Sent view position")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x4A) //Update view distance
-				PW.WriteVarInt(12)
-				Log.Debug("Sent view distance")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x4D) //Update view position
-				PW.WriteVarInt(2)
-				Log.Debug("Sent Entity Metadata")
-				c.AsyncWrite(PW.GetPacket())
-
-				//Client.ChunkLoad() //Load chunks
-
-				PW.ResetData(0x58) //Time Update
-				PW.WriteLong(0)
-				PW.WriteLong(-12000)
-				Log.Debug("Sent Time update")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x4B) //Spawn Position
-				PW.WritePosition(0, 0, 64)
-				PW.WriteFloat(0.0)
-				Log.Debug("Sent Spawn position")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x38) //Player pos and look
-				PW.WriteDouble(0.0)
-				PW.WriteDouble(64.0)
-				PW.WriteDouble(0.0)
-				PW.WriteFloat(0.0)
-				PW.WriteFloat(0.0)
-				PW.WriteByte(0)
-				PW.WriteVarInt(0)
-				PW.WriteBoolean(true)
-				Log.Debug("Sent Player pos and look")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x14) //Window Items
-				PW.WriteUByte(0)
-				PW.WriteVarInt(1)
-				PW.WriteVarInt(46)
-				PW.WriteArray(make([]byte, 46))
-				PW.WriteByte(0)
-				Log.Debug("Sent Window Items")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x52) //Update Health
-				PW.WriteFloat(20.0)
-				PW.WriteVarInt(20)
-				PW.WriteFloat(5.0)
-				Log.Debug("Sent Update Health")
-				c.AsyncWrite(PW.GetPacket())
-
-				PW.ResetData(0x51) //Set expereince
-				PW.WriteFloat(1.0)
-				PW.WriteVarInt(1)
-				PW.WriteVarInt(7)
-				Log.Debug("Sent Set Experience")
-				c.AsyncWrite(PW.GetPacket())
-
+				Log.Debug("Shouldn't be here yet :P")
 			case 0x02:
 				Log.Debug("Play 0x02_SB")
 			case 0x03:
@@ -520,3 +352,185 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 		}
 	}
 }
+
+/*
+	// Log.Debug("Sent 0x01_SB - Encryption response")
+	// LERSP := new(packet.Login_0x01_SB)
+	// LERSP.Packet = GP
+	// LERSP.Decode()
+	// //Login Success
+	// LS := new(packet.Login_0x02_CB)
+	// LS.UUID = packet.Auth(Client.PlayerName, LERSP.SharedSecret)
+	// if LS.UUID == uuid.Nil {
+	// 	c.Close()
+	// 	return
+	// }
+	// //time.Sleep(3 * time.Second)
+	// LS.Username = Client.PlayerName
+	// PW := packet.CreatePacketWriter(0x02) //LS.Encode()
+	// PW.WriteUUID(uuid.MustParse("f41f9506-e8f7-4a2b-bd4d-4db421620bff"))
+	// PW.WriteString(Client.PlayerName)
+	// c.AsyncWrite(PW.GetPacket()) //Send Login Success
+	// Log.Debug("Sent 0x02_CB - Login Success")
+	// time.Sleep(3 * time.Second)
+	// Client.UUID = LS.UUID
+	// Client.State = PLAY
+	// c.SetContext(Client) //Set conn context
+
+	JG := new(packet.JoinGame_CB) //JoinGame - Play 0x26
+	PW := JG.Encode(Client.Player.PlayerName, 0)
+	c.AsyncWrite(PW.GetPacket())
+	Log.Debug("Sent Join Game - 0x26 - P")
+
+	// PW.ResetData(0x48) //Server brand
+	// PW.WriteString("minecraft:brand")
+	// PW.WriteString("HoneyBEE")
+	// Log.Debug("Sent held item change")
+	// c.AsyncWrite(PW.GetPacket())
+
+	// PW.ResetData(0x0E) //Difficulty
+	// PW.WriteByte(0)
+	// PW.WriteBoolean(true)
+	// Log.Debug("Sent Difficulty")
+	// c.AsyncWrite(PW.GetPacket())
+
+	// PW.ResetData(0x32) //Player Abilities
+	// PW.WriteByte(0x0F)
+	// PW.WriteFloat(0.05)
+	// PW.WriteFloat(0.1)
+	// Log.Debug("Sent Player Abilities")
+	// c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x48) //Held Item Change
+	PW.WriteByte(0)
+	Log.Debug("Sent held item change")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x65) //Declare Recipes - investigate
+	PW.WriteVarInt(0)
+	Log.Debug("Sent recipe")
+	c.AsyncWrite(PW.GetPacket())
+
+	Log.Debug("Sent Tags")
+	c.AsyncWrite(TagsPacket)
+
+	PW.ResetData(0x1B) //Entity Status
+	PW.WriteInt(2)
+	PW.WriteUByte(23)
+	Log.Debug("Sent Entity Status")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x1B) //Entity Status
+	PW.WriteInt(2)
+	PW.WriteUByte(28)
+	Log.Debug("Sent Entity Status")
+	c.AsyncWrite(PW.GetPacket())
+
+	// PW.ResetData(0x12) //Declare commands
+	// PW.WriteVarInt(0)
+	// PW.WriteVarInt(0)
+	// Log.Debug("Sent Declare commands")
+	// c.AsyncWrite(PW.GetPacket())
+
+	Log.Debug("Sent Unlock Recipes")
+	c.AsyncWrite(UnlockRecipesPacket) //Unlock Recipes
+
+	PW.ResetData(0x38) //Player pos and look
+	PW.WriteDouble(0.0)
+	PW.WriteDouble(64.0)
+	PW.WriteDouble(0.0)
+	PW.WriteFloat(0.0)
+	PW.WriteFloat(0.0)
+	PW.WriteUByte(0)
+	PW.WriteVarInt(0)
+	PW.WriteBoolean(true)
+	Log.Debug("Sent Player pos and look")
+	c.AsyncWrite(PW.GetPacket())
+
+	// PW.ResetData(0x0F) //Chat Message
+	// CM := new(packet.ChatMessage_CB)
+	// CM.Chat = new(jsonstruct.ChatComponent)
+	// CM.Chat.Text = "Hello"
+	// CMB := CM.Chat.MarshalChatComponent()
+	// PW.WriteArray(CMB)
+	// PW.WriteByte(1)
+	// PW.WriteUUID(LS.UUID)
+	// Log.Debug("Sent Chat message")
+	// c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x36) //PlayerInfo
+	PW.WriteVarInt(0)
+	PW.WriteVarInt(1)
+	PW.WriteUUID(Client.Player.UUID)
+	PW.WriteString(Client.Player.PlayerName)
+	PW.WriteVarInt(0)
+	PW.WriteVarInt(1)
+	PW.WriteVarInt(0)
+	PW.WriteBoolean(false)
+	Log.Debug("Sent Player info")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x49) //Update view position
+	PW.WriteVarInt(0)
+	PW.WriteVarInt(0)
+	Log.Debug("Sent view position")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x4A) //Update view distance
+	PW.WriteVarInt(12)
+	Log.Debug("Sent view distance")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x4D) //Update view position
+	PW.WriteVarInt(2)
+	Log.Debug("Sent Entity Metadata")
+	c.AsyncWrite(PW.GetPacket())
+
+	//Client.ChunkLoad() //Load chunks
+
+	PW.ResetData(0x58) //Time Update
+	PW.WriteLong(0)
+	PW.WriteLong(-12000)
+	Log.Debug("Sent Time update")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x4B) //Spawn Position
+	PW.WritePosition(0, 0, 64)
+	PW.WriteFloat(0.0)
+	Log.Debug("Sent Spawn position")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x38) //Player pos and look
+	PW.WriteDouble(0.0)
+	PW.WriteDouble(64.0)
+	PW.WriteDouble(0.0)
+	PW.WriteFloat(0.0)
+	PW.WriteFloat(0.0)
+	PW.WriteByte(0)
+	PW.WriteVarInt(0)
+	PW.WriteBoolean(true)
+	Log.Debug("Sent Player pos and look")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x14) //Window Items
+	PW.WriteUByte(0)
+	PW.WriteVarInt(1)
+	PW.WriteVarInt(46)
+	PW.WriteArray(make([]byte, 46))
+	PW.WriteByte(0)
+	Log.Debug("Sent Window Items")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x52) //Update Health
+	PW.WriteFloat(20.0)
+	PW.WriteVarInt(20)
+	PW.WriteFloat(5.0)
+	Log.Debug("Sent Update Health")
+	c.AsyncWrite(PW.GetPacket())
+
+	PW.ResetData(0x51) //Set expereince
+	PW.WriteFloat(1.0)
+	PW.WriteVarInt(1)
+	PW.WriteVarInt(7)
+	Log.Debug("Sent Set Experience")
+	c.AsyncWrite(PW.GetPacket())*/

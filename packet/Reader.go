@@ -30,7 +30,7 @@ func (pr *PacketReader) seek(offset int) int {
 	return pr.index
 }
 
-func (pr *PacketReader) Setdata(data []byte) {
+func (pr *PacketReader) SetData(data []byte) {
 	pr.index = 0
 	pr.data = data
 }
@@ -38,6 +38,7 @@ func (pr *PacketReader) Setdata(data []byte) {
 func (pr *PacketReader) GetSeeker() int {
 	return pr.index
 }
+
 func (pr *PacketReader) GetEnd() int {
 	return len(pr.data)
 }
@@ -328,7 +329,7 @@ func (pr *PacketReader) ReadVarIntArray(length int) ([]int32, error) {
 		}
 		data = append(data, l)
 	}
-	Log.Debug("Seeker: ", pr.index)
+	// Log.Debug("Seeker: ", pr.index)
 	return data, nil
 }
 
@@ -344,25 +345,42 @@ func (pr *PacketReader) ReadLongArray(length int) ([]int64, error) {
 		}
 		data = append(data, l)
 	}
-	Log.Debug("Seeker: ", pr.index)
+	// Log.Debug("Seeker: ", pr.index)
 	return data, nil
 }
 
 func (pr *PacketReader) ReadRestOfByteArrayNoSeek() []byte {
-	data := pr.data[pr.index:]
-	return data
+	return pr.data[pr.index:]
 }
 
-func (pr *PacketReader) ReadPosition() (X, Y, Z uint64, err error) {
+func (pr *PacketReader) ReadPosition() (X, Y, Z int64, err error) {
 	POS, err := pr.ReadULong()
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	X = POS >> 38
-	Y = POS & 0xFFF
-	Z = (POS << 26 >> 38)
+	X = int64(POS >> 38)
+	Y = int64(POS & 0xFFF)
+	Z = int64(POS << 26 >> 38)
 	return
 }
+
+func (pr *PacketReader) ReadChunkSectionPosition() (X, Y, Z int64, err error) {
+	CSPOS, err := pr.ReadULong()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	X = int64(CSPOS >> 42)
+	Y = int64(CSPOS << 44 >> 44)
+	Z = int64(CSPOS << 22 >> 42)
+	return
+}
+
+// func (pr *PacketReader) ReadBlock() (BlockStateID int16, X,Y,Z int) {
+// 	BPOS := pr.ReadULong()
+// 	X = BPOS >> finshme
+// 	Y = BPOS >> finishme
+// 	Z = BPOS >> finishme
+// }
 
 func (pr *PacketReader) ReadIdentifier() (Identifier, error) {
 	I, err := pr.ReadString()

@@ -699,12 +699,7 @@ type (
 		Passengers     []int32
 	}
 
-	//Play 0x55
-	Teams_CB struct {
-		TeamName   string
-		Mode       byte
-		ActionData interface{}
-	}
+	//0x55 moved to teams.go
 
 	//Play 0x56
 	UpdateScore_CB struct {
