@@ -2,6 +2,8 @@ package packet
 
 import (
 	"HoneyBEE/nbt"
+	"HoneyBEE/utils"
+	"os"
 )
 
 func (JG *JoinGame_CB) Encode(PW *PacketWriter, playername string, GM byte) {
@@ -12,8 +14,8 @@ func (JG *JoinGame_CB) Encode(PW *PacketWriter, playername string, GM byte) {
 	JG.PreviousGamemode = -1
 	JG.WorldCount = 1
 	JG.WorldNames = []Identifier{"minecraft:overworld"}
-	JG.DimensionCodec = nbt.CreateNBTEncoder()
-	JG.Dimension = nbt.CreateNBTEncoder()
+	JGDimensionCodec := nbt.CreateNBTEncoder()
+	JGDimension := nbt.CreateNBTEncoder()
 	JG.WorldName = "minecraft:overworld"
 	JG.HashedSeed = 0
 	JG.MaxPlayers = 20
@@ -29,8 +31,8 @@ func (JG *JoinGame_CB) Encode(PW *PacketWriter, playername string, GM byte) {
 	PW.WriteByte(JG.PreviousGamemode)
 	PW.WriteVarInt(JG.WorldCount)
 	PW.WriteArrayIdentifier(JG.WorldNames)
-	JG.DimensionCodec.AddCompoundTag("minecraft:dimension_type")
-	JG.DimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:dimension_type"))
+	JGDimensionCodec.AddCompoundTag("minecraft:dimension_type")
+	JGDimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:dimension_type"))
 	List := nbt.CreateListTag("value", nbt.TagCompound)
 	TC := nbt.CreateCompoundTag("")
 	TC.AddTag(nbt.CreateStringTag("name", "minecraft:overworld"))
@@ -39,30 +41,28 @@ func (JG *JoinGame_CB) Encode(PW *PacketWriter, playername string, GM byte) {
 	// TC.PreviousTag = JG.DimensionCodec.CurrentTag
 	TC.EndTag()
 	List.AddTag(TC)
-	JG.DimensionCodec.AddTag(List)
-	JG.DimensionCodec.EndCompoundTag()
-	JG.DimensionCodec.AddCompoundTag("minecraft:worldgen/biome")
-	JG.DimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:worldgen/biome"))
+	JGDimensionCodec.AddTag(List)
+	JGDimensionCodec.EndCompoundTag()
+	JGDimensionCodec.AddCompoundTag("minecraft:worldgen/biome")
+	JGDimensionCodec.AddTag(nbt.CreateStringTag("type", "minecraft:worldgen/biome"))
 	Blist := nbt.CreateListTag("value", nbt.TagCompound)
 	TC2 := nbt.CreateCompoundTag("")
 	TC2.AddTag(nbt.CreateStringTag("name", "minecraft:plains"))
 	TC2.AddTag(nbt.CreateIntTag("id", 0))
 	TC2.AddTag(CreateBiomeProperties(1.0, 1.0, 1.0, 1.0, 8364543, 8364543, 8364543, 8364543, 8364543, 8364543, "none", "plains", "", "", ""))
-	JG.DimensionCodec.EndCompoundTag()
+	JGDimensionCodec.EndCompoundTag()
 	Blist.AddTag(TC2)
-	JG.DimensionCodec.AddTag(Blist)
-	JG.DimensionCodec.EndCompoundTag()
-	JG.DimensionCodec.EndCompoundTag()
-	JG.DimensionCodec.EndCompoundTag()
-	JG.DimensionCodec.EndCompoundTag()
-	JG.DimensionCodec.Encode()
-	PW.WriteArray(JG.DimensionCodec.GetData())
+	JGDimensionCodec.AddTag(Blist)
+	JGDimensionCodec.EndCompoundTag()
+	JGDimensionCodec.EndCompoundTag()
+	JGDimensionCodec.EndCompoundTag()
+	JGDimensionCodec.EndCompoundTag()
+	PW.WriteArray(JGDimensionCodec.GetData())
 	TC3 := CreateDimensionTypeRegistry(1, 1, 0, 1, 1, 1, 0, 0, 1.0, 1.0, 0, 256, 64, 12000, "", "minecraft:overworld")
-	JG.Dimension.AddTag(TC3)
-	JG.Dimension.EndCompoundTag()
-	JG.Dimension.Encode()
-	PW.WriteArray(JG.DimensionCodec.GetData())
-	PW.WriteArray(JG.Dimension.GetData())
+	JGDimension.AddTag(TC3)
+	JGDimension.EndCompoundTag()
+	PW.WriteArray(JGDimensionCodec.Encode())
+	PW.WriteArray(JGDimension.Encode())
 	PW.WriteIdentifier(JG.WorldName)
 	PW.WriteLong(0)
 	PW.WriteVarInt(20)
@@ -72,14 +72,14 @@ func (JG *JoinGame_CB) Encode(PW *PacketWriter, playername string, GM byte) {
 	PW.WriteBoolean(true)
 	PW.WriteBoolean(true)
 	Log.Debug("CREATED JOIN GAME")
-	// f, err := os.Create("testing.nbt")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// f.Write(JG.DimensionCodec.Data)
-	// f.Close()
-	// utils.PrintHexFromBytes("DimensionCodec", JG.DimensionCodec.Data)
-	// Log.Info("DimensionCodec", JG.DimensionCodec.Data)
+	f, err := os.Create("testing.nbt")
+	if err != nil {
+		panic(err)
+	}
+	f.Write(JGDimensionCodec.GetData())
+	f.Close()
+	utils.PrintHexFromBytes("DimensionCodec", JGDimensionCodec.GetData())
+	Log.Info("DimensionCodec", JGDimensionCodec.GetData())
 }
 
 func CreateDimensionTypeRegistry(piglin_safe, natural, respawn_anchor_works, has_skylight, bed_works, has_raids, ultrawarm, has_ceiling byte, ambient_light, coordinate_scale float32, min_y, height, logical_height int32, fixed_time int64, infiniburn, effects string) nbt.Compound {

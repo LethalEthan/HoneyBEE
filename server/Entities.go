@@ -114,7 +114,7 @@ const (
 	FishingHook
 )
 
-//EntityMetaDataType
+// EntityMetaDataType
 const (
 	EMDTByte = iota
 	EMDTVarInt
@@ -127,7 +127,7 @@ const (
 	EMDTRotation
 	EMDTPosition
 	EMDTOptPosition
-	EMDTDirection //0:DOWN 1:UP 2:NORTH 3:SOUTH 4:WEST 5:EAST
+	EMDTDirection // 0:DOWN 1:UP 2:NORTH 3:SOUTH 4:WEST 5:EAST
 	EMDTOptUUID
 	EMDTBlockID
 	EMDTNBT

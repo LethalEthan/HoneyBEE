@@ -2,7 +2,6 @@ package packet
 
 import (
 	"HoneyBEE/jsonstruct"
-	"HoneyBEE/nbt"
 
 	"github.com/google/uuid"
 )
@@ -347,8 +346,8 @@ type (
 		PreviousGamemode    int8
 		WorldCount          int32
 		WorldNames          []Identifier
-		DimensionCodec      nbt.NBTEncoder
-		Dimension           nbt.NBTEncoder
+		DimensionCodec      []byte
+		Dimension           []byte
 		WorldName           Identifier
 		HashedSeed          int64
 		MaxPlayers          int32

@@ -3,7 +3,6 @@ package main
 import (
 	"HoneyBEE/config"
 	"HoneyBEE/console"
-	"HoneyBEE/packet"
 	"HoneyBEE/server"
 	"HoneyBEE/utils"
 	"fmt"
@@ -31,12 +30,12 @@ var (
 )
 
 func init() {
-	//Hello from HoneyBEE
-	//Logger Creation Start
+	// Hello from HoneyBEE
+	// Logger Creation Start
 	defer console.DRECOVER()
-	B1 := logging.NewLogBackend(os.Stderr, "", 0)       //New Backend
-	B1Format := logging.NewBackendFormatter(B1, format) //Set Format
-	B1LF := logging.AddModuleLevel(B1Format)            //Add formatting Levels
+	B1 := logging.NewLogBackend(os.Stderr, "", 0)       // New Backend
+	B1Format := logging.NewBackendFormatter(B1, format) // Set Format
+	B1LF := logging.AddModuleLevel(B1Format)            // Add formatting Levels
 	err := config.ConfigStart()
 	if err != nil {
 		panic(err)
@@ -47,20 +46,20 @@ func init() {
 		B1LF.SetLevel(logging.INFO, "")
 	}
 	logging.SetBackend(B1LF)
-	//Logger Creation END
+	// Logger Creation END
 	Log.Info("HoneyBEE", utils.GetVersionString(), "starting...")
 	fmt.Print(utils.Ascii, utils.Ascii2, "\n")
-	//Remove unused Ascii strings for less memory cosumption
+	// Remove unused Ascii strings for less memory cosumption
 	utils.Ascii = ""
 	utils.Ascii2 = ""
-	//SetGCPercent
+	// SetGCPercent
 	if config.GConfig.Performance.GCPercent > 0 {
 		debug.SetGCPercent(config.GConfig.Performance.GCPercent)
 	}
 	if config.GConfig.Server.Port == "" {
 		panic("Server port not defined!")
 	}
-	//Server Config Check
+	// Server Config Check
 	Log.Info("Server Network Listener Started on port ", config.GConfig.Server.Port)
 	Log.Info("Number of logical CPU's: ", runtime.NumCPU())
 	if config.GConfig.Performance.CPU == 0 {
@@ -73,12 +72,8 @@ func init() {
 	if runtime.NumCPU() <= 3 || config.GConfig.Performance.CPU <= 3 {
 		Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 	}
-	packet.GenerateKeys()
-	//Log.Info("Generating Key Chain")
-	//Packet.KeyGen() //Generate Keys used for client Authenication, offline mode will not be supported (no piracy here bois)
 	go console.Console()
 	go console.Shutdown()
-	//go server.DebugServer()
 	if config.GConfig.DEBUGOPTS.PacketAnal {
 		Log.Warning("MITM Proxy mode enable")
 	}

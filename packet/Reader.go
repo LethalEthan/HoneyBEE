@@ -93,9 +93,9 @@ func (pr *PacketReader) ReadBoolean() (bool, error) {
 }
 
 //ReadByte - reads a single byte from the packet and returns it, it returns a zero and an io.EOF if the packet has been already read to the end.
-func (pr *PacketReader) ReadByte() (byte, error) {
+func (pr *PacketReader) ReadByte() (int8, error) {
 	Byte, err := pr.ReadUByte()
-	return Byte, err
+	return int8(Byte), err
 }
 
 func (pr *PacketReader) ReadUByte() (byte, error) {

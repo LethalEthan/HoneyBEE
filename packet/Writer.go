@@ -234,12 +234,13 @@ func (pw *PacketWriter) WriteUUID(val uuid.UUID) {
 }
 
 func (pw *PacketWriter) WritePosition(X, Y, Z int64) {
-	// if X < 33554432 && Y < 2048 && -Y > 2048 && Z < 33554432 {
-	var Location uint64 = ((uint64(X) & 0x3FFFFFF) << 38) | ((uint64(Z) & 0x3FFFFFF) << 12) | (uint64(Y) & 0xFFF)
-	pw.WriteULong(Location)
-	// } else {
-	// 	return
-	// }
+	if X < 33554432 && X > -33554432 && Y < 2048 && Y > -2048 && Z < 33554432 && Z > -33554432 {
+		var Location uint64 = ((uint64(X) & 0x3FFFFFF) << 38) | ((uint64(Z) & 0x3FFFFFF) << 12) | (uint64(Y) & 0xFFF)
+		pw.WriteULong(Location)
+	} else {
+		Log.Error("Couldn't write position, out of bounds")
+		return
+	}
 }
 
 func (pw *PacketWriter) WriteChunkSectionPosition(X, Y, Z int64) {

@@ -33,7 +33,7 @@ func (NBTE *NBTEncoder) GetData() []byte {
 	return NBTE.data
 }
 
-func (NBTE *NBTEncoder) Encode() {
+func (NBTE *NBTEncoder) Encode() []byte {
 	NBTE.data = NBTE.data[:0]
 	if NBTE.currentCompound.previousTag == nil {
 		NBTE.EncodeCompound(NBTE.rootCompound)
@@ -41,6 +41,7 @@ func (NBTE *NBTEncoder) Encode() {
 		Log.Debug("Cannot encode, tags are not fully ended!")
 		fmt.Println("Cannot encode, tags are not fully ended!")
 	}
+	return NBTE.data
 }
 
 func (NBTE *NBTEncoder) AddTag(v interface{}) {

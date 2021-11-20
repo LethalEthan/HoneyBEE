@@ -6,7 +6,7 @@ type Compound struct {
 	previousTag *Compound //To go back
 }
 
-// AddCompoundTag -Add compound tag and sets it in NBTWriter so objects are written to it
+// CreateCompoundTag - Create compound tag
 func CreateCompoundTag(name string) Compound {
 	C := *new(Compound)
 	C.name = name
@@ -14,7 +14,12 @@ func CreateCompoundTag(name string) Compound {
 	return C
 }
 
-// AddCompoundTag -Add compound tag and sets it in NBTWriter so objects are written to it
+// SetPreviousTag - This is an unsafe function and I would reccomend avoiding it unless you have to set it because of multiple compounds in a list
+func SetPreviousTag(C *Compound, previousTag *Compound) {
+	C.previousTag = previousTag
+}
+
+// AddCompoundTag - Add compound tag and sets it in NBTWriter so objects are written to it
 func (NBTE *NBTEncoder) AddCompoundTag(name string) {
 	C := new(Compound)
 	C.name = name

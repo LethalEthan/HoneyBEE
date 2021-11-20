@@ -36,7 +36,7 @@ func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Ac
 }
 
 func (Client *Client) ClientReact(c gnet.Conn) {
-	var PR = &Client.PR //packet.CreatePacketReader([]byte{0})
+	var PR = &Client.PR
 	var PW = &Client.PW
 	for {
 		Frame := <-Client.Read //Block until react fires
@@ -44,7 +44,10 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 			Log.Debug("Frame nil, closing")
 			return
 		}
-		// Log.Debug("FRAME: ", Frame)
+		if len(Frame) == 0 {
+			c.Close()
+			return
+		}
 		//Get PacketSize and Data
 		PacketSize, NR, err := packet.DecodeVarInt(Frame) //NR = Numread, used to note the position in the frame where it read to
 		if err != nil {
@@ -56,8 +59,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 			panic(err)
 		}
 		PR.SetData(Frame[NR2+NR:])
-		/*Size check - packets cannot be bigger than this which can lead to the server and client crashing
-		also known as book banning or any item/block that is used to overload the packet limit*/
+		//Packets cannot be bigger than a 3 byte varint :(
 		if PacketSize > 2097151 {
 			c.Close() //Disconnect the client until  I find a solution, my idea is a custom mod or client that raises the packet size to a Long
 			return
@@ -154,7 +156,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 
 				Log.Debug("Sent Join Game - 0x26 - P")
 
-				PW.ResetData(0x18) //Server brand
+				PW.ResetData(0x18) // Server brand
 				PW.WriteString("minecraft:brand")
 				PW.WriteString("HoneyBEE")
 				Log.Debug("Sent server brand")
@@ -186,13 +188,13 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				Log.Debug("Sent Tags")
 				c.AsyncWrite(TagsPacket)
 
-				PW.ResetData(0x1B) //Entity Status
+				PW.ResetData(0x1B) // Entity Status - Dsiable reduced debug mode
 				PW.WriteInt(2)
-				PW.WriteByte(23)
+				PW.WriteByte(DRDB)
 				Log.Debug("Sent Entity Status")
 				c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x1B) //Entity Status
+				PW.ResetData(0x1B) // Entity Status - set op level 4
 				PW.WriteInt(2)
 				PW.WriteByte(OP4)
 				Log.Debug("Sent Entity Status")
@@ -205,9 +207,9 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				// c.AsyncWrite(PW.GetPacket())
 
 				Log.Debug("Sent Unlock Recipes")
-				c.AsyncWrite(UnlockRecipesPacket) //Unlock Recipes
+				c.AsyncWrite(UnlockRecipesPacket) // Unlock Recipes
 
-				PW.ResetData(0x38) //Player pos and look
+				PW.ResetData(0x38) // Player pos and look
 				PW.WriteDouble(0.0)
 				PW.WriteDouble(64.0)
 				PW.WriteDouble(0.0)
@@ -235,37 +237,37 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteVarInt(1)
 				PW.WriteUUID(Client.Player.UUID)
 				PW.WriteString(Client.Player.PlayerName)
-				PW.WriteVarInt(0)      //num properties
-				PW.WriteVarInt(1)      //gamemode
-				PW.WriteVarInt(0)      //ping
-				PW.WriteBoolean(false) //has display name
+				PW.WriteVarInt(0)      // num properties
+				PW.WriteVarInt(1)      // gamemode
+				PW.WriteVarInt(0)      // ping
+				PW.WriteBoolean(false) // has display name
 				Log.Debug("Sent Player info")
 				c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x49) //Update view position
+				PW.ResetData(0x49) // Update view position
 				PW.WriteVarInt(0)
 				PW.WriteVarInt(0)
 				Log.Debug("Sent view position")
 				c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x4A) //Update view distance
+				PW.ResetData(0x4A) // Update view distance
 				PW.WriteVarInt(12)
 				Log.Debug("Sent view distance")
 				c.AsyncWrite(PW.GetPacket())
 
-				// PW.ResetData(0x4D) //Entity metadata
+				// PW.ResetData(0x4D) // Entity metadata
 				// PW.WriteVarInt(2)
 				// Log.Debug("Sent Entity Metadata")
 				// c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x4B) //Spawn Position
+				PW.ResetData(0x4B) // Spawn Position
 				PW.WritePosition(0, 0, 64)
 				PW.WriteFloat(0.0)
 				Log.Debug("Sent Spawn position")
 				c.AsyncWrite(PW.GetPacket())
 
-				ChunkLoad(c)       //Load chunks
-				PW.ResetData(0x38) //Player pos and look
+				ChunkLoad(c)       // Load chunks
+				PW.ResetData(0x38) // Player pos and look
 				PW.WriteDouble(0.0)
 				PW.WriteDouble(64.0)
 				PW.WriteDouble(0.0)
@@ -277,13 +279,13 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				Log.Debug("Sent Player pos and look")
 				c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x58) //Time Update
+				PW.ResetData(0x58) // Time Update
 				PW.WriteLong(0)
 				PW.WriteLong(-12000)
 				Log.Debug("Sent Time update")
 				c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x14) //Window Items
+				PW.ResetData(0x14) // Window Items
 				PW.WriteUByte(0)
 				PW.WriteVarInt(1)
 				PW.WriteVarInt(46)
@@ -292,14 +294,14 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				Log.Debug("Sent Window Items")
 				c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x52) //Update Health
+				PW.ResetData(0x52) // Update Health
 				PW.WriteFloat(20.0)
 				PW.WriteVarInt(20)
 				PW.WriteFloat(5.0)
 				Log.Debug("Sent Update Health")
 				c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x51) //Set expereince
+				PW.ResetData(0x51) // Set expereince
 				PW.WriteFloat(1.0)
 				PW.WriteVarInt(1)
 				PW.WriteVarInt(7)
