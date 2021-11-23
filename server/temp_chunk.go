@@ -7,16 +7,16 @@ import (
 	"github.com/panjf2000/gnet"
 )
 
-func ChunkLoad(c gnet.Conn) {
+func ChunkLoad(c gnet.Conn) error {
 	Chunk := *new(packet.ChunkData_CB)
 	Chunk.ChunkX = 0
 	Chunk.ChunkZ = 0
 	Chunk.BitMaskLength = 1
-	Chunk.PrimaryBitMask = append(Chunk.PrimaryBitMask, 1) //only 1 section
+	Chunk.PrimaryBitMask = append(Chunk.PrimaryBitMask, 1) // Only 1 section
 	NBTE := nbt.CreateNBTEncoder()
 	BA := make([]int64, 37)
-	for i := 0; i < len(BA); i++ { //Setup static heightmap
-		if i < 512 {
+	for i := 0; i < len(BA); i++ { // Setup static heightmap
+		if i < 36 { // last 3 bytes are unused
 			BA[i] |= 0x0F << 55
 			BA[i] |= 0x0F << 46
 			BA[i] |= 0x0F << 37
@@ -32,22 +32,21 @@ func ChunkLoad(c gnet.Conn) {
 		}
 	}
 	Log.Debug("HeightMapL:", len(BA))
-	NBTE.AddTag(nbt.CreateLongArrayTag("MOTION_BLOCKING", BA)) //BasedOnValue("MOTION_BLOCKING", BA)
+	NBTE.AddTag(nbt.CreateLongArrayTag("MOTION_BLOCKING", BA))
 	NBTE.EndCompoundTag()
-	NBTE.Encode()
-	Log.Debug("NBTD: ", NBTE.GetData())
-	Chunk.HeightMaps = NBTE.GetData()
+	Chunk.HeightMaps = NBTE.Encode()
+	// Log.Debug("NBTD: ", Chunk.HeightMaps) // Debug
 	Chunk.BiomeLength = 0
-	CS := packet.CreateWriterWithCapacity(32800) //Chunk Section
+	CS := packet.CreateWriterWithCapacity(32800) // Chunk Section
 	CS.WriteShort(4096)
-	CS.WriteUByte(8)
-	CS.WriteVarInt(0)
+	CS.WriteUByte(15) //bits per block
+	// CS.WriteVarInt(9)
 	CS.WriteVarInt(512)
-	AL := make([]byte, 32768)
+	AL := make([]int64, 26215) //4
 	for i := 0; i < len(AL); i++ {
 		AL[i] = 1
 	}
-	CS.WriteArray(AL)
+	CS.WriteLongArray(AL)
 	CS.WriteVarInt(0) //End Of chunk section
 	ChunkSection := CS.GetData()
 	Chunk.Size = len(ChunkSection)
@@ -99,14 +98,14 @@ func ChunkLoad(c gnet.Conn) {
 	PW.WriteArray(UL.GetData())
 	if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 		c.Close()
-		return
+		return err
 	}
 	PW.ResetData(0x22)
 	PW.WriteArray(tmpCL.GetData()) //Write X and Z
 	PW.WriteArray(C.GetData())     // Add other chunk data
 	if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 		c.Close() //send
-		return
+		return err
 	}
 	Log.Debug("Packet Size: ", len(PW.GetData()))
 	var j int32
@@ -128,14 +127,14 @@ func ChunkLoad(c gnet.Conn) {
 				PW.WriteArray(UL.GetData())
 				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 					c.Close()
-					return
+					return err
 				}
 				PW.ResetData(0x22)
 				PW.WriteArray(tmpCL.GetData())
 				PW.WriteArray(C.GetData())
 				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 					c.Close()
-					return
+					return err
 				}
 				if i == 0 {
 					//Log.Debug("X: ", -j, "Z: ", i)
@@ -152,14 +151,14 @@ func ChunkLoad(c gnet.Conn) {
 					PW.WriteArray(UL.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 					PW.ResetData(0x22)
 					PW.WriteArray(tmpCL.GetData())
 					PW.WriteArray(C.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 				}
 				if j == 0 {
@@ -177,14 +176,14 @@ func ChunkLoad(c gnet.Conn) {
 					PW.WriteArray(UL.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 					PW.ResetData(0x22)
 					PW.WriteArray(tmpCL.GetData())
 					PW.WriteArray(C.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 				}
 				if j != 0 && i != 0 {
@@ -204,14 +203,14 @@ func ChunkLoad(c gnet.Conn) {
 					PW.WriteArray(UL.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 					PW.ResetData(0x22)
 					PW.WriteArray(tmpCL.GetData())
 					PW.WriteArray(C.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 					//
 					Chunk.ChunkX = -j
@@ -227,14 +226,14 @@ func ChunkLoad(c gnet.Conn) {
 					PW.WriteArray(UL.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 					PW.ResetData(0x22)
 					PW.WriteArray(tmpCL.GetData())
 					PW.WriteArray(C.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 					//
 					Chunk.ChunkX = -j
@@ -250,34 +249,35 @@ func ChunkLoad(c gnet.Conn) {
 					PW.WriteArray(UL.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 					PW.ResetData(0x22)
 					PW.WriteArray(tmpCL.GetData())
 					PW.WriteArray(C.GetData())
 					if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 						c.Close()
-						return
+						return err
 					}
 				}
 			}
 		}
 	}
 	Log.Debug("Sent chunks!")
-	PW.ResetData(0x20) //Initialise World Border
-	PW.WriteDouble(2000.0)
-	PW.WriteDouble(2000.0)
-	PW.WriteDouble(2001.0)
-	PW.WriteDouble(2001.0)
-	PW.WriteVarLong(0)
-	PW.WriteVarInt(29999984)
-	PW.WriteVarInt(0)
-	PW.WriteVarInt(0)
-	Log.Debug("Sent Init World Border")
-	if err := c.AsyncWrite(PW.GetPacket()); err != nil {
-		c.Close()
-		return
-	}
+	// PW.ResetData(0x20) //Initialise World Border
+	// PW.WriteDouble(2000.0)
+	// PW.WriteDouble(2000.0)
+	// PW.WriteDouble(2001.0)
+	// PW.WriteDouble(2001.0)
+	// PW.WriteVarLong(0)
+	// PW.WriteVarInt(29999984)
+	// PW.WriteVarInt(0)
+	// PW.WriteVarInt(0)
+	// Log.Debug("Sent Init World Border")
+	// if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+	// 	c.Close()
+	// 	return
+	// }
+	return nil
 }
 
 func TRYChunkLoad() {
