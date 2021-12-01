@@ -23,6 +23,7 @@ func NewServer(ip string, port string, multicore bool, tick bool, lockosthread b
 	Log.Info("Generating Key chain")
 	packet.GenerateKeys()
 	S := new(Server)
+	packet.CreateEntries()
 	GlobalServer = S
 	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithNumEventLoop(config.GConfig.Server.NumEventLoop), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))
 	return *S, err
