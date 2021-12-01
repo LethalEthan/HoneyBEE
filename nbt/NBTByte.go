@@ -1,24 +1,32 @@
 package nbt
 
-func CreateByteTag(Name string, Val byte) TByte {
-	return TByte{Name, Val}
+import "HoneyBEE/utils"
+
+type Byte struct {
+	Name  string
+	Value byte
 }
 
-func (NBTW *NBTWriter) writeByte(Name string, val byte) {
-	if Name != "" {
-		NBTW.writeTag(TagByte, Name)
-	}
-	NBTW.AppendByteSlice([]byte{val})
+type ByteArray struct {
+	Name  string
+	Value []byte
 }
 
-func CreateByteArrayTag(Name string, Val []byte) TByteArray {
-	return TByteArray{Name, Val, len(Val), 0}
+func CreateByteTag(Name string, Val byte) Byte {
+	return Byte{Name, Val}
 }
 
-func (NBTW *NBTWriter) writeByteArray(Name string, val []byte) {
-	if Name != "" {
-		NBTW.writeTag(TagByteArray, Name)
-	}
-	NBTW.writeInt("", int32(len(val)))
-	NBTW.AppendByteSlice(val)
+func (NBTE *NBTEncoder) EncodeByte(Name string, Value byte) {
+	NBTE.EncodeTag(TagByte, Name)
+	NBTE.data = append(NBTE.data, Value)
+}
+
+func CreateByteArrayTag(Name string, Val []byte) ByteArray {
+	return ByteArray{Name, Val}
+}
+
+func (NBTE *NBTEncoder) EncodeByteArray(Name string, Value []byte) {
+	NBTE.EncodeTag(TagByteArray, Name)
+	NBTE.data = append(NBTE.data, utils.Int32ToByteArray(int32(len(Value)))...)
+	NBTE.data = append(NBTE.data, Value...)
 }

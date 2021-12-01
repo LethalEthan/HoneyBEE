@@ -1,9 +1,8 @@
 package console
 
 import (
-	"HoneyGO/config"
-	"HoneyGO/nserver"
-	"HoneyGO/utils"
+	"HoneyBEE/config"
+	"HoneyBEE/utils"
 	"bufio"
 	"crypto/md5"
 	"encoding/hex"
@@ -21,13 +20,14 @@ import (
 var (
 	conf     *config.Config
 	shutdown = make(chan os.Signal, 1)
-	Log      = logging.MustGetLogger("HoneyGO")
+	Log      = logging.MustGetLogger("HoneyBEE")
 	Panicked bool
 	hprof    *os.File
 	cprof    *os.File
 )
 
 func Console() {
+	runtime.LockOSThread()
 	defer DRECOVER()
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -54,19 +54,12 @@ func Console() {
 			if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 2 {
 				Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 			}
-			// if conf.Server.ClientFrameBuffer == 0 || conf.Server.ReadBufferCap == 0 || conf.Server.RecieveBuf == 0 || conf.Server.SendBuf == 0 || conf.Server.Timeout == 0 {
-			// 	panic("Please don't be stupid and set the buffers or timeout as 0 :/")
-			// }
 			Log.Critical("If you changed new server to old server this will not be reloaded or changed!")
 		case "GC":
 			runtime.GC()
 			Log.Info("GC invoked")
 		case "mem":
 			utils.PrintDebugStats()
-		// case "SSM":
-		// 	Log.Debug(server.StatusCache)
-		// case "CCM":
-		// 	Log.Debug(server.ClientConnectionMap)
 		case "panic":
 			panic("panicked, you told me to :)")
 		case "cpuprofile":
@@ -134,26 +127,11 @@ func Hash() string {
 //Shutdown - listens for sigterm and exits
 func Shutdown() {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
-	select {
-	case <-shutdown:
-		{
-			Log.Warning("Starting shutdown")
-			// if !config.GConfig.DEBUGOPTS.NewServer {
-			// 	server.SetNetServerRun(false)
-			// 	server.SetRun(false)
-			// } else {
-			nserver.GlobalServer.Shutdown()
-			//}
-			//if config.GConfig.Performance.EnableGCPlayer { //Don't send on an unintialised channel otherwise it will deadlock
-			//	go func() { nserver.GCPShutdown <- true }()
-			//}
-			//server.ClientConnectionMutex.Lock()
-			//Log.Debug(server.ClientConnectionMap) //Check if any connections are still active in the map, there shouldn't be any left over
-			DEBUG := true
-			if DEBUG {
-				utils.PrintDebugStats()
-			}
-			os.Exit(0)
-		}
+	<-shutdown
+	Log.Warning("Starting shutdown")
+	DEBUG := true
+	if DEBUG {
+		utils.PrintDebugStats()
 	}
+	os.Exit(0)
 }

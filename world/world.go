@@ -1,14 +1,12 @@
 package world
 
 import (
-	"HoneyGO/chunk"
-	"HoneyGO/config"
+	"HoneyBEE/chunk"
 	"errors"
 	"fmt"
 	"sync"
 
 	//"sync"
-	"time"
 
 	nibble "github.com/LethalEthan/Go-Nibble"
 	logging "github.com/op/go-logging"
@@ -17,8 +15,7 @@ import (
 var (
 	RegionMap           = make(map[RegionID]region)
 	mutex               = &sync.RWMutex{} //Allow regions to be sharded?
-	Log                 = logging.MustGetLogger("HoneyGO")
-	DEBUG               bool
+	Log                 = logging.MustGetLogger("HoneyBEE")
 	DefaultFlatArray    []byte
 	UninitialisedRegion = new(region)
 	UninitialisedChunk  = new(chunk.Chunk)
@@ -47,10 +44,6 @@ type RegionID struct {
 }
 
 func Init() {
-	Config := config.GetConfig()
-	if Config.Server.DEBUG {
-		DEBUG = true
-	}
 	DefaultFlatArray = make([]byte, 16384)
 	for i := 0; i < 16384; i++ {
 		DefaultFlatArray[i] = nibble.CreateNibbleMerged(1, 1)
@@ -69,10 +62,6 @@ func CreateRegion(X int64, Z int64) {
 	Region.ChunkModify = make(chan chunk.Chunk, 10)
 	Chunk := new(chunk.Chunk)
 	//
-	var TNow time.Time
-	if DEBUG {
-		TNow = time.Now()
-	}
 	Chunk.Blocks = make([]byte, 16384)
 	Chunk.BitsPerBlock = 4
 	//for i := 0; i < 16384; i++ {
@@ -103,15 +92,7 @@ func CreateRegion(X int64, Z int64) {
 			cz++
 		}
 	}
-	//RegionMap[ID] = *Region //Don't directly insert into map due to race concerns when the world generation pool is active
 	PutRegionInMap(*Region)
-	///
-	///Note: Find a way to store regions without strings as they cosume shit tonnes of ram in a map -\_0_0_/-
-	///
-	if DEBUG {
-		Elapse := time.Since(TNow)
-		fmt.Print("\nFinished creating: ", RID, " Time Taken: ", Elapse)
-	}
 }
 
 //PutRegionInMap - Safely puts regions into a map to be retrieved whenever
@@ -170,8 +151,6 @@ func GetRegionByInt(X int64, Z int64) (region, bool, error) {
 
 }
 
-//var RegionChunkCache = make(map[string]region.Data) -- WIP
-
 //GetChunkFromRegion - Gets the chunk from the region
 func GetChunkFromRegion(Region region, ChunkX int, ChunkZ int) (chunk.Chunk, error) {
 	//Each region contains 0~65536 chunks and each location is dependant on the region location
@@ -179,20 +158,18 @@ func GetChunkFromRegion(Region region, ChunkX int, ChunkZ int) (chunk.Chunk, err
 	//So if we know the region location we can know all the possible chunk locations without ineffeciently trying to scan through them all
 	// X := Region.ID.X
 	// Z := Region.ID.Z
-	TNow := time.Now()
 	var ChunkLocationsX int64
 	var ChunkLocationsZ int64
 	//Make negative numbers positive so the logic still works
-	//INVESTIGATE: NOT the number to clear the sign bit
 	if Region.ID.X < 0 { //If X is negative
-		ChunkLocationsX = Region.ID.X * -256 //Min XChunk Co-ord
-		ChunkX = ChunkX * -1
+		ChunkLocationsX = -Region.ID.X * 256 //Min XChunk Co-ord
+		ChunkX = -ChunkX
 	} else {
 		ChunkLocationsX = Region.ID.X * 256 //Min XChunk Co-ord
 	}
 	if Region.ID.Z < 0 {
-		ChunkLocationsZ = Region.ID.Z * -256 //Min ZChunk Co-ord
-		ChunkZ = ChunkZ * -1
+		ChunkLocationsZ = -Region.ID.Z * 256 //Min ZChunk Co-ord
+		ChunkZ = -ChunkZ
 	} else {
 		ChunkLocationsZ = Region.ID.Z * 256 //Min ZChunk Co-ord
 	}
@@ -207,10 +184,6 @@ func GetChunkFromRegion(Region region, ChunkX int, ChunkZ int) (chunk.Chunk, err
 	T = T * 256                      //Z increments every 256 chunks since each region goes by 256*256 and starts incrementing with X then increments Z for every 256 chunks
 	T = T + (int(CLXDelta) - ChunkX) //Minus the X chunk we try find outta the max possible Xchunk then add to var T (position in array)
 	T = 65535 - T                    //Take away the position of the chunk from the max length of the array
-	Elapse := time.Since(TNow)       //calculates the time it took to find the chunk (all timeings will be linked later on so optimisations can be made)
-	if DEBUG {
-		fmt.Print("\nGetChunkFromRegionTook: ", Elapse)
-	}
 	return Region.Data[T], nil
 }
 

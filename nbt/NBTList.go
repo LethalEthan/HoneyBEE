@@ -1,168 +1,126 @@
 package nbt
 
-func CreateListTag(Name string, Type byte) TList {
-	List := new(TList)
+import (
+	"HoneyBEE/utils"
+	"math"
+)
+
+type List struct {
+	Name    string
+	tagtype byte
+	value   []interface{}
+}
+
+func CreateListTag(Name string, Type byte) List {
+	List := *new(List)
 	List.Name = Name
-	List.Type = Type
-	List.Value = make([]interface{}, 0, 16)
-	return *List
+	List.tagtype = Type
+	List.value = make([]interface{}, 0, 16)
+	return List
 }
 
-func (NBTW *NBTWriter) writeListTag(val string, Type byte, Length int) {
-	NBTW.AppendByteSlice([]byte{TagList})
-	NBTW.writeString("", val)
-	NBTW.writeByte("", Type)
-	NBTW.writeInt("", int32(Length))
-}
-
-func (L *TList) AddToList(val interface{}) {
-	switch val.(type) {
-	case TEnd:
-		panic("Cannot add end tag to list")
-	case TByte:
-		L.Value = append(L.Value, val.(TByte))
-	case TShort:
-		L.Value = append(L.Value, val.(TShort))
-	case TInt:
-		L.Value = append(L.Value, val.(TInt))
-	case TLong:
-		L.Value = append(L.Value, val.(TLong))
-	case TFloat:
-		L.Value = append(L.Value, val.(TFloat))
-	case TDouble:
-		L.Value = append(L.Value, val.(TDouble))
-	case TByteArray:
-		L.Value = append(L.Value, val.(TByteArray))
-	case TString:
-		L.Value = append(L.Value, val.(TString))
-	case TList:
-		L.Value = append(L.Value, val.(TList))
-	case TCompound:
-		L.Value = append(L.Value, val.(TCompound))
-	case TIntArray:
-		L.Value = append(L.Value, val.(TIntArray))
-	case TLongArray:
-		L.Value = append(L.Value, val.(TLongArray))
-	default:
-		return
+func CreateListTagWithCapacity(Name string, Type byte, Capacity int) List {
+	List := *new(List)
+	List.Name = Name
+	List.tagtype = Type
+	if Capacity > 0 {
+		List.value = make([]interface{}, 0, 16)
+	} else {
+		List.value = make([]interface{}, 0, Capacity)
 	}
-	L.length++
+	return List
 }
 
-func (NBTW *NBTWriter) writeList(Name string, Type byte, val []interface{}) {
-	var ok bool
-	NBTW.writeListTag(Name, Type, len(val))
-	switch Type {
-	case TagEnd:
-		panic("Cannot list end tags")
+func (L *List) AddTag(Value interface{}) {
+	switch L.tagtype {
 	case TagByte:
-		var B TByte
-		for i := 0; i < len(val); i++ {
-			B, ok = val[i].(TByte)
-			if ok != true {
-				panic("Type assertion failed for TList")
-			}
-			NBTW.writeByte("", B.Value)
-		}
-	case TagShort:
-		var S TShort
-		for i := 0; i < len(val); i++ {
-			S, ok = val[i].(TShort)
-			if ok != true {
-				panic("TA failed for TShort")
-			}
-			NBTW.writeShort("", S.Value)
-		}
-	case TagInt:
-		var I TInt
-		for i := 0; i < len(val); i++ {
-			I, ok = val[i].(TInt)
-			if ok != true {
-				panic("TA failed for TInt")
-			}
-			NBTW.writeInt("", I.Value)
-		}
-	case TagLong:
-		var L TLong
-		for i := 0; i < len(val); i++ {
-			L, ok = val[i].(TLong)
-			if ok != true {
-				panic("TA failed for TLong")
-			}
-			NBTW.writeLong("", L.Value)
-		}
-	case TagFloat:
-		var F TFloat
-		for i := 0; i < len(val); i++ {
-			F, ok = val[i].(TFloat)
-			if ok != true {
-				panic("TA failed for TFloat")
-			}
-			NBTW.writeFloat("", F.Value)
-		}
-	case TagDouble:
-		var D TDouble
-		for i := 0; i < len(val); i++ {
-			D, ok = val[i].(TDouble)
-			if ok != true {
-				panic("TA failed for TDouble")
-			}
-			NBTW.writeDouble("", D.Value)
-		}
-	case TagByteArray:
-		var BA TByteArray
-		for i := 0; i < len(val); i++ {
-			BA, ok = val[i].(TByteArray)
-			if ok != true {
-				panic("TA failed for TByteArray")
-			}
-			NBTW.writeByteArray("", BA.Value)
-		}
-	case TagString:
-		var S TString
-		for i := 0; i < len(val); i++ {
-			S, ok = val[i].(TString)
-			if ok != true {
-				panic("TA failed for TString")
-			}
-			NBTW.writeString("", S.Value)
-		}
-	case TagList:
-		var List TList
-		for i := 0; i < len(val); i++ {
-			List, ok = val[i].(TList)
-			if ok != true {
-				panic("TA failed for TList")
-			}
-			//NBTW.writeListTag(List.Name, List.Type, len(List.Value))
-			NBTW.writeList(List.Name, List.Type, List.Value)
+		if L.tagtype == TagByte {
+			L.value = append(L.value, Value.(Byte))
 		}
 	case TagCompound:
-		var C TCompound
-		for i := 0; i < len(val); i++ {
-			C, ok = val[i].(TCompound)
-			if ok != true {
-				panic("TA failed for TCompound")
-			}
-			NBTW.traverseCompound(C)
+		if L.tagtype == TagCompound {
+			L.value = append(L.value, Value.(Compound))
 		}
-	case TagIntArray:
-		var IA TIntArray
-		for i := 0; i < len(val); i++ {
-			IA, ok = val[i].(TIntArray)
-			if ok != true {
-				panic("TA failed for TIntArray")
-			}
-			NBTW.writeIntArray("", IA.Value)
+	}
+}
+
+func (NBTE *NBTEncoder) EncodeList(L List) {
+	NBTE.data = append(NBTE.data, TagList)
+	if L.Name != "" {
+		NBTE.data = append(NBTE.data, utils.Int16ToByteArray(int16(len(L.Name)))...)
+		NBTE.data = append(NBTE.data, L.Name...)
+	}
+	NBTE.data = append(NBTE.data, L.tagtype)
+	NBTE.data = append(NBTE.data, utils.Int32ToByteArray(int32(len(L.value)))...)
+	for i := range L.value {
+		switch v := L.value[i].(type) {
+		case End:
+			NBTE.data = append(NBTE.data, 0)
+		case Byte:
+			NBTE.data = append(NBTE.data, v.Value)
+		case Short:
+			NBTE.data = append(NBTE.data, utils.UnsafeCastInt16ToBytes(v.Value)...) //append(NBTE.data, utils.Int16ToByteArray(v.Value)...)
+		case Int:
+			NBTE.data = append(NBTE.data, utils.UnsafeCastInt32ToBytes(v.Value)...) //utils.Int32ToByteArray(v.Value)...)
+		case Long:
+			NBTE.data = append(NBTE.data, utils.UnsafeCastInt64ToBytes(v.Value)...) //utils.Int64ToByteArray(v.Value)...)
+		case Float:
+			NBTE.data = append(NBTE.data, utils.UnsafeCastUint32ToBytes(math.Float32bits(v.Value))...) //utils.Uint32ToByteArray(math.Float32bits(v.Value))...)
+		case Double:
+			NBTE.data = append(NBTE.data, utils.UnsafeCastUint64ToBytes(math.Float64bits(v.Value))...) //utils.Uint64ToByteArray(math.Float64bits(v.Value))...)
+		case ByteArray:
+			NBTE.data = append(NBTE.data, v.Value...)
+		case String:
+			NBTE.data = append(NBTE.data, utils.UnsafeCastInt16ToBytes(int16(len(v.Value)))...) //utils.Int16ToByteArray(int16(len(v.Value)))...)
+			NBTE.data = append(NBTE.data, v.Value...)
+		case Compound:
+			NBTE.encodeListCompound(&v)
+		case IntArray:
+			NBTE.data = append(NBTE.data, utils.UnsafeCastInt32ToBytes(int32(len(v.Value)))...) //utils.Int32ToByteArray(int32(len(v.Value)))...)
+			NBTE.data = append(NBTE.data, utils.UnsafeCastInt32ArrayToBytes(v.Value)...)
+			// for _, v := range v.Value {
+			// 	NBTE.data = append(NBTE.data, utils.Int32ToByteArray(v)...)
+			// }
+		case LongArray:
+			NBTE.data = append(NBTE.data, utils.UnsafeCastInt32ToBytes(int32(len(v.Value)))...) //append(NBTE.data, utils.Int32ToByteArray(int32(len(v.Value)))...)
+			NBTE.data = append(NBTE.data, utils.UnsafeCastInt64ArrayToBytes(v.Value)...)
+			// for _, v := range v.Value {
+			// 	NBTE.data = append(NBTE.data, utils.Int64ToByteArray(v)...)
+			// }
 		}
-	case TagLongArray:
-		var LA TLongArray
-		for i := 0; i < len(val); i++ {
-			LA, ok = val[i].(TLongArray)
-			if ok != true {
-				panic("TA failed for TLongArray")
-			}
-			NBTW.writeLongArray("", LA.Value)
+	}
+}
+
+func (NBTE *NBTEncoder) encodeListCompound(C *Compound) {
+	for _, v := range C.value {
+		switch val := v.(type) {
+		case End:
+			NBTE.data = append(NBTE.data, TagEnd)
+			return
+		case Byte:
+			NBTE.EncodeByte(val.Name, val.Value)
+		case Short:
+			NBTE.EncodeShort(val.Name, val.Value)
+		case Int:
+			NBTE.EncodeInt(val.Name, val.Value)
+		case Long:
+			NBTE.EncodeLong(val.Name, val.Value)
+		case Float:
+			NBTE.EncodeFloat(val.Name, val.Value)
+		case Double:
+			NBTE.EncodeDouble(val.Name, val.Value)
+		case ByteArray:
+			NBTE.EncodeByteArray(val.Name, val.Value)
+		case String:
+			NBTE.EncodeString(val.Name, val.Value)
+		case List:
+			NBTE.EncodeList(val)
+		case Compound:
+			NBTE.EncodeCompound(&val)
+		case IntArray:
+			NBTE.EncodeIntArray(val.Name, val.Value)
+		case LongArray:
+			NBTE.EncodeLongArray(val.Name, val.Value)
 		}
 	}
 }

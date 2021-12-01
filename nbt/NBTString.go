@@ -1,42 +1,29 @@
 package nbt
 
-import "HoneyGO/utils"
+import "HoneyBEE/utils"
 
-func CreateStringTag(Name string, Val string) TString {
-	return TString{Name, Val}
+type String struct {
+	Name  string
+	Value string
 }
 
-func (NBTW *NBTWriter) writeString(Name string, val string) {
+func CreateStringTag(Name string, Value string) String {
+	return String{Name, Value}
+}
+
+func (NBTE *NBTEncoder) EncodeString(Name string, Value string) {
+	// NBTE.EncodeTag(TagString, Name)
 	if Name != "" {
-		NBTW.AppendByteSlice([]byte{TagString})
-		NBTW.AppendByteSlice(utils.Int16ToByteArray(int16(len(Name))))
-		NBTW.AppendByteSlice([]byte(Name))
-	}
-	if val != "" {
-		NBTW.AppendByteSlice(utils.Int16ToByteArray(int16(len(val))))
-		NBTW.AppendByteSlice([]byte(val))
+		NBTE.data = append(NBTE.data, TagString)
+		NBTE.data = append(NBTE.data, utils.Int16ToByteArray(int16(len(Name)))...)
+		NBTE.data = append(NBTE.data, Name...)
 	} else {
-		if Name != "" {
-			NBTW.AppendByteSlice([]byte{0, 0})
-		}
+		NBTE.data = append(NBTE.data, []byte{0, 0}...)
 	}
-	return
-}
-
-func (TS TString) Encode() []byte {
-	Data := make([]byte, 0, len(TS.Name)+len(TS.Value))
-	if TS.Name != "" {
-		Data = append(Data, []byte{TagString}...)
-		Data = append(Data, utils.Int16ToByteArray(int16(len(TS.Name)))...)
-		Data = append(Data, []byte(TS.Name)...)
-	}
-	if TS.Value != "" {
-		Data = append(Data, utils.Int16ToByteArray(int16(len(TS.Value)))...)
-		Data = append(Data, []byte(TS.Value)...)
+	if Value != "" {
+		NBTE.data = append(NBTE.data, utils.Int16ToByteArray(int16(len(Value)))...)
+		NBTE.data = append(NBTE.data, []byte(Value)...)
 	} else {
-		if TS.Name == "" {
-			Data = append(Data, []byte{0, 0}...)
-		}
+		NBTE.data = append(NBTE.data, []byte{0, 0}...)
 	}
-	return Data
 }
