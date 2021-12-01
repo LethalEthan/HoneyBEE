@@ -29,8 +29,9 @@ var (
 	Panicked bool = false
 )
 
-func init() {
+func main() {
 	// Hello from HoneyBEE
+	// defer profile.Start(profile.MemProfile).Stop()
 	// Logger Creation Start
 	defer console.DRECOVER()
 	B1 := logging.NewLogBackend(os.Stderr, "", 0)       // New Backend
@@ -42,6 +43,7 @@ func init() {
 	}
 	if config.GConfig.Server.DEBUG {
 		B1LF.SetLevel(logging.DEBUG, "")
+		Log.Debug("Debug mode enabled")
 	} else {
 		B1LF.SetLevel(logging.INFO, "")
 	}
@@ -74,21 +76,14 @@ func init() {
 	}
 	go console.Console()
 	go console.Shutdown()
-	if config.GConfig.DEBUGOPTS.PacketAnal {
-		Log.Warning("MITM Proxy mode enable")
-	}
 	runtime.GC()
-}
-
-func main() {
-	defer console.DRECOVER()
 	if console.Panicked {
 		Log.Warning("Main: Panic is true, blocked main thread")
 		for {
 			time.Sleep(20000000)
 		}
 	}
-	_, err := server.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
+	_, err = server.NewServer(config.GConfig.Server.Host, config.GConfig.Server.Port, config.GConfig.Server.MultiCore, false, config.GConfig.Server.LockOSThread, config.GConfig.Server.Reuse, config.GConfig.Server.SendBuf, config.GConfig.Server.RecieveBuf, config.GConfig.Server.ReadBufferCap)
 	if err != nil {
 		Log.Critical(err)
 	}
