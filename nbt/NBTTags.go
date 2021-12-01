@@ -29,3 +29,26 @@ func (NBTE *NBTEncoder) EncodeTag(Type byte, Name string) {
 		NBTE.data = append(NBTE.data, []byte{0, 0}...)
 	}
 }
+
+//EncodeTag - Encodes the name and tag into the encoder buf only if there is a name, a lack of names means it's in a list
+func (NBTD *NBTDecoder) DecodeTag() (Type byte, Name string, err error) {
+	Type = NBTD.data[NBTD.index] // Read tag type
+	NBTD.seek(1)
+	if Type == TagEnd {
+		return
+	}
+	NL, err := utils.ByteArrayToInt16(NBTD.data[NBTD.index : NBTD.index+2]) // Read name length
+	if err != nil {
+		panic(err)
+	}
+	if err = NBTD.seek(2); err != nil {
+		return
+	}
+	if NL > 0 {
+		Name = string(NBTD.data[NBTD.index:NL])   //Read name
+		if err = NBTD.seek(int(NL)); err != nil { // Seek name length
+			return
+		}
+	}
+	return
+}

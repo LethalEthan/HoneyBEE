@@ -23,5 +23,7 @@ func (NBTE *NBTEncoder) EncodeString(Name string, Value string) {
 	if Value != "" {
 		NBTE.data = append(NBTE.data, utils.Int16ToByteArray(int16(len(Value)))...)
 		NBTE.data = append(NBTE.data, []byte(Value)...)
+	} else {
+		NBTE.data = append(NBTE.data, []byte{0, 0}...)
 	}
 }

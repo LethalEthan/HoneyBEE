@@ -16,9 +16,9 @@ type NBTEncoder struct {
 
 func CreateNBTEncoder() NBTEncoder {
 	NBTE := *new(NBTEncoder)
-	NBTE.data = make([]byte, 0, 2048)
+	NBTE.data = make([]byte, 0, 4096)
 	NBTE.rootCompound = new(Compound)
-	NBTE.rootCompound.value = make([]interface{}, 0, 16)
+	NBTE.rootCompound.value = make([]interface{}, 0, 32)
 	NBTE.currentCompound = NBTE.rootCompound
 	return NBTE
 }
@@ -33,7 +33,28 @@ func (NBTE *NBTEncoder) GetData() []byte {
 	return NBTE.data
 }
 
+func (NBTE *NBTEncoder) GetObjects() []interface{} {
+	return NBTE.rootCompound.value
+}
+
+func (NBTE *NBTEncoder) SetRootTag(C *Compound) {
+	NBTE.rootCompound = C
+}
+
+func (NBTE *NBTEncoder) GetRootTag() *Compound {
+	return NBTE.rootCompound
+}
+
+func (NBTE *NBTEncoder) SetCurrentTag(C *Compound) {
+	NBTE.currentCompound = C
+}
+
+func (NBTE *NBTEncoder) GetCurrentTag() *Compound {
+	return NBTE.currentCompound
+}
+
 func (NBTE *NBTEncoder) Encode() []byte {
+	Log.Debug("Encode function")
 	NBTE.data = NBTE.data[:0]
 	if NBTE.currentCompound.previousTag == nil {
 		NBTE.EncodeCompound(NBTE.rootCompound)
@@ -46,4 +67,8 @@ func (NBTE *NBTEncoder) Encode() []byte {
 
 func (NBTE *NBTEncoder) AddTag(v interface{}) {
 	NBTE.currentCompound.value = append(NBTE.currentCompound.value, v)
+}
+
+func (NBTE *NBTEncoder) AddMultipleTags(val []interface{}) {
+	NBTE.currentCompound.value = append(NBTE.currentCompound.value, val...)
 }
