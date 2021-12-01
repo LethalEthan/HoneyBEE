@@ -3,7 +3,6 @@ package server
 import (
 	"HoneyBEE/packet"
 	"HoneyBEE/player"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/panjf2000/gnet"
@@ -31,6 +30,7 @@ func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Ac
 		return nil, gnet.None
 	} else {
 		Log.Warning("Frame is 0?!")
+		CC.Read <- nil
 		return nil, gnet.Close
 	}
 }
@@ -123,6 +123,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 		case LOGIN:
 			switch PacketID {
 			case 0x00:
+				// Login Start
 				Log.Debug("0x00_SB - Login start")
 				LoginStart := new(packet.Login_0x00_SB)
 				if err := LoginStart.Decode(PR); err != nil {
@@ -132,27 +133,62 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				}
 				Log.Info("Name decoded: ", LoginStart.Name)
 				Client.Player.PlayerName = LoginStart.Name
-				// LERQ := new(packet.Login_0x01_CB)
-				// LERQ.Encode()
-				// c.AsyncWrite(PW.GetPacket())
-				// Log.Debug("Sent 0x01_CB - Encryption Request")
-				PWC := packet.CreatePacketWriter(0x03)
-				PWC.WriteVarInt(-1)
-				c.AsyncWrite(PWC.GetPacket())
-				PW := packet.CreatePacketWriter(0x02)                                       //LS.Encode()
-				Client.Player.UUID = uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6") //"f41f9506-e8f7-4a2b-bd4d-4db421620bff")
-				PW.WriteUUID(uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6"))        //"f41f9506-e8f7-4a2b-bd4d-4db421620bff"))
-				PW.WriteString(Client.Player.PlayerName)
-				c.AsyncWrite(PW.GetPacket()) //Send Login Success
-				Log.Debug("Data: ", PW.GetPacket())
+				/* Login Encryption Request
+				LERQ := new(packet.Login_0x01_CB)
+				LERQ.Encode(PW)
+				c.AsyncWrite(PW.GetPacket())
+				Log.Debug("Sent 0x01_CB - Encryption Request")*/
+				// Login Success
+				LS := new(packet.Login_0x02_CB)
+				// LS.UUID, LS.Username = packet.Auth(Client.Player.PlayerName, LERSP.SharedSecret)
+				LS.UUID = uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6")
+				LS.Username = Client.Player.PlayerName
+				if LS.UUID == uuid.Nil {
+					Log.Error("UUID is nil!")
+					c.Close()
+					return
+				}
+				Log.Debug("UUID: ", LS.UUID)
+				Client.Player.UUID = LS.UUID
+				Client.Player.PlayerName = LS.Username // We reset the playername to what the sessionserver says
+				PW.ClearData()
+				err := LS.Encode(PW)
+				if err != nil { //Encode Login Success
+					Log.Error("Could not encode login success: ", err)
+					c.Close()
+					return
+				}
+				//Send Login Success
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 				Log.Debug("Sent 0x02_CB - Login Success")
 				Client.State = PLAY
-				c.SetContext(Client)
-				time.Sleep(1 * time.Second)
+				c.SetContext(Client) //Set conn context
 				//
-				// JG := new(packet.JoinGame_CB) //JoinGame - Play 0x26
-				// JG.Encode(&PW, LoginStart.Name, 0)
-				c.AsyncWrite(JoinGamePacket) //PW.GetPacket())
+				JG := new(packet.JoinGame_CB) //JoinGame - Play 0x26
+				JG.EntityID = 2               //int32(player.AssignEID(playername))
+				JG.IsHardcore = false
+				JG.Gamemode = 1
+				JG.PreviousGamemode = -1
+				JG.WorldCount = 4
+				JG.WorldNames = []packet.Identifier{"minecraft:overworld", "minecraft:overworld_caves", "minecraft:the_nether", "minecraft:the_end"}
+				JG.WorldName = "minecraft:overworld"
+				JG.HashedSeed = 0
+				JG.MaxPlayers = 0
+				JG.ViewDistance = 12
+				JG.ReducedDebugInfo = false
+				JG.EnableRespawnScreen = true
+				JG.IsDebug = false
+				JG.IsFlat = true
+				JG.Encode(PW)
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil { //JoinGamePacket
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				Log.Debug("Sent Join Game - 0x26 - P")
 
@@ -160,7 +196,11 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteString("minecraft:brand")
 				PW.WriteString("HoneyBEE")
 				Log.Debug("Sent server brand")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				// PW.ResetData(0x0E) //Difficulty
 				// PW.WriteByte(0)
@@ -178,27 +218,47 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.ResetData(0x48) //Held Item Change
 				PW.WriteByte(0)
 				Log.Debug("Sent held item change")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x65) //Declare Recipes - investigate
 				PW.WriteVarInt(0)
 				Log.Debug("Sent recipe")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				Log.Debug("Sent Tags")
-				c.AsyncWrite(TagsPacket)
+				if err := c.AsyncWrite(TagsPacket); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x1B) // Entity Status - Dsiable reduced debug mode
 				PW.WriteInt(2)
 				PW.WriteByte(DRDB)
 				Log.Debug("Sent Entity Status")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x1B) // Entity Status - set op level 4
 				PW.WriteInt(2)
 				PW.WriteByte(OP4)
 				Log.Debug("Sent Entity Status")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				// PW.ResetData(0x12) //Declare commands
 				// PW.WriteVarInt(0)
@@ -207,7 +267,11 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				// c.AsyncWrite(PW.GetPacket())
 
 				Log.Debug("Sent Unlock Recipes")
-				c.AsyncWrite(UnlockRecipesPacket) // Unlock Recipes
+				if err := c.AsyncWrite(UnlockRecipesPacket); err != nil { // Unlock Recipes
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x38) // Player pos and look
 				PW.WriteDouble(0.0)
@@ -219,7 +283,11 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteVarInt(0)
 				PW.WriteBoolean(true)
 				Log.Debug("Sent Player pos and look")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				// PW.ResetData(0x0F) //Chat Message
 				// CM := new(packet.ChatMessage_CB)
@@ -242,18 +310,30 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteVarInt(0)      // ping
 				PW.WriteBoolean(false) // has display name
 				Log.Debug("Sent Player info")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x49) // Update view position
 				PW.WriteVarInt(0)
 				PW.WriteVarInt(0)
 				Log.Debug("Sent view position")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x4A) // Update view distance
 				PW.WriteVarInt(12)
 				Log.Debug("Sent view distance")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				// PW.ResetData(0x4D) // Entity metadata
 				// PW.WriteVarInt(2)
@@ -261,12 +341,21 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				// c.AsyncWrite(PW.GetPacket())
 
 				PW.ResetData(0x4B) // Spawn Position
-				PW.WritePosition(0, 0, 64)
+				PW.WritePosition(0, 64, 0)
 				PW.WriteFloat(0.0)
 				Log.Debug("Sent Spawn position")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
-				ChunkLoad(c)       // Load chunks
+				if err := ChunkLoad(c); err != nil { // Load chunks
+					Log.Error(err)
+					c.Close()
+					return
+				}
+
 				PW.ResetData(0x38) // Player pos and look
 				PW.WriteDouble(0.0)
 				PW.WriteDouble(64.0)
@@ -277,13 +366,21 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteVarInt(0)
 				PW.WriteBoolean(true)
 				Log.Debug("Sent Player pos and look")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x58) // Time Update
 				PW.WriteLong(0)
 				PW.WriteLong(-12000)
 				Log.Debug("Sent Time update")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x14) // Window Items
 				PW.WriteUByte(0)
@@ -292,23 +389,39 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				PW.WriteArray(make([]byte, 46))
 				PW.WriteByte(0)
 				Log.Debug("Sent Window Items")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x52) // Update Health
 				PW.WriteFloat(20.0)
 				PW.WriteVarInt(20)
 				PW.WriteFloat(5.0)
 				Log.Debug("Sent Update Health")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 
 				PW.ResetData(0x51) // Set expereince
 				PW.WriteFloat(1.0)
 				PW.WriteVarInt(1)
 				PW.WriteVarInt(7)
 				Log.Debug("Sent Set Experience")
-				c.AsyncWrite(PW.GetPacket())
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
 			case 0x01:
-				Log.Debug("Shouldn't be here yet :P")
+				Log.Debug("Recieved 0x01_SB - Encryption response")
+				LERSP := new(packet.Login_0x01_SB)
+				if err := LERSP.Decode(PR); err != nil {
+					panic(err)
+				}
 			case 0x02:
 				Log.Debug("Play 0x02_SB")
 			case 0x03:
@@ -341,7 +454,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				if err != nil {
 					Log.Error(err)
 				}
-				OnGround, err := PR.ReadByte()
+				OnGround, err := PR.ReadBoolean()
 				if err != nil {
 					Log.Error(err)
 				}
@@ -535,4 +648,14 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 	PW.WriteVarInt(1)
 	PW.WriteVarInt(7)
 	Log.Debug("Sent Set Experience")
-	c.AsyncWrite(PW.GetPacket())*/
+	c.AsyncWrite(PW.GetPacket())
+	PW := packet.CreatePacketWriter(0x02)                                       //LS.Encode()
+	Client.Player.UUID = uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6") //"f41f9506-e8f7-4a2b-bd4d-4db421620bff")
+	PW.WriteUUID(uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6"))        //"f41f9506-e8f7-4a2b-bd4d-4db421620bff"))
+	PW.WriteString(Client.Player.PlayerName)
+	c.AsyncWrite(PW.GetPacket()) //Send Login Success
+	Log.Debug("Data: ", PW.GetPacket())
+	Log.Debug("Sent 0x02_CB - Login Success")
+	Client.State = PLAY
+	c.SetContext(Client)
+	time.Sleep(1 * time.Second)*/

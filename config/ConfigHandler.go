@@ -41,9 +41,7 @@ type Config struct {
 		GCPercent int `yaml:"gc-percent"`
 	} `yaml:"performance"`
 	DEBUGOPTS struct {
-		PacketAnal        bool   `yaml:"packet-anal"`
-		PacketAnalAddress string `yaml:"packet-anal-address"`
-		Maintenance       bool   `yaml:"maintenance"`
+		Maintenance bool `yaml:"maintenance"`
 		//ServerStatusMessage string `yaml:"server-status-message"`
 	} `yaml:"debug-opts"`
 }
