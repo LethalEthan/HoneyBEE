@@ -61,7 +61,7 @@ Wanting a Minecraft server with a stable, high level API? Visit [Prismarine](htt
 
 Wanting a C# implementation of the Minecraft server protocol. [Obsidian](https://github.com/ObsidianMC/Obsidian) (C#)
 
-Wanting a fast, lightweight Minecraft server written in Kotlin? [krypton](https://github.com/KryptonMC/Krypton) (Kotlin)
+Wanting a fast, lightweight Minecraft server written in Kotlin? [Krypton](https://github.com/KryptonMC/Krypton) (Kotlin)
 
 Wanting a paper server with some added gameplay features ? Visit [Purpur](https://github.com/pl3xgaming/Purpur) (Java)
 
