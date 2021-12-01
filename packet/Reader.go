@@ -88,7 +88,7 @@ func (pr *PacketReader) Seek(offset int) (int, error) {
 //ReadBoolean - reads a single byte from the packet, and interprets it as a boolean.
 //It throws an error and returns false if it has a problem either reading from the packet or encounters a value outside of the boolean range.
 func (pr *PacketReader) ReadBoolean() (bool, error) {
-	bool, err := pr.ReadByte()
+	bool, err := pr.ReadUByte()
 	return bool > 0, err
 }
 
@@ -388,4 +388,16 @@ func (pr *PacketReader) ReadIdentifier() (Identifier, error) {
 		return "", err
 	}
 	return Identifier(I), nil
+}
+
+func (pr *PacketReader) ReadIdentifierArray(length int) ([]Identifier, error) {
+	var err error
+	IA := make([]Identifier, length)
+	for i := 0; i < length; i++ {
+		IA[i], err = pr.ReadIdentifier()
+		if err != nil {
+			return []Identifier{""}, err
+		}
+	}
+	return IA, nil
 }

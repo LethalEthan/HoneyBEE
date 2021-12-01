@@ -9,7 +9,7 @@ import (
 
 func TestCreatePacketWriter(T *testing.T) {
 	PW := CreatePacketWriter(0x00)
-	if cap(PW.data) != 128 {
+	if cap(PW.data) != 2048 {
 		T.Error(WriterLength)
 	}
 }
@@ -23,7 +23,7 @@ func TestCreatePacketWriterWithCapacity(T *testing.T) {
 
 func TestCreatePacketWriterWithCapacityBelow0(T *testing.T) {
 	PW := CreatePacketWriterWithCapacity(0x00, -45345)
-	if cap(PW.data) != 128 {
+	if cap(PW.data) != 2048 {
 		T.Error(WriterLength)
 	}
 }

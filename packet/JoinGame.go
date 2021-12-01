@@ -13,10 +13,6 @@ var End_Entry nbt.Compound
 var BiomeEntry nbt.List
 
 func CreateEntries() {
-	// for _, v := range biome.GetBiomeIDMap() {
-	// 	Log.Debug(v)
-	// }
-	// os.Exit(0)
 	// Create Overworld entry
 	Overworld_Entry = nbt.CreateCompoundTag("")
 	Overworld_Entry.AddTag(nbt.CreateStringTag("name", "minecraft:overworld"))
@@ -42,7 +38,7 @@ func CreateEntries() {
 	End_Entry.AddTag(CreateDimensionTypeRegistry(0, 0, 0, 0, 0, 1, 0, 0, 0, 1.0, 0, 256, 256, 6000, "minecraft:infiniburn_end", "minecraft:the_end")) // element
 	End_Entry.EndTag()
 	BiomeEntry = CreateBiomeRegistries()
-	TestBiomeList()
+	// TestBiomeList()
 }
 
 func (JG *JoinGame_CB) Encode(PW *PacketWriter) {
@@ -216,7 +212,7 @@ func CreateBiomeRegistries() nbt.List {
 		TC.EndTag()
 		BiomeList.AddTag(TC)
 	}
-	Log.Debug(BiomeList)
+	// Log.Debug(BiomeList)
 	return BiomeList
 }
 

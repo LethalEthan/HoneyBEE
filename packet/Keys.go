@@ -30,16 +30,16 @@ func GenerateKeys() {
 	}
 	rand.Read(VerifyToken)
 	Log.Info("Key Generated!")
-	//Get rid of vscode warnings
+	// Get rid of vscode warnings
 	_ = publicKey
 	_ = privateKeySlice
 }
 
-func Auth(username string, sharedSecret []byte) uuid.UUID {
-	PlayerUUID, autherr := Authenticate(username, "", sharedSecret, publicKeySlice)
+func Auth(username string, sharedSecret []byte) (uuid.UUID, string) {
+	PlayerUUID, response, autherr := Authenticate(username, "", sharedSecret, publicKeySlice)
 	if autherr != nil {
-		Log.Error("Auth Fail!")
-		return uuid.Nil
+		Log.Error("Auth Fail! ", autherr)
+		return uuid.Nil, ""
 	}
-	return PlayerUUID
+	return PlayerUUID, response.Name
 }
