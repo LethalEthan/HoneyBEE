@@ -3,6 +3,8 @@ package utils
 import (
 	"encoding/binary"
 	"errors"
+	"reflect"
+	"unsafe"
 )
 
 var Ascii = `
@@ -56,6 +58,24 @@ func Int64ToByteArray(val int64) []byte {
 	return Bint64
 }
 
+func Uint16ToByteArray(val uint16) []byte {
+	buf := make([]byte, 2)
+	binary.BigEndian.PutUint16(buf, val)
+	return buf
+}
+
+func Uint32ToByteArray(val uint32) []byte {
+	buf := make([]byte, 4)
+	binary.BigEndian.PutUint32(buf, val)
+	return buf
+}
+
+func Uint64ToByteArray(val uint64) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, val)
+	return buf
+}
+
 func ByteArrayToInt16(val []byte) (int16, error) {
 	if len(val) > 2 || len(val) < 2 {
 		return 0, errbytearrayconversion
@@ -80,4 +100,74 @@ func ByteArrayToInt64(val []byte) (int64, error) {
 		conval := int64(binary.BigEndian.Uint64(val))
 		return conval, nil
 	}
+}
+
+// Unsafe :)
+
+func UnsafeCastInt16ToBytes(val int16) []byte {
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&val)), Len: 2, Cap: 2}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastInt16ArrayToBytes(ints []int16) []byte {
+	length := len(ints) * 2
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ints[0])), Len: length, Cap: length}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastInt32ToBytes(val int32) []byte {
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&val)), Len: 4, Cap: 4}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastInt32ArrayToBytes(ints []int32) []byte {
+	length := len(ints) * 4
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ints[0])), Len: length, Cap: length}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastInt64ToBytes(val int64) []byte {
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&val)), Len: 8, Cap: 8}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastInt64ArrayToBytes(ints []int64) []byte {
+	length := len(ints) * 8
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ints[0])), Len: length, Cap: length}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+//uints
+
+func UnsafeCastUint16ToBytes(val uint16) []byte {
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&val)), Len: 2, Cap: 2}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastUint16ArrayToBytes(ints []uint16) []byte {
+	length := len(ints) * 2
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ints[0])), Len: length, Cap: length}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastUint32ToBytes(val uint32) []byte {
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&val)), Len: 4, Cap: 4}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastUint32ArrayToBytes(ints []uint32) []byte {
+	length := len(ints) * 4
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ints[0])), Len: length, Cap: length}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastUint64ToBytes(val uint64) []byte {
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&val)), Len: 8, Cap: 8}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
+}
+
+func UnsafeCastUint64ArrayToBytes(ints []uint64) []byte {
+	length := len(ints) * 8
+	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ints[0])), Len: length, Cap: length}
+	return *(*[]byte)(unsafe.Pointer(&hdr))
 }

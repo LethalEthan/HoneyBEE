@@ -15,7 +15,7 @@ func CreateDoubleTag(Name string, Val float64) Double {
 }
 
 func (NBTE *NBTEncoder) EncodeDouble(Name string, val float64) {
-	NBTE.EncodeTag(TagFloat, Name)
+	NBTE.EncodeTag(TagDouble, Name)
 	var buf = make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, math.Float64bits(val))
 	NBTE.data = append(NBTE.data, buf...)

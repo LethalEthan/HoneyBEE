@@ -1,6 +1,6 @@
 server:
-  host: "0.0.0.0" #currently doesn't do shit
-  port: ":25570" #Set the port
+  host: "0.0.0.0"
+  port: ":25570"
   debug: false #Wanna see the juicy info?
   timeout: 15 #In seconds
   multicore: true
@@ -8,14 +8,10 @@ server:
   send-buffer: 64
   recv-buffer: 64
   read-buffer-cap: 64
-  client-frame-buffer: 10 #Sets the limit on the buffered channel that handles frames
+  net-event-loop: 8
   protocol:
     AvailableProtocols: []
     block-players-on-login: true
 performance: #Change me!
    cpu: 8
    gc-percent: 100
-debug-opts:
-    packet-anal: false #switches HoneyBEE into a MITM proxy that captures and decodes packets
-    packet-anal-address: "127.0.0.1:25567" #Server address that HoneyBEE probes
-    maintenance: false

@@ -1,6 +1,6 @@
 **Suggestions**
 
-If HoneyGO isn't what you needed you could look at some other projects that are popular and are recommended from me. The projects listed are actively developed and support modern-ish versions of Minecraft (1.12 - 1.17):
+If HoneyBEE isn't what you needed you could look at some other projects that are popular and are recommended from me. The projects listed are actively developed and support modern-ish versions of Minecraft (1.12 - 1.17):
 
 Wanting a lightweight C# minecraft server? [Starfield](https://github.com/StarfieldMC/Starfield) (C#)
 
@@ -20,7 +20,7 @@ Wanting a Minecraft server with a stable, high level API? Visit [Prismarine](htt
 
 Wanting a C# implementation of the Minecraft server protocol. [Obsidian](https://github.com/ObsidianMC/Obsidian) (C#)
 
-Wanting a fast, lightweight Minecraft server written in Kotlin? [krypton](https://github.com/KryptonMC/Krypton) (Kotlin)
+Wanting a fast, lightweight Minecraft server written in Kotlin? [Krypton](https://github.com/KryptonMC/Krypton) (Kotlin)
 
 Wanting a paper server with some added gameplay features ? Visit [Purpur](https://github.com/pl3xgaming/Purpur) (Java)
 
@@ -36,8 +36,6 @@ Wanting a fast multithreaded and async implementation of a minecraft server? [Mo
 
 Wanting a high performance minecraft server written in golang, soley made for PvP? [gogs](https://github.com/GambitLLC/gogs) (GO)
 
-Wanting a high performance paper-fork server with additional performance patches? [airplane](https://airplane.gg/) (Java)
-
-Wanting a high performance paper-fork server with bleeding edge enhancements (now merged with paper)? Visit [Tuinity](https://github.com/Spottedleaf/Tuinity) (Java)
+Wanting a high performance paper-fork server with additional performance patches? [airplane](https://airplane.gg/) (Java) - Discontinued for 1.18+
 
 **For General use I suggest Paper/Tuinity it is stable, bukkit compatible, fast and is the go to standard for most servers.**

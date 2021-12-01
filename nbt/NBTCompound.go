@@ -1,24 +1,48 @@
 package nbt
 
+import "fmt"
+
 type Compound struct {
-	name        string
+	Name        string
 	value       []interface{}
 	previousTag *Compound //To go back
 }
 
-// AddCompoundTag -Add compound tag and sets it in NBTWriter so objects are written to it
+// CreateCompoundTag - Create compound tag
 func CreateCompoundTag(name string) Compound {
 	C := *new(Compound)
-	C.name = name
-	C.value = make([]interface{}, 0, 16)
+	C.Name = name
+	C.value = make([]interface{}, 0, 32)
 	return C
 }
 
-// AddCompoundTag -Add compound tag and sets it in NBTWriter so objects are written to it
+// CreateCompoundTag - Create compound tag
+func CreateCompoundTagWithCapacity(name string, Capacity int) Compound {
+	C := *new(Compound)
+	C.Name = name
+	if Capacity < 0 {
+		C.value = make([]interface{}, 0, 32)
+	} else {
+		C.value = make([]interface{}, 0, Capacity)
+	}
+	return C
+}
+
+// SetPreviousTag - This is an unsafe function and I would reccomend avoiding it unless you have to set it because of multiple compounds in a list
+func SetPreviousTag(C *Compound, previousTag *Compound) {
+	C.previousTag = previousTag
+}
+
+// SetPreviousTag - This is an unsafe function and I would reccomend avoiding it unless you have to set it because of multiple compounds in a list
+func (C *Compound) SetPreviousTag(previousTag *Compound) {
+	C.previousTag = previousTag
+}
+
+// AddCompoundTag - Add compound tag and sets it in NBTWriter so objects are written to it
 func (NBTE *NBTEncoder) AddCompoundTag(name string) {
 	C := new(Compound)
-	C.name = name
-	C.value = make([]interface{}, 0, 16)
+	C.Name = name
+	C.value = make([]interface{}, 0, 32)
 	C.previousTag = NBTE.currentCompound
 	NBTE.currentCompound = C
 }
@@ -34,7 +58,7 @@ func (NBTE *NBTEncoder) EndCompoundTag() {
 }
 
 func (NBTE *NBTEncoder) EncodeCompound(C *Compound) {
-	NBTE.EncodeTag(TagCompound, C.name)
+	NBTE.EncodeTag(TagCompound, C.Name)
 	for _, v := range C.value {
 		switch val := v.(type) {
 		case End:
@@ -64,6 +88,8 @@ func (NBTE *NBTEncoder) EncodeCompound(C *Compound) {
 			NBTE.EncodeIntArray(val.Name, val.Value)
 		case LongArray:
 			NBTE.EncodeLongArray(val.Name, val.Value)
+		default:
+			fmt.Print("Uh oh")
 		}
 	}
 }
@@ -78,4 +104,8 @@ func (TC *Compound) EndTag() {
 
 func (TC *Compound) AddMultipleTags(val []interface{}) {
 	TC.value = append(TC.value, val...)
+}
+
+func (TC *Compound) Reset() {
+	TC.value = TC.value[:0]
 }

@@ -20,10 +20,11 @@ var ErrorHash = "00000000000000000000000000000000"
 var MD5 string
 
 type jsonResponse struct {
-	ID string `json:"id"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
-func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (uuid.UUID, error) {
+func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (uuid.UUID, *jsonResponse, error) {
 	//A hash is created using the shared secret and public key and is sent to the mojang sessionserver
 	//The server returns the data about the player including the player's skin blob
 	//Again I cannot thank enough wiki.vg, this is based off one of the linked java gists by Drew DeVault; thank you for the gist that I used to base this off
@@ -46,26 +47,28 @@ func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (uu
 
 	response, err := http.Get(fmt.Sprintf("https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s", username, hashString))
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, nil, err
 	}
 	defer response.Body.Close()
 
 	dec := json.NewDecoder(response.Body)
-	res := &jsonResponse{}
+	res := new(jsonResponse)
+	// res.Properties = new(properties)
 	err = dec.Decode(res)
 	if err != nil {
-		return uuid.Nil, errors.New(ErrorAuthFailed)
+		return uuid.Nil, nil, err
 	}
 	if len(res.ID) != 32 {
-		return uuid.Nil, errors.New(ErrorAuthFailed)
+		return uuid.Nil, nil, errors.New(ErrorAuthFailed)
 	}
-	hyphenater := res.ID[0:8] + "-" + res.ID[8:12] + "-" + res.ID[12:16] + "-" + res.ID[16:20] + "-" + res.ID[20:]
-	res.ID = hyphenater
+	// res.ID = res.ID[0:8] + "-" + res.ID[8:12] + "-" + res.ID[12:16] + "-" + res.ID[16:20] + "-" + res.ID[20:]
 	UUID, err := uuid.Parse(res.ID)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, nil, err
 	}
-	return UUID, nil
+	// T, err := UUID.MarshalText()
+	Log.Debug("UUID from auth: ", res.ID, " ", res)
+	return UUID, res, nil
 }
 
 func twosCompliment(p []byte) {

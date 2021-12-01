@@ -26,5 +26,10 @@ func PrintDebugStats() {
 	fmt.Println("mem.CPUFraction:", mem.GCCPUFraction)
 	fmt.Println("mem.Frees:", mem.Frees)
 	fmt.Println("mem.Mallocs:", mem.Mallocs)
+	fmt.Println("mem.NextGC:", mem.NextGC)
+	fmt.Println("mem.LastGC:", mem.Mallocs)
+	fmt.Println("mem.PauseTotalns:", mem.PauseTotalNs)
+	fmt.Println("mem.MCacheSys:", mem.MCacheSys/1000000)
+	fmt.Println("mem.MCacheInuse:", mem.MCacheInuse/1000000)
 	fmt.Println("-----")
 }

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	logging "github.com/op/go-logging"
 )
 
@@ -13,11 +14,11 @@ var log = logging.MustGetLogger("HoneyBEE")
 
 //Information on player
 type PlayerObject struct {
-	Name     string
-	UUID     string
-	EntityID uint32
-	GameMode uint8
-	Online   bool
+	PlayerName   string
+	Locale       string
+	ViewDistance byte
+	ChatMode     byte
+	UUID         uuid.UUID
 }
 
 var (

@@ -20,18 +20,18 @@ var (
 // Config struct for HoneyBEE config
 type Config struct {
 	Server struct {
-		Host              string `yaml:"host"`    //IP Address to bind the Server to -- TBD
-		Port              string `yaml:"port"`    //TCP Port to bind the Server to
-		DEBUG             bool   `yaml:"debug"`   //Output DEBUG info -- TO BE LINKED
-		Timeout           int    `yaml:"timeout"` // Server timeout to use until a connection is destroyed when unresponsive (in seconds)
-		MultiCore         bool   `yaml:"multicore"`
-		LockOSThread      bool   `yaml:"lock-os-thread"`
-		Reuse             bool   `yaml:"SO_REUSE"`
-		SendBuf           int    `yaml:"send-buffer"`
-		RecieveBuf        int    `yaml:"recv-buffer"`
-		ReadBufferCap     int    `yaml:"read-buffer-cap"`
-		ClientFrameBuffer int    `yaml:"client-frame-buffer"`
-		Protocol          struct {
+		Host          string `yaml:"host"`
+		Port          string `yaml:"port"`
+		DEBUG         bool   `yaml:"debug"`
+		Timeout       int    `yaml:"timeout"`
+		MultiCore     bool   `yaml:"multicore"`
+		LockOSThread  bool   `yaml:"lock-os-thread"`
+		Reuse         bool   `yaml:"SO_REUSE"`
+		SendBuf       int    `yaml:"send-buffer"`
+		RecieveBuf    int    `yaml:"recv-buffer"`
+		ReadBufferCap int    `yaml:"read-buffer-cap"`
+		NumEventLoop  int    `yaml:"net-event-loop"`
+		Protocol      struct {
 			AvailableProtocols  []int32 `yaml:"available-protocols"`
 			BlockPlayersOnLogin bool    `yaml:"block-players-on-login"`
 		} `yaml:"protocol"`
@@ -41,9 +41,7 @@ type Config struct {
 		GCPercent int `yaml:"gc-percent"`
 	} `yaml:"performance"`
 	DEBUGOPTS struct {
-		PacketAnal        bool   `yaml:"packet-anal"`
-		PacketAnalAddress string `yaml:"packet-anal-address"`
-		Maintenance       bool   `yaml:"maintenance"`
+		Maintenance bool `yaml:"maintenance"`
 		//ServerStatusMessage string `yaml:"server-status-message"`
 	} `yaml:"debug-opts"`
 }

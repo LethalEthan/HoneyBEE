@@ -2,7 +2,6 @@ package packet
 
 import (
 	"HoneyBEE/jsonstruct"
-	"HoneyBEE/nbt"
 
 	"github.com/google/uuid"
 )
@@ -277,12 +276,12 @@ type (
 
 	//Play 0x22
 	ChunkData_CB struct {
-		ChunkX              int
-		ChunkZ              int
-		BitMaskLength       int
+		ChunkX              int32
+		ChunkZ              int32
+		BitMaskLength       int32
 		PrimaryBitMask      []int64
 		HeightMaps          []byte
-		BiomeLength         int
+		BiomeLength         int32
 		Biomes              []int32
 		Size                int
 		Data                []byte
@@ -341,14 +340,14 @@ type (
 
 	//Play 0x26
 	JoinGame_CB struct {
-		EntityID            int
+		EntityID            int32
 		IsHardcore          bool
 		Gamemode            byte
 		PreviousGamemode    int8
-		WorldCount          int
+		WorldCount          int32
 		WorldNames          []Identifier
-		DimensionCodec      nbt.NBTEncoder
-		Dimension           nbt.NBTEncoder
+		DimensionCodec      []byte
+		Dimension           []byte
 		WorldName           Identifier
 		HashedSeed          int64
 		MaxPlayers          int32
@@ -699,12 +698,7 @@ type (
 		Passengers     []int32
 	}
 
-	//Play 0x55
-	Teams_CB struct {
-		TeamName   string
-		Mode       byte
-		ActionData interface{}
-	}
+	//0x55 moved to teams.go
 
 	//Play 0x56
 	UpdateScore_CB struct {
@@ -835,6 +829,6 @@ type (
 	//Play 0x66
 	Tags_CB struct {
 		Length int32
-		Tags   TagsFormat
+		Tags   TagsArray
 	}
 )
