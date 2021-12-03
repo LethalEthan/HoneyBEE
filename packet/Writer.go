@@ -240,6 +240,10 @@ func (pw *PacketWriter) WriteLongArray(val []int64) {
 	pw.data = append(pw.data, utils.UnsafeCastInt64ArrayToBytes(val)...)
 }
 
+func (pw *PacketWriter) WriteULongArray(val []uint64) {
+	pw.data = append(pw.data, utils.UnsafeCastUint64ArrayToBytes(val)...)
+}
+
 func (pw *PacketWriter) WriteUUID(val uuid.UUID) {
 	BU, err := val.MarshalBinary()
 	if err != nil {

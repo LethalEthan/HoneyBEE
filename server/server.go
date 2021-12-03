@@ -24,7 +24,7 @@ type Read struct{}
 
 func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	CC, _ := Conn.Context().(*Client) //S.ConnectedSockets.Load(Conn.RemoteAddr().String())
-	Log.Debug("React hit!")
+	// Log.Debug("React hit!")
 	if len(Frame) > 0 {
 		CC.Read <- Frame
 		return nil, gnet.None
@@ -340,17 +340,17 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				// Log.Debug("Sent Entity Metadata")
 				// c.AsyncWrite(PW.GetPacket())
 
-				PW.ResetData(0x4B) // Spawn Position
-				PW.WritePosition(0, 64, 0)
-				PW.WriteFloat(0.0)
-				Log.Debug("Sent Spawn position")
-				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+				if err := ChunkLoad(c); err != nil { // Load chunks
 					Log.Error(err)
 					c.Close()
 					return
 				}
 
-				if err := ChunkLoad(c); err != nil { // Load chunks
+				PW.ResetData(0x4B) // Spawn Position
+				PW.WritePosition(0, 64, 0)
+				PW.WriteFloat(0.0)
+				Log.Debug("Sent Spawn position")
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
 					Log.Error(err)
 					c.Close()
 					return
@@ -459,6 +459,60 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 					Log.Error(err)
 				}
 				Log.Debugf("X: %.10F Y: %.10F Z: %.10F ONGROUND: %t", X, Y, Z, OnGround)
+				PW.ResetData(0x21)
+				PW.WriteLong(138412846)
+				if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+					Log.Error(err)
+					c.Close()
+					return
+				}
+			case 0x12:
+				Log.Debug("Recieved 0x11 player position and rotation")
+				X, err := PR.ReadDouble()
+				if err != nil {
+					Log.Error(err)
+				}
+				Y, err := PR.ReadDouble()
+				if err != nil {
+					Log.Error(err)
+				}
+				Z, err := PR.ReadDouble()
+				if err != nil {
+					Log.Error(err)
+				}
+				Yaw, err := PR.ReadFloat()
+				if err != nil {
+					Log.Error(err)
+				}
+				Pitch, err := PR.ReadFloat()
+				if err != nil {
+					Log.Error(err)
+				}
+				OnGround, err := PR.ReadBoolean()
+				if err != nil {
+					Log.Error(err)
+				}
+				Log.Debugf("X: %.10F Y: %.10F Z: %.10F Yaw: %.10F Pitch: %.10F ONGROUND: %t", X, Y, Z,Yaw,Pitch, OnGround)
+			case 0x13:
+				Yaw, err := PR.ReadFloat()
+				if err != nil {
+					Log.Error(err)
+				}
+				Pitch, err := PR.ReadFloat()
+				if err != nil {
+					Log.Error(err)
+				}
+				OnGround, err := PR.ReadBoolean()
+				if err != nil {
+					Log.Error(err)
+				}
+				Log.Debugf("Yaw: %.10F Pitch: %.10F ONGROUND: %t", Yaw,Pitch, OnGround)
+			case 0x14:
+				OnGround, err := PR.ReadBoolean()
+				if err != nil {
+					Log.Error(err)
+				}
+				Log.Debugf("ONGROUND: %t", OnGround)
 			default:
 				Log.Debug("Recieved packet play:", PacketID)
 			}

@@ -91,8 +91,8 @@ func (JG *JoinGame_CB) Encode(PW *PacketWriter) {
 	PW.WriteVarInt(12)
 	PW.WriteBoolean(false)
 	PW.WriteBoolean(true)
-	PW.WriteBoolean(true)
-	PW.WriteBoolean(true)
+	PW.WriteBoolean(false)
+	PW.WriteBoolean(false)
 	// Log.Debug("CREATED JOIN GAME")
 	// Debug - save results
 	// f, err := os.Create("testing.nbt")
