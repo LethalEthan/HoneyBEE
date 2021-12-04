@@ -37,8 +37,10 @@ type Config struct {
 		} `yaml:"protocol"`
 	} `yaml:"server"`
 	Performance struct {
-		CPU       int `yaml:"cpu"`
-		GCPercent int `yaml:"gc-percent"`
+		CPU                int `yaml:"cpu"`
+		GCPercent          int `yaml:"gc-percent"`
+		ViewDistance       int `yaml:"view-distance"`
+		SimulationDistance int `yaml:"simulation-distance"`
 	} `yaml:"performance"`
 	DEBUGOPTS struct {
 		Maintenance bool `yaml:"maintenance"`

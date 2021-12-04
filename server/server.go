@@ -1,8 +1,10 @@
 package server
 
 import (
+	"HoneyBEE/config"
 	"HoneyBEE/packet"
 	"HoneyBEE/player"
+	"HoneyBEE/utils"
 
 	"github.com/google/uuid"
 	"github.com/panjf2000/gnet"
@@ -84,12 +86,13 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				}
 				HP := new(packet.Handshake_0x00)
 				if err := HP.Decode(PR); err != nil {
-					Log.Critical("Error while decoding HP: ", err)
+					Log.Error("Error while decoding HP: ", err)
 					c.Close()
 					return
 				}
 				Client.ProtocolVersion = HP.ProtocolVersion
-				if Client.ProtocolVersion != 756 {
+				if Client.ProtocolVersion != utils.PrimaryMinecraftProtocolVersion {
+					Log.Debug("Closing becase client does not match server protocol version!")
 					c.Close()
 				}
 				Client.State = int(HP.NextState)
@@ -133,14 +136,19 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				}
 				Log.Info("Name decoded: ", LoginStart.Name)
 				Client.Player.PlayerName = LoginStart.Name
-				/* Login Encryption Request
-				LERQ := new(packet.Login_0x01_CB)
-				LERQ.Encode(PW)
-				c.AsyncWrite(PW.GetPacket())
-				Log.Debug("Sent 0x01_CB - Encryption Request")*/
+				//Login Encryption Request
+				// LERQ := new(packet.Login_0x01_CB)
+				// LERQ.Encode(PW)
+				// c.AsyncWrite(PW.GetPacket())
+				// Log.Debug("Sent 0x01_CB - Encryption Request")
 				// Login Success
 				LS := new(packet.Login_0x02_CB)
-				// LS.UUID, LS.Username = packet.Auth(Client.Player.PlayerName, LERSP.SharedSecret)
+				// LS.UUID, LS.Username, err = packet.Auth(Client.Player.PlayerName, LERSP.SharedSecret)
+				// if err != nil {
+				// 	Log.Debug("Auth err: ", err)
+				// 	c.Close()
+				// 	return
+				// }
 				LS.UUID = uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6")
 				LS.Username = Client.Player.PlayerName
 				if LS.UUID == uuid.Nil {
@@ -178,7 +186,8 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				JG.WorldName = "minecraft:overworld"
 				JG.HashedSeed = 0
 				JG.MaxPlayers = 0
-				JG.ViewDistance = 12
+				JG.ViewDistance = int32(config.GConfig.Performance.ViewDistance)
+				JG.SimulationDistance = int32(config.GConfig.Performance.SimulationDistance)
 				JG.ReducedDebugInfo = false
 				JG.EnableRespawnScreen = true
 				JG.IsDebug = false
@@ -420,7 +429,9 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				Log.Debug("Recieved 0x01_SB - Encryption response")
 				LERSP := new(packet.Login_0x01_SB)
 				if err := LERSP.Decode(PR); err != nil {
-					panic(err)
+					Log.Error(err)
+					c.Close()
+					return
 				}
 			case 0x02:
 				Log.Debug("Play 0x02_SB")
@@ -492,7 +503,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				if err != nil {
 					Log.Error(err)
 				}
-				Log.Debugf("X: %.10F Y: %.10F Z: %.10F Yaw: %.10F Pitch: %.10F ONGROUND: %t", X, Y, Z,Yaw,Pitch, OnGround)
+				Log.Debugf("X: %.10F Y: %.10F Z: %.10F Yaw: %.10F Pitch: %.10F ONGROUND: %t", X, Y, Z, Yaw, Pitch, OnGround)
 			case 0x13:
 				Yaw, err := PR.ReadFloat()
 				if err != nil {
@@ -506,7 +517,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				if err != nil {
 					Log.Error(err)
 				}
-				Log.Debugf("Yaw: %.10F Pitch: %.10F ONGROUND: %t", Yaw,Pitch, OnGround)
+				Log.Debugf("Yaw: %.10F Pitch: %.10F ONGROUND: %t", Yaw, Pitch, OnGround)
 			case 0x14:
 				OnGround, err := PR.ReadBoolean()
 				if err != nil {

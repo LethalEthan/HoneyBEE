@@ -100,8 +100,8 @@ func ChunkLoad(c gnet.Conn) error {
 	PW := packet.CreatePacketWriterWithCapacity(0x20, 128) //Initialise World Border
 	PW.WriteDouble(0.0)
 	PW.WriteDouble(0.0)
-	PW.WriteDouble(20000001.0)
-	PW.WriteDouble(20000000.0)
+	PW.WriteDouble(348.0)
+	PW.WriteDouble(348.0)
 	PW.WriteVarLong(0)
 	PW.WriteVarInt(29999984)
 	PW.WriteVarInt(0)
@@ -217,19 +217,21 @@ func CreateChunkSection() []byte {
 	CS.WriteUShort(4096)                        // Number of non-air blocks
 	CS.WriteUByte(8)                            // bits per block
 	CS.WriteVarInt(6)                           // pallete length
-	CS.WriteVarInt(0)
-	CS.WriteVarInt(33)
-	CS.WriteVarInt(73)
-	CS.WriteVarInt(33)
-	CS.WriteVarInt(72)
-	CS.WriteVarInt(3953)
-	CS.WriteVarInt(512)      //Number of longs
-	AL := make([]byte, 4096) // Write 512 "longs", using bytes because bitsperblock is 8
-	for i := 0; i < len(AL); i++ {
+	CS.WriteVarInt(0)                           //0
+	CS.WriteVarInt(33)                          //1st
+	CS.WriteVarInt(73)                          //2nd
+	CS.WriteVarInt(33)                          //3rd
+	CS.WriteVarInt(72)                          //4th
+	CS.WriteVarInt(3953)                        //5th /3953 = redstone ore /3954 = deep slate redstone ore
+	CS.WriteVarInt(512)                         //Number of longs
+	AL := make([]byte, 4096)                    // Write 512 "longs", using bytes because bitsperblock is 8
+	for i := 0; i < len(AL)-256; i++ {
 		AL[i] = 4
 	}
+	for i := 3840; i < 4096; i++ {
+		AL[i] = 5
+	}
 	CS.WriteArray(AL)
-	// CS.WriteVarInt(0) //End Of chunk section
 	return CS.GetData()
 }
 
@@ -260,3 +262,83 @@ func CreateChunk(X, Z int32) []byte {
 	C.WriteVarInt(0)                 // Write block entity length
 	return C.GetPacket()
 }
+
+/* preperation for 1.18, more data needed
+func CreateChunkSection() []byte {
+	CS := packet.CreateWriterWithCapacity(5000) // Chunk Section
+	CS.WriteUShort(4096)                        // Number of non-air blocks
+	CS.WriteUByte(8)                            // bits per block
+	CS.WriteVarInt(6)                           // pallete length
+	CS.WriteVarInt(0)                           //0
+	CS.WriteVarInt(33)                          //1st
+	CS.WriteVarInt(73)                          //2nd
+	CS.WriteVarInt(33)                          //3rd
+	CS.WriteVarInt(72)                          //4th
+	CS.WriteVarInt(3955)                        //5th /3953 = redstone ore /3954 = deep slate redstone ore
+	CS.WriteVarInt(512)                         //Number of longs
+	AL := make([]byte, 4096)                    // Write 512 "longs", using bytes because bitsperblock is 8
+	for i := 0; i < len(AL)-256; i++ {
+		AL[i] = 4
+	}
+	for i := 3840; i < 4096; i++ {
+		AL[i] = 5
+	}
+	CS.WriteArray(AL)
+	//Biome pallete container
+	CS.WriteUByte(0)
+	CS.WriteVarInt(0)
+	// CS.WriteVarInt(256)
+	CS.WriteLongArray(make([]int64, 256))
+	return CS.GetData()
+}
+
+func CreateChunk(X, Z int32) []byte {
+	Chunk := *new(packet.ChunkData_CB)
+	Chunk.ChunkX = X
+	Chunk.ChunkZ = Z
+	Chunk.BitMaskLength = 1
+	Chunk.PrimaryBitMask = append(Chunk.PrimaryBitMask, 0b0000000000000000000000000000000000000000000000000000000000001111) // Only 4 sections for now
+	HM := CreateStaticHeightMap()
+	Chunk.HeightMaps = HM.Encode()
+	Chunk.BiomeLength = 1024
+	ChunkSection := CreateChunkSection()
+	Chunk.Size = len(ChunkSection) + len(ChunkSection) + len(ChunkSection) + len(ChunkSection)
+	C := packet.CreatePacketWriterWithCapacity(0x22, 34768) //construct chunk
+	C.WriteInt(Chunk.ChunkX)
+	C.WriteInt(Chunk.ChunkZ)
+	// C.WriteVarInt(Chunk.BitMaskLength)
+	// C.WriteLong(0b0000000000000000000000000000000000000000000000000000000000001111) //Array(Chunk.PrimaryBitMask)
+	C.WriteArray(Chunk.HeightMaps)
+	C.WriteVarInt(int32(Chunk.Size)) // Write chunk size
+	C.WriteArray(ChunkSection)       // Write the chunk section
+	C.WriteArray(ChunkSection)       // Write the chunk section
+	C.WriteArray(ChunkSection)       // Write the chunk section
+	C.WriteArray(ChunkSection)       // Write the chunk section
+	C.WriteVarInt(0)                 // Write block entity length
+	C.WriteBoolean(true)
+	// Sky light mask
+	C.WriteVarInt(1)
+	C.WriteULong(1)
+	// Block Light mask
+	C.WriteVarInt(1)
+	C.WriteULong(1)
+	// Empty Sky light mask
+	C.WriteVarInt(1)
+	C.WriteULong(0b1111111111111111111111111111111111111111111111111111111111111110)
+	// Empty Block light mask
+	C.WriteVarInt(1)
+	C.WriteULong(0b1111111111111111111111111111111111111111111111111111111111111110) //111111111111111111111111111111111111111111111111111111111111110
+	//SkyLight array
+	C.WriteVarInt(1)
+	C.WriteVarInt(2048)
+	for i := 0; i < 2048; i++ {
+		C.WriteUByte(0xFF)
+	}
+	C.WriteVarInt(1)
+	C.WriteVarInt(2048)
+	for i := 0; i < 2048; i++ {
+		C.WriteUByte(0xFF)
+	}
+	return C.GetPacket()
+}
+*/

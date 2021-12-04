@@ -35,11 +35,11 @@ func GenerateKeys() {
 	_ = privateKeySlice
 }
 
-func Auth(username string, sharedSecret []byte) (uuid.UUID, string) {
+func Auth(username string, sharedSecret []byte) (uuid.UUID, string, error) {
 	PlayerUUID, response, autherr := Authenticate(username, "", sharedSecret, publicKeySlice)
 	if autherr != nil {
 		Log.Error("Auth Fail! ", autherr)
-		return uuid.Nil, ""
+		return uuid.Nil, "", autherr
 	}
-	return PlayerUUID, response.Name
+	return PlayerUUID, response.Name, nil
 }

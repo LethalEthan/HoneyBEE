@@ -21,7 +21,7 @@ type StatusVersion struct {
 type StatusPlayers struct {
 	MaxPlayers    int32 `json:"max"`
 	OnlinePlayers int32 `json:"online"`
-	//SamplePlayer  []SPlayer `json:"sample, omitempty"`
+	// SamplePlayer  []string `json:"sample, omitempty"`
 }
 
 var LastStatus ServerStatus
@@ -29,12 +29,12 @@ var LastStatus ServerStatus
 //CreateStatusObject - Create the server status object
 func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string) *ServerStatus {
 	//Limit the range of protocols to prevent the cache being flooded by false requests in attempt to crash the server maliciously
-	if LastStatus.Version.Protocol == MinecraftProtocolVersion {
-		Log.Debug("Cache")
-		return &LastStatus
-	}
+	// if LastStatus.Version.Protocol == MinecraftProtocolVersion {
+	// 	Log.Debug("Cache")
+	// 	return &LastStatus
+	// }
+	Log.Debug("STATUS CREATION")
 	if MinecraftProtocolVersion > 1200 || MinecraftProtocolVersion < 500 {
-		Log.Info("Protocol OOB, setting to 1.17!")
 		MinecraftProtocolVersion = utils.PrimaryMinecraftProtocolVersion
 		MinecraftVersion = utils.PrimaryMinecraftVersion
 	}
@@ -46,7 +46,7 @@ func CreateStatusObject(MinecraftProtocolVersion int32, MinecraftVersion string)
 		Extra[0] = jsonstruct.StatusObject{Text: "!", Bold: true, Color: "gold"}
 		status.Description = jsonstruct.StatusObject{Text: "Server under maintenance", Bold: true, Color: "red", Extra: Extra}
 	} else {
-		Extra[0] = jsonstruct.StatusObject{Text: "GO!", Bold: true, Color: "gold"}
+		Extra[0] = jsonstruct.StatusObject{Text: "BEE!", Bold: true, Color: "gold"}
 		status.Description = jsonstruct.StatusObject{Text: "Honey", Bold: true, Color: "yellow", Extra: Extra}
 	}
 	return status

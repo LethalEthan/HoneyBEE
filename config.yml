@@ -15,3 +15,5 @@ server:
 performance: #Change me!
    cpu: 8
    gc-percent: 100
+   view-distance: 12
+   simulation-distance: 12

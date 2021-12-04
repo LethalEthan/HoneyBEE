@@ -1,5 +1,7 @@
 package packet
 
+import "HoneyBEE/utils"
+
 ///
 ///CLientBound S->C
 ///
@@ -39,8 +41,8 @@ func (SP *Stat_Ping) Decode(PR *PacketReader) error {
 
 func (SP *Stat_Response) Encode(PW *PacketWriter) {
 	PW.ResetData(0x00)
-	SP.Response = CreateStatusObject(SP.ProtocolVersion, "1.17")
-	Log.Debug("ProtoVER: ", SP.ProtocolVersion)
+	SP.Response = CreateStatusObject(utils.PrimaryMinecraftProtocolVersion, utils.PrimaryMinecraftVersion)
+	Log.Debug("ClientProtocolVersion: ", SP.ProtocolVersion, "ServerProtocolVersion: ", utils.PrimaryMinecraftProtocolVersion)
 	marshaledStatus, err := SP.Response.MarshalJSON() //Sends status via json
 	if err != nil {
 		Log.Error(err)
