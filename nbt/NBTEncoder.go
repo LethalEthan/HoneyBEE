@@ -12,6 +12,7 @@ type NBTEncoder struct {
 	data            []byte
 	rootCompound    *Compound
 	currentCompound *Compound
+	// output          bytes.Buffer
 }
 
 func CreateNBTEncoder() NBTEncoder {
