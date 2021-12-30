@@ -11,7 +11,7 @@ import (
 // A temporary mock up of chunk loading until I figure everything out properly
 //
 
-func ChunkLoad(c gnet.Conn) error {
+func (Client *Client) ChunkLoad(c gnet.Conn) error {
 	// C := CreateChunk()
 	//
 	// tmpCL := packet.CreateWriterWithCapacity(16) //temp chunk location writer
@@ -24,11 +24,11 @@ func ChunkLoad(c gnet.Conn) error {
 	//
 	//UL := CreateLightData()
 	//Send chunk
-	if err := c.AsyncWrite(CreateLightData(0, 0)); err != nil {
+	if err := Client.SendData(c, CreateLightData(0, 0)); err != nil {
 		c.Close() //send
 		return err
 	}
-	if err := c.AsyncWrite(CreateChunk(0, 0)); err != nil { //CreateChunk(0, 0)
+	if err := Client.SendData(c, CreateChunk(0, 0)); err != nil { //CreateChunk(0, 0)
 		c.Close() //send
 		return err
 	}
@@ -39,56 +39,56 @@ func ChunkLoad(c gnet.Conn) error {
 	for Z = 0; Z < 12; Z++ {
 		for X = 0; X < 12; X++ {
 			if X != 0 || Z != 0 {
-				if err := c.AsyncWrite(CreateLightData(X, -Z)); err != nil {
+				if err := Client.SendData(c, CreateLightData(X, -Z)); err != nil {
 					c.Close()
 					return err
 				}
-				if err := c.AsyncWrite(CreateChunk(X, Z)); err != nil { // Send chunk
+				if err := Client.SendData(c, CreateChunk(X, Z)); err != nil { // Send chunk
 					c.Close()
 					return err
 				}
 				if Z == 0 {
-					if err := c.AsyncWrite(CreateLightData(-X, Z)); err != nil {
+					if err := Client.SendData(c, CreateLightData(-X, Z)); err != nil {
 						c.Close()
 						return err
 					}
-					if err := c.AsyncWrite(CreateChunk(-X, Z)); err != nil {
+					if err := Client.SendData(c, CreateChunk(-X, Z)); err != nil {
 						c.Close()
 						return err
 					}
 				}
 				if X == 0 {
-					if err := c.AsyncWrite(CreateLightData(X, -Z)); err != nil {
+					if err := Client.SendData(c, CreateLightData(X, -Z)); err != nil {
 						c.Close()
 						return err
 					}
-					if err := c.AsyncWrite(CreateChunk(X, -Z)); err != nil {
+					if err := Client.SendData(c, CreateChunk(X, -Z)); err != nil {
 						c.Close()
 						return err
 					}
 				}
 				if X != 0 && Z != 0 {
-					if err := c.AsyncWrite(CreateLightData(X, -Z)); err != nil {
+					if err := Client.SendData(c, CreateLightData(X, -Z)); err != nil {
 						c.Close()
 						return err
 					}
-					if err := c.AsyncWrite(CreateChunk(X, -Z)); err != nil {
+					if err := Client.SendData(c, CreateChunk(X, -Z)); err != nil {
 						c.Close()
 						return err
 					}
-					if err := c.AsyncWrite(CreateLightData(-X, Z)); err != nil {
+					if err := Client.SendData(c, CreateLightData(-X, Z)); err != nil {
 						c.Close()
 						return err
 					}
-					if err := c.AsyncWrite(CreateChunk(-X, Z)); err != nil {
+					if err := Client.SendData(c, CreateChunk(-X, Z)); err != nil {
 						c.Close()
 						return err
 					}
-					if err := c.AsyncWrite(CreateLightData(-X, -Z)); err != nil {
+					if err := Client.SendData(c, CreateLightData(-X, -Z)); err != nil {
 						c.Close()
 						return err
 					}
-					if err := c.AsyncWrite(CreateChunk(-X, -Z)); err != nil {
+					if err := Client.SendData(c, CreateChunk(-X, -Z)); err != nil {
 						c.Close()
 						return err
 					}
@@ -107,7 +107,7 @@ func ChunkLoad(c gnet.Conn) error {
 	PW.WriteVarInt(0)
 	PW.WriteVarInt(0)
 	Log.Debug("Sent Init World Border")
-	if err := c.AsyncWrite(PW.GetPacket()); err != nil {
+	if err := Client.SendData(c, PW.GetPacket()); err != nil {
 		c.Close()
 		return err
 	}

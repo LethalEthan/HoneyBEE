@@ -1,8 +1,6 @@
 package packet
 
-import (
-	logging "github.com/op/go-logging"
-)
+import "github.com/op/go-logging"
 
 var Log = logging.MustGetLogger("HoneyBEE")
 

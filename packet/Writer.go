@@ -162,7 +162,9 @@ func (pw *PacketWriter) WriteArray(val []byte) {
 //WriteString - Write String to packet (string)
 func (pw *PacketWriter) WriteString(val string) {
 	pw.WriteVarInt(int32(len(val)))
-	pw.data = append(pw.data, val...)
+	if len(val) > 0 {
+		pw.data = append(pw.data, val...)
+	}
 	// pw.AppendByteSlice([]byte(val))
 }
 

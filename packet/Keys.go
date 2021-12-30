@@ -13,7 +13,6 @@ var (
 	publicKey       *rsa.PublicKey
 	publicKeySlice  []byte
 	privateKeySlice []byte
-	VerifyToken     = make([]byte, 4)
 )
 
 func GenerateKeys() {
@@ -28,7 +27,6 @@ func GenerateKeys() {
 	if err != nil {
 		panic(err)
 	}
-	rand.Read(VerifyToken)
 	Log.Info("Key Generated!")
 	// Get rid of vscode warnings
 	_ = publicKey

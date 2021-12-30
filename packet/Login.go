@@ -93,6 +93,7 @@ func (LERSP *Login_0x01_SB) Decode(PR *PacketReader) error {
 		Log.Error(err)
 		return err
 	}
+	// Decrypt using server private key
 	LERSP.SharedSecret, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, LERSP.SharedSecret)
 	if err != nil {
 		Log.Error(err)
@@ -103,6 +104,8 @@ func (LERSP *Login_0x01_SB) Decode(PR *PacketReader) error {
 		Log.Error(err)
 		return err
 	}
+	LERSP.VerifyTokenLen = int32(len(LERSP.VerifyToken))
+	LERSP.SharedSecretLen = int32(len(LERSP.SharedSecret))
 	return nil
 }
 
@@ -128,24 +131,29 @@ func (LPR *Login_0x02_SB) Decode(PR *PacketReader) error {
 }
 
 func (LERQ *Login_0x01_CB) Encode(PW *PacketWriter) {
+	LERQ.VerifyTokenLen = 4
+	LERQ.PublicKeyLen = int32(len(publicKeySlice))
 	PW.ResetData(0x01)
-	PW.WriteString("")
-	PW.WriteVarInt(int32(len(publicKeySlice)))
-	PW.WriteArray(publicKeySlice)
-	PW.WriteVarInt(4)
-	PW.WriteArray([]byte{0, 9, 40, 200})
+	PW.WriteString("")                         // serverID
+	PW.WriteVarInt(int32(len(publicKeySlice))) // publickey length
+	PW.WriteArray(publicKeySlice)              // publickey
+	PW.WriteVarInt(4)                          // verifytoken len
+	LERQ.VerifyToken = make([]byte, 4)         // 4 byte token
+	rand.Read(LERQ.VerifyToken)                // generate random bytes
+	PW.WriteArray(LERQ.VerifyToken)            // verify token
 }
 
 func (LoginSucc *Login_0x02_CB) Encode(PW *PacketWriter) error {
 	PW.ResetData(0x02)
 	PW.WriteUUID(LoginSucc.UUID)
 	PW.WriteString(LoginSucc.Username)
-	T, err := LoginSucc.UUID.MarshalText()
+	tmp, err := LoginSucc.UUID.MarshalText()
 	if err != nil {
 		Log.Error(err)
 		return err
 	}
-	Log.Info("Username:", LoginSucc.Username, "UUID:", string(T))
+	Log.Info("Username:", LoginSucc.Username, "UUID:", string(tmp))
+	Log.Debug("Sent Login success")
 	return nil
 }
 
