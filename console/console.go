@@ -14,7 +14,7 @@ import (
 	"runtime/pprof"
 	"syscall"
 
-	logging "github.com/op/go-logging"
+	"github.com/op/go-logging"
 )
 
 var (
@@ -52,9 +52,8 @@ func Console() {
 				runtime.GOMAXPROCS(conf.Performance.CPU)
 			}
 			if runtime.NumCPU() <= 3 || conf.Performance.CPU <= 2 {
-				Log.Critical("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
+				Log.Warning("Number of CPU's is less than 3 this could impact performance as this is a heavily threaded application")
 			}
-			Log.Critical("If you changed new server to old server this will not be reloaded or changed!")
 		case "GC":
 			runtime.GC()
 			Log.Info("GC invoked")
@@ -68,7 +67,7 @@ func Console() {
 				cprof.Close() // error handling omitted for example
 				Log.Warning("Written CPU Profile")
 			} else {
-				Log.Critical("cpuprofile flag not specified! not writing a profile")
+				Log.Warning("cpuprofile flag not specified! not writing a profile")
 			}
 		case "memprofile":
 			if config.Memprofile != "" {
@@ -79,7 +78,7 @@ func Console() {
 					Log.Warning("Written Memory Profile")
 				}
 			} else {
-				Log.Critical("memprofile flag not specified! not writing a profile")
+				Log.Warning("memprofile flag not specified! not writing a profile")
 			}
 		case "profile":
 			if config.Cpuprofile != "" {
@@ -87,7 +86,7 @@ func Console() {
 				cprof.Close() // error handling omitted for example
 				Log.Warning("Written CPU Profile")
 			} else {
-				Log.Critical("cpuprofile flag not specified! not writing a cpuprofile")
+				Log.Warning("cpuprofile flag not specified! not writing a cpuprofile")
 			}
 			//
 			if config.Memprofile != "" {
@@ -98,7 +97,7 @@ func Console() {
 					Log.Warning("Written Memory Profile")
 				}
 			} else {
-				Log.Critical("memprofile flag not specified! not writing a cpuprofile")
+				Log.Warning("memprofile flag not specified! not writing a cpuprofile")
 			}
 		default:
 			Log.Warning("Unknown command")

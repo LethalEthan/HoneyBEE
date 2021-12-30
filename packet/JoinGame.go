@@ -2,6 +2,7 @@ package packet
 
 import (
 	"HoneyBEE/biome"
+	"HoneyBEE/config"
 	"HoneyBEE/nbt"
 	"os"
 )
@@ -88,11 +89,12 @@ func (JG *JoinGame_CB) Encode(PW *PacketWriter) {
 	PW.WriteIdentifier(JG.WorldName)
 	PW.WriteLong(0)
 	PW.WriteVarInt(20)
-	PW.WriteVarInt(12)
+	PW.WriteVarInt(int32(config.GConfig.Performance.ViewDistance))
+	// PW.WriteVarInt(int32(config.GConfig.Performance.SimulationDistance)) // 1.18
 	PW.WriteBoolean(false)
 	PW.WriteBoolean(true)
-	PW.WriteBoolean(true)
-	PW.WriteBoolean(true)
+	PW.WriteBoolean(false)
+	PW.WriteBoolean(false)
 	// Log.Debug("CREATED JOIN GAME")
 	// Debug - save results
 	// f, err := os.Create("testing.nbt")
@@ -208,7 +210,7 @@ func CreateBiomeRegistries() nbt.List {
 		TC := nbt.CreateCompoundTag("") // Biome entry
 		TC.AddTag(nbt.CreateStringTag("name", v.Name))
 		TC.AddTag(nbt.CreateIntTag("id", int32(v.ID)))
-		TC.AddTag(CreateBiomeProperties(1.0, 1.0, 1.0, 1.0, 1703705, 1703705, 1703705, 1703705, 1703705, 1703705, "none", "plains", "", "", ""))
+		TC.AddTag(CreateBiomeProperties(1.0, 1.0, 1.0, 1.0, 65535, 65535, 65535, 65535, 65535, 65535, "none", "plains", "", "", "")) //1703705
 		TC.EndTag()
 		BiomeList.AddTag(TC)
 	}

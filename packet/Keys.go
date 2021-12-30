@@ -13,7 +13,6 @@ var (
 	publicKey       *rsa.PublicKey
 	publicKeySlice  []byte
 	privateKeySlice []byte
-	VerifyToken     = make([]byte, 4)
 )
 
 func GenerateKeys() {
@@ -28,18 +27,17 @@ func GenerateKeys() {
 	if err != nil {
 		panic(err)
 	}
-	rand.Read(VerifyToken)
 	Log.Info("Key Generated!")
 	// Get rid of vscode warnings
 	_ = publicKey
 	_ = privateKeySlice
 }
 
-func Auth(username string, sharedSecret []byte) (uuid.UUID, string) {
+func Auth(username string, sharedSecret []byte) (uuid.UUID, string, error) {
 	PlayerUUID, response, autherr := Authenticate(username, "", sharedSecret, publicKeySlice)
 	if autherr != nil {
 		Log.Error("Auth Fail! ", autherr)
-		return uuid.Nil, ""
+		return uuid.Nil, "", autherr
 	}
-	return PlayerUUID, response.Name
+	return PlayerUUID, response.Name, nil
 }

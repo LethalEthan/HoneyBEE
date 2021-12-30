@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	logging "github.com/op/go-logging"
+	"github.com/op/go-logging"
 	"github.com/panjf2000/gnet"
 )
 
 var Log = logging.MustGetLogger("HoneyBEE")
-var GlobalServer *Server
+var GlobalServer Server
 
 type Server struct {
 	*gnet.EventServer
@@ -19,14 +19,13 @@ type Server struct {
 	ConnectedSockets sync.Map
 }
 
-func NewServer(ip string, port string, multicore bool, tick bool, lockosthread bool, reuse bool, sendBuf int, recvBuf int, readBufferCap int) (Server, error) {
+func NewServer(ip string, port string, multicore bool, tick bool, lockosthread bool, reuse bool, sendBuf int, recvBuf int, readBufferCap int) (*Server, error) {
 	Log.Info("Generating Key chain")
 	packet.GenerateKeys()
-	S := new(Server)
+	GlobalServer = *new(Server)
 	packet.CreateEntries()
-	GlobalServer = S
-	err := gnet.Serve(S, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithNumEventLoop(config.GConfig.Server.NumEventLoop), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))
-	return *S, err
+	err := gnet.Serve(&GlobalServer, "tcp://"+ip+port, gnet.WithMulticore(multicore), gnet.WithNumEventLoop(config.GConfig.Server.NumEventLoop), gnet.WithTicker(tick), gnet.WithLockOSThread(lockosthread), gnet.WithReusePort(reuse), gnet.WithSocketSendBuffer(sendBuf), gnet.WithSocketRecvBuffer(recvBuf), gnet.WithReadBufferCap(readBufferCap), gnet.WithTCPKeepAlive(5*time.Second))
+	return &GlobalServer, err
 }
 
 func (S *Server) OnInitComplete(Srv gnet.Server) (Action gnet.Action) {
@@ -43,7 +42,7 @@ func (S *Server) OnOpened(Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 	C.PR = packet.CreatePacketReader([]byte{0x00})
 	C.PW = packet.CreatePacketWriterWithCapacity(0x00, 8192)
 	C.Read = make(chan []byte, 10)
-	Conn.SetContext(&C)
+	// Conn.SetContext(&C)
 	S.ConnectedSockets.Store(Conn.RemoteAddr().String(), C)
 	go C.ClientReact(Conn)
 	Log.Debug("CR")
@@ -53,13 +52,15 @@ func (S *Server) OnOpened(Conn gnet.Conn) (Out []byte, Action gnet.Action) {
 
 func (S *Server) OnClosed(Conn gnet.Conn, err error) (Action gnet.Action) {
 	Log.Debugf("Socket with addr: %s is closing...\n", Conn.RemoteAddr().String())
-	S.ConnectedSockets.Delete(Conn.RemoteAddr().String())
-	CC, tmp := Conn.Context().(*Client)
-	if !tmp {
-		Log.Critical("Conn Context is nil!")
+	CO, load := S.ConnectedSockets.LoadAndDelete(Conn.RemoteAddr().String())
+	if load {
+		CC := CO.(Client)
+		CC.Read <- nil
+		Conn.SetContext(nil)
+		close(CC.Read)
+		Log.Infof("Socket with addr: %s is closed\n", Conn.RemoteAddr().String())
+	} else {
+		Log.Infof("Client object not found")
 	}
-	CC.Read <- nil
-	Conn.SetContext(nil)
-	Log.Infof("Socket with addr: %s is closed\n", Conn.RemoteAddr().String())
 	return
 }

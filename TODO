@@ -1,5 +1,11 @@
 Get out of pre-alpha:
 Finish packet logic and design
-Finish NBT tests and work on performance and design later
+world loading and saving, this format will likely change so be cautious and a converter will be given if so
+
+1.18:
+Simulation distance in join game
+Chunk data now includes light data
+Biomes use palletes
+Bits per block = 0 means the it's all 1 type of block, very smart
 
 This list will increase, got covid so I can't think too well

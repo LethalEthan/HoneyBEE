@@ -162,7 +162,9 @@ func (pw *PacketWriter) WriteArray(val []byte) {
 //WriteString - Write String to packet (string)
 func (pw *PacketWriter) WriteString(val string) {
 	pw.WriteVarInt(int32(len(val)))
-	pw.data = append(pw.data, val...)
+	if len(val) > 0 {
+		pw.data = append(pw.data, val...)
+	}
 	// pw.AppendByteSlice([]byte(val))
 }
 
@@ -238,6 +240,10 @@ func (pw *PacketWriter) WriteIntArray(val []int32) {
 
 func (pw *PacketWriter) WriteLongArray(val []int64) {
 	pw.data = append(pw.data, utils.UnsafeCastInt64ArrayToBytes(val)...)
+}
+
+func (pw *PacketWriter) WriteULongArray(val []uint64) {
+	pw.data = append(pw.data, utils.UnsafeCastUint64ArrayToBytes(val)...)
 }
 
 func (pw *PacketWriter) WriteUUID(val uuid.UUID) {

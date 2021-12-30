@@ -67,7 +67,7 @@ func Authenticate(username, serverID string, sharedSecret, publicKey []byte) (uu
 		return uuid.Nil, nil, err
 	}
 	// T, err := UUID.MarshalText()
-	Log.Debug("UUID from auth: ", res.ID, " ", res)
+	Log.Debug("UUID from auth: ", res.ID, res)
 	return UUID, res, nil
 }
 

@@ -352,6 +352,7 @@ type (
 		HashedSeed          int64
 		MaxPlayers          int32
 		ViewDistance        int32
+		SimulationDistance  int32
 		ReducedDebugInfo    bool
 		EnableRespawnScreen bool
 		IsDebug             bool

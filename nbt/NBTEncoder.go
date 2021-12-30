@@ -54,7 +54,7 @@ func (NBTE *NBTEncoder) GetCurrentTag() *Compound {
 }
 
 func (NBTE *NBTEncoder) Encode() []byte {
-	Log.Debug("Encode function")
+	// Log.Debug("Encode function")
 	NBTE.data = NBTE.data[:0]
 	if NBTE.currentCompound.previousTag == nil {
 		NBTE.EncodeCompound(NBTE.rootCompound)
