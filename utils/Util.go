@@ -171,3 +171,14 @@ func UnsafeCastUint64ArrayToBytes(ints []uint64) []byte {
 	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ints[0])), Len: length, Cap: length}
 	return *(*[]byte)(unsafe.Pointer(&hdr))
 }
+
+/// go 1.18 test
+
+// type LongNumber interface {
+//     ~int64 | ~uint64 | ~float64
+// }
+
+// func UnsafeCastLongNumberToBytes[T LongNumber](val T) []byte {
+// 	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&val)), Len: 8, Cap: 8}
+// 	return *(*[]byte)(unsafe.Pointer(&hdr))
+// }
