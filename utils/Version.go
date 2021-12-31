@@ -9,8 +9,8 @@ const (
 	MajorVersion = 0
 	MinorVersion = 0
 	PatchVersion = 1
-	BuildVersion = 10
-	StateVersion = "P-ALPHA" //PreAlpha, Alpha, Beta, Release Candidate, Release
+	BuildVersion = 11
+	StateVersion = "ALPHA" //PreAlpha, Alpha, Beta, Release Candidate, Release
 )
 
 //GetVersion - Returns Major, Minor, Patch, VersionState and Build number

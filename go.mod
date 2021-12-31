@@ -21,7 +21,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/profile v1.6.0
 	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/zap v1.19.1
+	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
