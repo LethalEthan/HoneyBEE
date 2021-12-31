@@ -89,6 +89,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 			Log.Debug("Frame: ", Frame)
 			Log.Debug("PacketSize", PacketSize)
 			Log.Debug("Frame length", len(Frame))
+			Log.Debug("Grouped packets")
 		}
 		//Packets cannot be bigger than a 3 byte varint :(
 		if PacketSize > 2097151 {
@@ -224,8 +225,6 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 					c.Close()
 					return
 				}
-				// LS.UUID = uuid.MustParse("523c4206-f96b-43ad-a220-9835508444d6")
-				// LS.Username = Client.Player.PlayerName
 				if LS.UUID == uuid.Nil {
 					Log.Error("UUID is nil!")
 					c.Close()
@@ -351,12 +350,12 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 				// Log.Debug("Sent Declare commands")
 				// Client.SendData(c,PW.GetPacket())
 
-				Log.Debug("Sent Unlock Recipes")
-				if err := Client.SendData(c, UnlockRecipesPacket); err != nil { // Unlock Recipes
-					Log.Error(err)
-					c.Close()
-					return
-				}
+				// Log.Debug("Sent Unlock Recipes")
+				// if err := Client.SendData(c, UnlockRecipesPacket); err != nil { // Unlock Recipes
+				// 	Log.Error(err)
+				// 	c.Close()
+				// 	return
+				// }
 
 				PW.ResetData(0x38) // Player pos and look
 				PW.WriteDouble(0.0)
