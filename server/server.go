@@ -37,6 +37,7 @@ func (S *Server) React(Frame []byte, Conn gnet.Conn) (Out []byte, Action gnet.Ac
 		Conn.Close()
 		return
 	}
+	Conn.ResetBuffer()
 	CC := CO.(Client)
 	// Log.Debug("React hit!")
 	if len(Frame) > 0 {
@@ -54,15 +55,9 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 	var PW = &Client.PW
 	for {
 		Frame := <-Client.Read //Block until react fires
-		if Frame == nil {
+		if Frame == nil || len(Frame) == 0 {
 			Log.Debug("Frame nil, closing")
 			Client = nil
-			// c.SetContext(nil)
-			c.Close()
-			return
-		}
-		if len(Frame) == 0 {
-			Log.Debug("p 0")
 			c.Close()
 			return
 		}
@@ -72,14 +67,14 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 			PR.SetData(Frame)
 		}
 		//Get PacketSize and Data
-		PacketSize, NR, err := PR.ReadVarInt() //packet.DecodeVarInt(Frame) //NR = Numread, used to note the position in the frame where it read to
+		PacketSize, NR, err := PR.ReadVarInt() //NR = Numread, used to note the position in the frame where it read to
 		if err != nil {
 			Log.Error(err)
 			c.Close()
 			return
 		}
 		PacketDataSize := PacketSize - 1
-		PacketID, _, err := PR.ReadVarInt() //packet.DecodeVarInt(Frame[NR:]) //NR2 is the second numread so the Decoder later on will correctly
+		PacketID, _, err := PR.ReadVarInt()
 		if err != nil {
 			Log.Error(err)
 			c.Close()
@@ -94,7 +89,7 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 		//Packets cannot be bigger than a 3 byte varint :(
 		if PacketSize > 2097151 {
 			Log.Error("packet size greater than 3 byte varint")
-			c.Close() //Disconnect the client until  I find a solution, my idea is a custom mod or client that raises the packet size to a Long
+			c.Close() //Disconnect the client until I find a solution, my idea is a custom mod or client that raises the packet size to a VarLong because why not
 			return
 		}
 		// Legacy Ping - drop conn
@@ -125,7 +120,6 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 					c.Close()
 				}
 				Client.State = int(HP.NextState)
-				// c.SetContext(Client)
 			}
 		case STATUS:
 			switch PacketID {
@@ -597,5 +591,6 @@ func (Client *Client) ClientReact(c gnet.Conn) {
 		default:
 			Log.Info("PP")
 		}
+
 	}
 }
