@@ -288,3 +288,12 @@ func TestAllRWValues(T *testing.T) {
 	PW.ClearData()
 	PR.SetData([]byte{0})
 }
+
+func BenchmarkBlockPositionEncode(B *testing.B) {
+	B.ReportAllocs()
+	B.ResetTimer()
+	for i := 0; i < B.N; i++ {
+		Block := i<<12 | (i<<8 | i<<4 | i)
+		_ = Block
+	}
+}

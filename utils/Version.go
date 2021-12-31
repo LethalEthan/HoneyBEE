@@ -9,7 +9,7 @@ const (
 	MajorVersion = 0
 	MinorVersion = 0
 	PatchVersion = 1
-	BuildVersion = 11
+	BuildVersion = 12
 	StateVersion = "ALPHA" //PreAlpha, Alpha, Beta, Release Candidate, Release
 )
 

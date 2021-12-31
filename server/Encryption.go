@@ -86,11 +86,9 @@ func (Client *Client) DecryptPacket(data []byte) []byte {
 
 func (Client *Client) SendData(c gnet.Conn, data []byte) (err error) {
 	if Client.onlinemode {
-		Log.Debug("Sending onli")
 		data = Client.EncryptPacket(data)
 		err = c.AsyncWrite(data)
 	} else {
-		Log.Debug("Sending ofln")
 		err = c.AsyncWrite(data)
 	}
 	return
