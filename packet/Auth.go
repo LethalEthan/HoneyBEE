@@ -1,8 +1,8 @@
 package packet
 
 import (
-	"crypto/md5"
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -17,7 +17,7 @@ import (
 
 var ErrorAuthFailed = /*errors.New*/ ("Authentication failed")
 var ErrorHash = "00000000000000000000000000000000"
-var MD5 string
+var SHA string
 
 type jsonResponse struct {
 	ID   string `json:"id"`
@@ -83,17 +83,16 @@ func twosCompliment(p []byte) {
 }
 
 func Hash() string {
-	hashee, err := os.Open(os.Args[0])
+	file, err := os.Open(os.Args[0])
 	if err != nil {
-		MD5 = ErrorHash
+		SHA = ErrorHash
 	}
-	hash := md5.New()
-	if _, err := io.Copy(hash, hashee); err != nil {
-		MD5 = ErrorHash
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		SHA = ErrorHash
 	}
-	//Get the 16 bytes hash
-	hBytes := hash.Sum([]byte(ErrorAuthFailed))[:16]
-	hashee.Close()
-	MD5 = hex.EncodeToString(hBytes) //Convert bytes to string
-	return MD5
+	hBytes := hash.Sum(nil)
+	file.Close()
+	SHA = hex.EncodeToString(hBytes) //Convert bytes to string
+	return SHA
 }

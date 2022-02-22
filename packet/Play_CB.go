@@ -77,7 +77,7 @@ type (
 		Pitch      byte
 	}
 
-	//Play_0x05_CB -
+	//Play_0x05_CB - Sculk Vibration Signal
 	SculkVibrationSignal_CB struct {
 		SourcePosition Position
 		Destination    Identifier
@@ -141,7 +141,7 @@ type (
 	}
 
 	//Play_0x0E_CB - Server Difficulty
-	ServerDifficulty struct {
+	ServerDifficulty_CB struct {
 		Difficulty     byte
 		DifficultyLock bool
 	}
@@ -274,20 +274,7 @@ type (
 		KeepAliveID int64
 	}
 
-	//Play 0x22
-	ChunkData_CB struct {
-		ChunkX              int32
-		ChunkZ              int32
-		BitMaskLength       int32
-		PrimaryBitMask      []int64
-		HeightMaps          []byte
-		BiomeLength         int32
-		Biomes              []int32
-		Size                int
-		Data                []byte
-		NumberBlockEntities int
-		BlockEntities       NBT
-	}
+	// 0x22 - chunk data moved to chunks.go
 
 	//Play 0x23
 	Effect_CB struct {
@@ -492,7 +479,7 @@ type (
 	}
 
 	//Play 0x38
-	PlayerPositionLook struct {
+	PlayerPositionLook_CB struct {
 		X               float64
 		Y               float64
 		Z               float64
@@ -525,8 +512,9 @@ type (
 	}
 
 	//Play 0x3A
-	DestroyEntity_CB struct {
-		EntityID int32
+	DestroyEntities_CB struct {
+		Count     int32
+		EntityIDs []int32
 	}
 
 	//Play 0x3B
@@ -710,29 +698,34 @@ type (
 	}
 
 	//Play 0x57
+	UpdateSimulationDistance_CB struct {
+		SimulationDistance int32
+	}
+
+	//Play 0x58
 	SetTitleSubTitle_CB struct {
 		SubtitleText jsonstruct.ChatComponent
 	}
 
-	//Play 0x58
+	//Play 0x59
 	TimeUpdate_CB struct {
 		WorldAge  int64
 		TimeOfDay int64
 	}
 
-	//Ply 0x59
+	//Ply 0x5A
 	SetTitleText_CB struct {
 		TitleText jsonstruct.ChatComponent
 	}
 
-	//Play 0x5A
+	//Play 0x5B
 	SetTitleTimes_CB struct {
 		FadeIn  int32
 		Stay    int32
 		FadeOut int32
 	}
 
-	//Play 0x5B
+	//Play 0x5C
 	EntitySoundEffect_CB struct {
 		SoundID       int32
 		SoundCategory int32
@@ -741,7 +734,7 @@ type (
 		Pitch         float32
 	}
 
-	//Play 0x5C
+	//Play 0x5D
 	SoundEffect_CB struct {
 		SoundID         int32
 		SoundCategory   int32
@@ -752,33 +745,33 @@ type (
 		Pitch           float32
 	}
 
-	//Play 0x5D
+	//Play 0x5E
 	StopSound_CB struct {
 		Flags  byte
 		Source int32
 		Sound  Identifier
 	}
 
-	//Play 0x5E
+	//Play 0x5F
 	PlayerListHeaderFooter_CB struct {
 		Header jsonstruct.ChatComponent
 		Footer jsonstruct.ChatComponent
 	}
 
-	//Play 0x5F
+	//Play 0x60
 	NBTQueryResponse_CB struct {
 		TransactionID int32
 		NBT           NBT
 	}
 
-	//Play 0x60
+	//Play 0x61
 	CollectItem_CB struct {
 		CollectedEntityID int32
 		CollectorEntityID int32
 		PickupItemCount   int32
 	}
 
-	//Play 0x61
+	//Play 0x62
 	EntityTeleport_CB struct {
 		EntityID int32
 		X        float64
@@ -789,7 +782,7 @@ type (
 		OnGround bool
 	}
 
-	//Play 0x62
+	//Play 0x63
 	Advancements_CB struct {
 		ResetClear         bool
 		MappingSize        int32
@@ -806,14 +799,14 @@ type (
 		}
 	}
 
-	//Play 0x63
+	//Play 0x64
 	EntityProperties_CB struct {
 		EntityID           int32
 		NumberOfProperties int32
 		Properties         []Property
 	}
 
-	//Play 0x64
+	//Play 0x65
 	EntityEffect_CB struct {
 		EntityID  int32
 		EffectID  byte
@@ -822,12 +815,13 @@ type (
 		Flags     byte
 	}
 
+	//Play 0x66
 	DeclareRecipes_CB struct {
 		NumRecipes int32
 		Recipe     Recipes
 	}
 
-	//Play 0x66
+	//Play 0x67
 	Tags_CB struct {
 		Length int32
 		Tags   TagsArray

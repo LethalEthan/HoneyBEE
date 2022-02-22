@@ -5,7 +5,6 @@ import (
 	"HoneyBEE/console"
 	"HoneyBEE/server"
 	"HoneyBEE/utils"
-	"fmt"
 	"os"
 	"runtime"
 	"runtime/debug"
@@ -50,7 +49,7 @@ func main() {
 	logging.SetBackend(B1LF)
 	// Logger Creation END
 	Log.Info("HoneyBEE starting...", "version: ", utils.GetVersionString(), "build: ", console.Hash())
-	fmt.Print(utils.Ascii, utils.Ascii2, "\n")
+	print(utils.Ascii, utils.Ascii2, "\n")
 	// Remove unused Ascii strings for less memory cosumption
 	utils.Ascii = ""
 	utils.Ascii2 = ""
@@ -76,6 +75,8 @@ func main() {
 	}
 	// go console.Console()
 	// go console.Shutdown()
+	// world.GetRegionsFromStorage()
+	// return
 	runtime.GC()
 	if console.Panicked {
 		Log.Warning("Main: Panic is true, blocked main thread")
