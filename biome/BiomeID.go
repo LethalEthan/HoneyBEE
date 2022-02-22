@@ -10,337 +10,262 @@ type Biome struct {
 
 // ID's of all biomes
 const (
-	Ocean_BiomeID = iota
+	The_Void_BiomeID = iota
 	Plains_BiomeID
+	Sunflower_Plains_BiomeID
+	Snowy_Plains_BiomeID // NEW
+	Ice_Spikes_BiomeID
 	Desert_BiomeID
-	Mountains_BiomeID
-	Forest_BiomeID
-	Taiga_BiomeID
 	Swamp_BiomeID
-	River_BiomeID
-	Nether_Wastes_BiomeID
-	The_End_BiomeID
-	Frozen_Ocean_BiomeID
-	Frozen_River_BiomeID
-	Snowy_Tundra_BiomeID
-	Snowy_Mountains_BiomeID
-	Mushroom_Fields_BiomeID
-	Mushroom_Fields_Shore_BiomeID
-	Beach_BiomeID
-	Desert_Hills_BiomeID
-	Wooded_Hills_BiomeID
-	Taiga_Hills_BiomeID
-	Mountain_Edge_BiomeID
-	Jungle_BiomeID
-	Jungle_Hills_BiomeID
-	Jungle_Edge_BiomeID
-	Deep_Ocean_BiomeID
-	Stone_Shore_BiomeID
-	Snowy_Beach_BiomeID
+	Forest_BiomeID
+	Flower_Forest_BiomeID
 	Birch_Forest_BiomeID
-	Birch_Forest_Hills_BiomeID
 	Dark_Forest_BiomeID
+	Old_Growth_Birch_Forest_BiomeID // NEW
+	Old_Growth_Pine_Taiga_BiomeID   // NEW
+	Old_Growth_Spruce_Taiga         // NEW
+	Taiga_BiomeID
 	Snowy_Taiga_BiomeID
-	Snowy_Taiga_Hills_BiomeID
-	Giant_Tree_Taiga_BiomeID
-	Giant_Tree_Taiga_Hills_BiomeID
-	Wooded_Mountains_BiomeID
 	Savanna_BiomeID
 	Savanna_Plateau_BiomeID
+	Windswept_Hills_BiomeID          // NEW
+	Windswept_Gravelly_Hills_BiomeID // NEW
+	Windswept_Forest_BiomeID         // NEW
+	Windswept_Savanna_BiomeID        // NEW
+	Jungle_BiomeID
+	Sparse_Jungle_BiomeID // NEW
+	Bamboo_Jungle_BiomeID
 	Badlands_BiomeID
-	Wooded_Badlands_Plateau_BiomeID
-	Badlands_Plateau_BiomeID
-	Small_End_Islands_BiomeID
-	End_Midlands_BiomeID
-	End_Highlands_BiomeID
-	End_Barrens_BiomeID
+	Eroded_Badlands_BiomeID
+	Wooded_Badlands_BiomeID // NEW
+	Meadow_BiomeID          // NEW
+	Grove_BiomeID           // NEW
+	Snowy_Slopes_BiomeID    // NEW
+	Frozen_Peaks_BiomeID    // NEW
+	Jagged_Peaks_BiomeID    // NEW
+	Stony_Peaks_BiomeID     // NEW
+	River_BiomeID
+	Frozen_River_BiomeID
+	Beach_BiomeID
+	Snowy_Beach_BiomeID
+	Stony_Shore_BiomeID
 	Warm_Ocean_BiomeID
 	Lukewarm_Ocean_BiomeID
-	Cold_Ocean_BiomeID
-	Deep_Warm_Ocean_BiomeID
 	Deep_Lukewarm_Ocean_BiomeID
+	Ocean_BiomeID
+	Deep_Ocean_BiomeID
+	Cold_Ocean_BiomeID
 	Deep_Cold_Ocean_BiomeID
+	Frozen_Ocean_BiomeID
 	Deep_Frozen_Ocean_BiomeID
-	The_Void_BiomeID         = 127
-	Sunflower_Plains_BiomeID = iota + 77
-	Desert_Lakes_BiomeID
-	Gravelly_Mountains_BiomeID
-	Flower_Forest_BiomeID
-	Taiga_Mountains_BiomeID
-	Swamp_Hills_BiomeID
-	Ice_Spikes_BiomeID                       = 140
-	Modified_Jungle_BiomeID                  = 149
-	Modified_Jungle_Edge_BiomeID             = 151
-	Tall_Birch_Forest_BiomeID                = 155
-	Tall_Birch_Hills_BiomeID                 = 156
-	Dark_Forest_Hills_BiomeID                = 157
-	Snowy_Taiga_Mountains_BiomeID            = 158
-	Giant_Spruce_Taiga_BiomeID               = 160
-	Modified_Gravelly_Mountains_BiomeID      = 162
-	Shattered_Savanna_BiomeID                = 163
-	Shattered_Savanna_Plateau_BiomeID        = 164
-	Eroded_Badlands_BiomeID                  = 165
-	Modified_Wooded_Badlands_Plateau_BiomeID = 166
-	Modified_Badlands_Plateau_BiomeID        = 167
-	Bamboo_Jungle_BiomeID                    = 168
-	Bamboo_Jungle_Hills_BiomeID              = 169
-	Soul_Sand_Valley_BiomeID                 = 170
-	Crimson_Forest_BiomeID                   = 171
-	Warped_Forest_BiomeID                    = 172
-	Basalt_Deltas_BiomeID                    = 173
-	Dripstone_Caves_BiomeID                  = 174
-	Lush_Caves_BiomeID                       = 175
+	Mushroom_Fields_BiomeID
+	Dripstone_Caves_BiomeID
+	Lush_Caves_BiomeID
+	Nether_Wastes_BiomeID
+	Warped_Forest_BiomeID
+	Crimson_Forest_BiomeID
+	Soul_Sand_Valley_BiomeID
+	Basalt_Deltas_BiomeID
+	The_End_BiomeID
+	End_Highlands_BiomeID
+	End_Midlands_BiomeID
+	Small_End_Islands_BiomeID
+	End_Barrens_BiomeID
 )
 
 var (
 	// biomeNameMap stores all object's of biomes, there name and ID and further on their peoperties
 	biomeNameMap = map[string]Biome{
-		"ocean":                           biomeStructs[0],  //{"minecraft:ocean", Ocean_BiomeID},
-		"plains":                          biomeStructs[1],  //{"minecraft:plains", Plains_BiomeID},
-		"desert":                          biomeStructs[2],  //{"minecraft:desert", Desert_BiomeID},
-		"mountains":                       biomeStructs[3],  //{"minecraft:mountains", Mountains_BiomeID},
-		"forest":                          biomeStructs[4],  //{"minecraft:forest", Forest_BiomeID},
-		"taiga":                           biomeStructs[5],  //{"minecraft:taiga", Taiga_BiomeID},
-		"swamp":                           biomeStructs[6],  //{"minecraft:swamp", Swamp_BiomeID},
-		"river":                           biomeStructs[7],  //{"minecraft:river", River_BiomeID},
-		"nether_wastes":                   biomeStructs[8],  //{"minecraft:nether_wastes", Nether_Wastes_BiomeID},
-		"the_end":                         biomeStructs[9],  //{"minecraft:the_end", The_End_BiomeID},
-		"frozen_ocean":                    biomeStructs[10], //{"minecraft:frozen_ocean", Frozen_Ocean_BiomeID},
-		"frozen_river":                    biomeStructs[11], //{"minecraft:frozen_river", Frozen_River_BiomeID},
-		"snowy_tundra":                    biomeStructs[12], //{"minecraft:snowy_tundra", Snowy_Tundra_BiomeID},
-		"snowy_mountains":                 biomeStructs[13], //{"minecraft:snowy_mountains", Snowy_Mountains_BiomeID},
-		"mushroom_fields":                 biomeStructs[14], //{"minecraft:mushroom_fields", Mushroom_Fields_BiomeID},
-		"mushroom_fields_shore":           biomeStructs[15], //{"minecraft:mushroom_fields_shore", Mushroom_Fields_Shore_BiomeID},
-		"beach":                           biomeStructs[16], //{"minecraft:beach", Beach_BiomeID},
-		"desert_hills":                    biomeStructs[17], //{"minecraft:desert_hills", Desert_Hills_BiomeID},
-		"wooded_hills":                    biomeStructs[18], //{"minecraft:wooded_hills", Wooded_Hills_BiomeID},
-		"taiga_hills":                     biomeStructs[19], //{"minecraft:taiga_hills", Taiga_Hills_BiomeID},
-		"mountain_edge":                   biomeStructs[20], //{"minecraft:mountain_edge", Mountain_Edge_BiomeID},
-		"jungle":                          biomeStructs[21], //{"minecraft:jungle", Jungle_BiomeID},
-		"jungle_hills":                    biomeStructs[22], //{"minecraft:jungle_hills", Jungle_Hills_BiomeID},
-		"jungle_edge":                     biomeStructs[23], //{"minecraft:jungle_edge", Jungle_Edge_BiomeID},
-		"deep_ocean":                      biomeStructs[24], //{"minecraft:deep_ocean", Deep_Ocean_BiomeID},
-		"stone_shore":                     biomeStructs[25], //{"minecraft:stone_shore", Stone_Shore_BiomeID},
-		"snowy_beach":                     biomeStructs[26], //{"minecraft:snowy_beach", Snowy_Beach_BiomeID},
-		"birch_forest":                    biomeStructs[27], //{"minecraft:birch_forest", Birch_Forest_BiomeID},
-		"birch_forest_hills":              biomeStructs[28], //{"minecraft:birch_forest_hills", Birch_Forest_Hills_BiomeID},
-		"dark_forest":                     biomeStructs[29], //{"minecraft:dark_forest", Dark_Forest_BiomeID},
-		"snowy_taiga":                     biomeStructs[30], //{"minecraft:snowy_taiga", Snowy_Taiga_BiomeID},
-		"snowy_taiga_hills":               biomeStructs[31], //{"minecraft:snowy_taiga_hills", Snowy_Taiga_Hills_BiomeID},
-		"giant_tree_taiga":                biomeStructs[32], //{"minecraft:giant_tree_taiga", Giant_Tree_Taiga_BiomeID},
-		"giant_tree_taiga_hills":          biomeStructs[33], //{"minecraft:giant_tree_taiga_hills", Giant_Tree_Taiga_Hills_BiomeID},
-		"wooded_mountains":                biomeStructs[34], //{"minecraft:wooded_mountains", Wooded_Mountains_BiomeID},
-		"savanna":                         biomeStructs[35], //{"minecraft:savanna", Savanna_BiomeID},
-		"savanna_plateu":                  biomeStructs[36], //{"minecraft:savanna_plateu", Savanna_Plateau_BiomeID},
-		"badlands":                        biomeStructs[37], //{"minecraft:badlands", Badlands_BiomeID},
-		"wooded_badlands_plateu":          biomeStructs[38], //{"minecraft:wooded_badlands_plateu", Wooded_Badlands_Plateau_BiomeID},
-		"badlands_plateu":                 biomeStructs[39], //{"minecraft:badlands_plateu", Badlands_Plateau_BiomeID},
-		"small_end_islands":               biomeStructs[40], //{"minecraft:small_end_islands", Small_End_Islands_BiomeID},
-		"end_midlands":                    biomeStructs[41], //{"minecraft:end_midlands", End_Midlands_BiomeID},
-		"end_highlands":                   biomeStructs[42], //{"minecraft:end_highlands", End_Highlands_BiomeID},
-		"end_barrens":                     biomeStructs[43], //{"minecraft:end_barrens", End_Barrens_BiomeID},
-		"warm_ocean":                      biomeStructs[44], //{"minecraft:warm_ocean", Warm_Ocean_BiomeID},
-		"lukewarm_ocean":                  biomeStructs[45], //{"minecraft:lukewarm_ocean", Lukewarm_Ocean_BiomeID},
-		"cold_ocean":                      biomeStructs[46], //{"minecraft:cold_ocean", Cold_Ocean_BiomeID},
-		"deep_warm_ocean":                 biomeStructs[47], //{"minecraft:deep_warm_ocean", Deep_Warm_Ocean_BiomeID},
-		"deep_lukewarm_ocean":             biomeStructs[48], //{"minecraft:deep_lukewarm_ocean", Deep_Lukewarm_Ocean_BiomeID},
-		"deep_cold_ocean":                 biomeStructs[49], //{"minecraft:deep_cold_:ocean", Deep_Cold_Ocean_BiomeID},
-		"deep_frozen_ocean":               biomeStructs[50], //{"minecraft:deep_frozen_ocean", Deep_Frozen_Ocean_BiomeID},
-		"the_void":                        biomeStructs[51], //{"minecraft:the_void", The_Void_BiomeID},
-		"sunflower_plains":                biomeStructs[52], //{"minecraft:sunflower_plains", Sunflower_Plains_BiomeID},
-		"desert_lakes":                    biomeStructs[53], //{"minecraft:desert_lakes", Desert_BiomeID},
-		"gravelly_mountains":              biomeStructs[54], //{"minecraft:gravelly_mountains", Gravelly_Mountains_BiomeID},
-		"flower_forest":                   biomeStructs[55], //{"minecraft:flower_forest", Flower_Forest_BiomeID},
-		"taiga_mountains":                 biomeStructs[56], //{"minecraft:taiga_mountains", Taiga_Mountains_BiomeID},
-		"swamp_hills":                     biomeStructs[57], //{"minecraft:swamp_hills", Swamp_Hills_BiomeID},
-		"ice_spikes":                      biomeStructs[58], //{"minecraft:ice_spikes", Ice_Spikes_BiomeID},
-		"modified_jungle":                 biomeStructs[59], //{"minecraft:modified_junlge", Modified_Jungle_BiomeID},
-		"modified_jungle_edge":            biomeStructs[60], //{"minecraft:modified_jungle_edge", Modified_Jungle_Edge_BiomeID},
-		"tall_birch_forest":               biomeStructs[61], //{"minecraft:tall_birch_forest", Tall_Birch_Forest_BiomeID},
-		"tall_birch_hills":                biomeStructs[62], //{"minecraft:tall_birch_hills", Tall_Birch_Hills_BiomeID},
-		"dark_forest_hills":               biomeStructs[63], //{"minecraft:dark_forest_hills", Dark_Forest_Hills_BiomeID},
-		"snowy_taiga_mountains":           biomeStructs[64], //{"minecraft:snowy_taiga_mountains", Snowy_Taiga_Mountains_BiomeID},
-		"giant_spruce_taiga":              biomeStructs[65], //{"minecraft:giant_spruce_taiga", Giant_Spruce_Taiga_BiomeID},
-		"modified_gravelly_mountains":     biomeStructs[66], //{"minecraft:modified_gavelly_mountains", Modified_Gravelly_Mountains_BiomeID},
-		"shattered_savanna":               biomeStructs[67], //{"minecraft:shattered_savanna", Shattered_Savanna_BiomeID},
-		"shattered_savanna_plateu":        biomeStructs[68], //{"minecraft:shattered_savanna_plateu", Shattered_Savanna_Plateau_BiomeID},
-		"eroded_badlands":                 biomeStructs[69], //{"minecraft:eroded_badlands", Eroded_Badlands_BiomeID},
-		"modified_wooded_badlands_plateu": biomeStructs[70], //{"minecraft:modified_wooded_badlands_plateu", Modified_Wooded_Badlands_Plateau_BiomeID},
-		"modified_badlands_plateu":        biomeStructs[71], //{"minecraft:modified_badlands_plateu", Modified_Badlands_Plateau_BiomeID},
-		"bamboo_jungle":                   biomeStructs[72], //{"minecraft:bamboo_jungle", Bamboo_Jungle_BiomeID},
-		"bamboo_jungle_hills":             biomeStructs[73], //{"minecraft:bamboo_jungle_hills", Bamboo_Jungle_Hills_BiomeID},
-		"soul_sand_valley":                biomeStructs[74], //{"minecraft:soul_sand_valley", Soul_Sand_Valley_BiomeID},
-		"crimson_forest":                  biomeStructs[75], //{"minecraft:crimson_forest", Crimson_Forest_BiomeID},
-		"warped_forest":                   biomeStructs[76], //{"minecraft:warped_forest", Warped_Forest_BiomeID},
-		"basalt_deltas":                   biomeStructs[77], //{"minecraft:basalt_deltas", Basalt_Deltas_BiomeID},
-		"dripstone_caves":                 biomeStructs[78], //{"minecraft:dripstone_caves", Dripstone_Caves_BiomeID},
-		"lush_caves":                      biomeStructs[79], //{"minecraft:lush_caves", Lush_Caves_BiomeID},
+		"the_void":                 biomeStructs[The_Void_BiomeID],                 //0
+		"plains":                   biomeStructs[Plains_BiomeID],                   //1
+		"sunflower_plains":         biomeStructs[Sunflower_Plains_BiomeID],         //2
+		"snowy_plains":             biomeStructs[Snowy_Plains_BiomeID],             //3
+		"ice_spikes":               biomeStructs[Ice_Spikes_BiomeID],               //4
+		"desert":                   biomeStructs[Desert_BiomeID],                   //5
+		"swamp":                    biomeStructs[Swamp_BiomeID],                    //6
+		"forest":                   biomeStructs[Forest_BiomeID],                   //7
+		"flower_forest":            biomeStructs[Flower_Forest_BiomeID],            //8
+		"birch_forest":             biomeStructs[Birch_Forest_BiomeID],             //9
+		"dark_forest":              biomeStructs[Dark_Forest_BiomeID],              //10
+		"old_growth_birch_forest":  biomeStructs[Old_Growth_Birch_Forest_BiomeID],  //11
+		"old_growth_pine_taiga":    biomeStructs[Old_Growth_Pine_Taiga_BiomeID],    //12
+		"old_growth_spruce":        biomeStructs[Old_Growth_Spruce_Taiga],          //13
+		"taiga":                    biomeStructs[Taiga_BiomeID],                    //14
+		"snowy_taiga":              biomeStructs[Snowy_Taiga_BiomeID],              //15
+		"savanna":                  biomeStructs[Savanna_BiomeID],                  //16
+		"savanna_plateu":           biomeStructs[Savanna_Plateau_BiomeID],          //17
+		"windswept_hills":          biomeStructs[Windswept_Hills_BiomeID],          //18
+		"windswept_gravelly_hills": biomeStructs[Windswept_Gravelly_Hills_BiomeID], //19
+		"windswept_forest":         biomeStructs[Windswept_Forest_BiomeID],         //20
+		"windswpet_savanna":        biomeStructs[Windswept_Savanna_BiomeID],        //21
+		"jungle":                   biomeStructs[Jungle_BiomeID],                   //22
+		"sparse_jungle":            biomeStructs[Sparse_Jungle_BiomeID],            //23
+		"bamboo_jungle":            biomeStructs[Bamboo_Jungle_BiomeID],            //24
+		"badlands":                 biomeStructs[Badlands_BiomeID],                 //25
+		"eroded_badlands":          biomeStructs[Eroded_Badlands_BiomeID],          //26
+		"wooded_badlands":          biomeStructs[Wooded_Badlands_BiomeID],          //27
+		"meadow":                   biomeStructs[Meadow_BiomeID],                   //28
+		"grove":                    biomeStructs[Grove_BiomeID],                    //29
+		"snowy_slopes":             biomeStructs[Snowy_Slopes_BiomeID],             //30
+		"frozen_peaks":             biomeStructs[Frozen_Peaks_BiomeID],             //31
+		"jagged_peaks":             biomeStructs[Jagged_Peaks_BiomeID],             //32
+		"stony_peaks":              biomeStructs[Stony_Peaks_BiomeID],              //33
+		"river":                    biomeStructs[River_BiomeID],                    //34
+		"frozen_river":             biomeStructs[Frozen_River_BiomeID],             //35
+		"beach":                    biomeStructs[Beach_BiomeID],                    //36
+		"snowy_beach":              biomeStructs[Snowy_Beach_BiomeID],              //37
+		"stony_shore":              biomeStructs[Stony_Shore_BiomeID],              //38
+		"warm_ocean":               biomeStructs[Warm_Ocean_BiomeID],               //39
+		"lukewarm_ocean":           biomeStructs[Lukewarm_Ocean_BiomeID],           //40
+		"deep_lukewarm_ocean":      biomeStructs[Deep_Lukewarm_Ocean_BiomeID],      //41
+		"ocean":                    biomeStructs[Ocean_BiomeID],                    //42
+		"deep_ocean":               biomeStructs[Deep_Ocean_BiomeID],               //43
+		"cold_ocean":               biomeStructs[Cold_Ocean_BiomeID],               //44
+		"deep_cold_ocean":          biomeStructs[Deep_Cold_Ocean_BiomeID],          //45
+		"frozen_ocean":             biomeStructs[Frozen_Ocean_BiomeID],             //46
+		"deep_frozen_ocean":        biomeStructs[Deep_Frozen_Ocean_BiomeID],        //47
+		"mushroom_fields":          biomeStructs[Mushroom_Fields_BiomeID],          //48
+		"dripstone_caves":          biomeStructs[Dripstone_Caves_BiomeID],          //49
+		"lush_caves":               biomeStructs[Lush_Caves_BiomeID],               //50
+		"nether_wastes":            biomeStructs[Nether_Wastes_BiomeID],            //51
+		"warped_forest":            biomeStructs[Warped_Forest_BiomeID],            //52
+		"crimson_forest":           biomeStructs[Crimson_Forest_BiomeID],           //53
+		"soul_sand_valley":         biomeStructs[Soul_Sand_Valley_BiomeID],         //54
+		"basalt_deltas":            biomeStructs[Basalt_Deltas_BiomeID],            //55
+		"the_end":                  biomeStructs[The_End_BiomeID],                  //56
+		"end_highlands":            biomeStructs[End_Highlands_BiomeID],            //57
+		"end_midlands":             biomeStructs[End_Midlands_BiomeID],             //58
+		"small_end_islands":        biomeStructs[Small_End_Islands_BiomeID],        //59
+		"end_barrens":              biomeStructs[End_Barrens_BiomeID],              //60
 	}
 	// biomeIDMap stores all objects of biomes via their ID defined in the constants above
 	biomeIDMap = map[int]Biome{
-		Ocean_BiomeID:                            biomeStructs[0],  //{"minecraft:ocean", Ocean_BiomeID},
-		Plains_BiomeID:                           biomeStructs[1],  //{"minecraft:plains", Plains_BiomeID},
-		Desert_BiomeID:                           biomeStructs[2],  //{"minecraft:desert", Desert_BiomeID},
-		Mountains_BiomeID:                        biomeStructs[3],  //{"minecraft:mountains", Mountains_BiomeID},
-		Forest_BiomeID:                           biomeStructs[4],  //{"minecraft:forest", Forest_BiomeID},
-		Taiga_BiomeID:                            biomeStructs[5],  //{"minecraft:taiga", Taiga_BiomeID},
-		Swamp_BiomeID:                            biomeStructs[6],  //{"minecraft:swamp", Swamp_BiomeID},
-		River_BiomeID:                            biomeStructs[7],  //{"minecraft:river", River_BiomeID},
-		Nether_Wastes_BiomeID:                    biomeStructs[8],  //{"minecraft:nether_wastes", Nether_Wastes_BiomeID},
-		The_End_BiomeID:                          biomeStructs[9],  //{"minecraft:the_end", The_End_BiomeID},
-		Frozen_Ocean_BiomeID:                     biomeStructs[10], //{"minecraft:frozen_ocean", Frozen_Ocean_BiomeID},
-		Frozen_River_BiomeID:                     biomeStructs[11], //{"minecraft:frozen_river", Frozen_River_BiomeID},
-		Snowy_Tundra_BiomeID:                     biomeStructs[12], //{"minecraft:snowy_tundra", Snowy_Tundra_BiomeID},
-		Snowy_Mountains_BiomeID:                  biomeStructs[13], //{"minecraft:snowy_mountains", Snowy_Mountains_BiomeID},
-		Mushroom_Fields_BiomeID:                  biomeStructs[14], //{"minecraft:mushroom_fields", Mushroom_Fields_BiomeID},
-		Mushroom_Fields_Shore_BiomeID:            biomeStructs[15], //{"minecraft:mushroom_fields_shore", Mushroom_Fields_Shore_BiomeID},
-		Beach_BiomeID:                            biomeStructs[16], //{"minecraft:beach", Beach_BiomeID},
-		Desert_Hills_BiomeID:                     biomeStructs[17], //{"minecraft:desert_hills", Desert_Hills_BiomeID},
-		Wooded_Hills_BiomeID:                     biomeStructs[18], //{"minecraft:wooded_hills", Wooded_Hills_BiomeID},
-		Taiga_Hills_BiomeID:                      biomeStructs[19], //{"minecraft:taiga_hills", Taiga_Hills_BiomeID},
-		Mountain_Edge_BiomeID:                    biomeStructs[20], //{"minecraft:mountain_edge", Mountain_Edge_BiomeID},
-		Jungle_BiomeID:                           biomeStructs[21], //{"minecraft:jungle", Jungle_BiomeID},
-		Jungle_Hills_BiomeID:                     biomeStructs[22], //{"minecraft:jungle_hills", Jungle_Hills_BiomeID},
-		Jungle_Edge_BiomeID:                      biomeStructs[23], //{"minecraft:jungle_edge", Jungle_Edge_BiomeID},
-		Deep_Ocean_BiomeID:                       biomeStructs[24], //{"minecraft:deep_ocean", Deep_Ocean_BiomeID},
-		Stone_Shore_BiomeID:                      biomeStructs[25], //{"minecraft:stone_shore", Stone_Shore_BiomeID},
-		Snowy_Beach_BiomeID:                      biomeStructs[26], //{"minecraft:snowy_beach", Snowy_Beach_BiomeID},
-		Birch_Forest_BiomeID:                     biomeStructs[27], //{"minecraft:birch_forest", Birch_Forest_BiomeID},
-		Birch_Forest_Hills_BiomeID:               biomeStructs[28], //{"minecraft:birch_forest_hills", Birch_Forest_Hills_BiomeID},
-		Dark_Forest_BiomeID:                      biomeStructs[29], //{"minecraft:dark_forest", Dark_Forest_BiomeID},
-		Snowy_Taiga_BiomeID:                      biomeStructs[30], //{"minecraft:snowy_taiga", Snowy_Taiga_BiomeID},
-		Snowy_Taiga_Hills_BiomeID:                biomeStructs[31], //{"minecraft:snowy_taiga_hills", Snowy_Taiga_Hills_BiomeID},
-		Giant_Tree_Taiga_BiomeID:                 biomeStructs[32], //{"minecraft:giant_tree_taiga", Giant_Tree_Taiga_BiomeID},
-		Giant_Tree_Taiga_Hills_BiomeID:           biomeStructs[33], //{"minecraft:giant_tree_taiga_hills", Giant_Tree_Taiga_Hills_BiomeID},
-		Wooded_Mountains_BiomeID:                 biomeStructs[34], //{"minecraft:wooded_mountains", Wooded_Mountains_BiomeID},
-		Savanna_BiomeID:                          biomeStructs[35], //{"minecraft:savanna", Savanna_BiomeID},
-		Savanna_Plateau_BiomeID:                  biomeStructs[36], //{"minecraft:savanna_plateu", Savanna_Plateau_BiomeID},
-		Badlands_BiomeID:                         biomeStructs[37], //{"minecraft:badlands", Badlands_BiomeID},
-		Wooded_Badlands_Plateau_BiomeID:          biomeStructs[38], //{"minecraft:wooded_badlands_plateu", Wooded_Badlands_Plateau_BiomeID},
-		Badlands_Plateau_BiomeID:                 biomeStructs[39], //{"minecraft:badlands_plateu", Badlands_Plateau_BiomeID},
-		Small_End_Islands_BiomeID:                biomeStructs[40], //{"minecraft:small_end_islands", Small_End_Islands_BiomeID},
-		End_Midlands_BiomeID:                     biomeStructs[41], //{"minecraft:end_midlands", End_Midlands_BiomeID},
-		End_Highlands_BiomeID:                    biomeStructs[42], //{"minecraft:end_highlands", End_Highlands_BiomeID},
-		End_Barrens_BiomeID:                      biomeStructs[43], //{"minecraft:end_barrens", End_Barrens_BiomeID},
-		Warm_Ocean_BiomeID:                       biomeStructs[44], //{"minecraft:warm_ocean", Warm_Ocean_BiomeID},
-		Lukewarm_Ocean_BiomeID:                   biomeStructs[45], //{"minecraft:lukewarm_ocean", Lukewarm_Ocean_BiomeID},
-		Cold_Ocean_BiomeID:                       biomeStructs[46], //{"minecraft:cold_ocean", Cold_Ocean_BiomeID},
-		Deep_Warm_Ocean_BiomeID:                  biomeStructs[47], //{"minecraft:deep_warm_ocean", Deep_Warm_Ocean_BiomeID},
-		Deep_Lukewarm_Ocean_BiomeID:              biomeStructs[48], //{"minecraft:deep_lukewarm_ocean", Deep_Lukewarm_Ocean_BiomeID},
-		Deep_Cold_Ocean_BiomeID:                  biomeStructs[49], //{"minecraft:deep_cold_:ocean", Deep_Cold_Ocean_BiomeID},
-		Deep_Frozen_Ocean_BiomeID:                biomeStructs[50], //{"minecraft:deep_frozen_ocean", Deep_Frozen_Ocean_BiomeID},
-		The_Void_BiomeID:                         biomeStructs[51], //{"minecraft:the_void", The_Void_BiomeID},
-		Sunflower_Plains_BiomeID:                 biomeStructs[52], //{"minecraft:sunflower_plains", Sunflower_Plains_BiomeID},
-		Desert_Lakes_BiomeID:                     biomeStructs[53], //{"minecraft:desert_lakes", Desert_BiomeID},
-		Gravelly_Mountains_BiomeID:               biomeStructs[54], //{"minecraft:gravelly_mountains", Gravelly_Mountains_BiomeID},
-		Flower_Forest_BiomeID:                    biomeStructs[55], //{"minecraft:flower_forest", Flower_Forest_BiomeID},
-		Taiga_Mountains_BiomeID:                  biomeStructs[56], //{"minecraft:taiga_mountains", Taiga_Mountains_BiomeID},
-		Swamp_Hills_BiomeID:                      biomeStructs[57], //{"minecraft:swamp_hills", Swamp_Hills_BiomeID},
-		Ice_Spikes_BiomeID:                       biomeStructs[58], //{"minecraft:ice_spikes", Ice_Spikes_BiomeID},
-		Modified_Jungle_BiomeID:                  biomeStructs[59], //{"minecraft:modified_junlge", Modified_Jungle_BiomeID},
-		Modified_Jungle_Edge_BiomeID:             biomeStructs[60], //{"minecraft:modified_jungle_edge", Modified_Jungle_Edge_BiomeID},
-		Tall_Birch_Forest_BiomeID:                biomeStructs[61], //{"minecraft:tall_birch_forest", Tall_Birch_Forest_BiomeID},
-		Tall_Birch_Hills_BiomeID:                 biomeStructs[62], //{"minecraft:tall_birch_hills", Tall_Birch_Hills_BiomeID},
-		Dark_Forest_Hills_BiomeID:                biomeStructs[63], //{"minecraft:dark_forest_hills", Dark_Forest_Hills_BiomeID},
-		Snowy_Taiga_Mountains_BiomeID:            biomeStructs[64], //{"minecraft:snowy_taiga_mountains", Snowy_Taiga_Mountains_BiomeID},
-		Giant_Spruce_Taiga_BiomeID:               biomeStructs[65], //{"minecraft:giant_spruce_taiga", Giant_Spruce_Taiga_BiomeID},
-		Modified_Gravelly_Mountains_BiomeID:      biomeStructs[66], //{"minecraft:modified_gavelly_mountains", Modified_Gravelly_Mountains_BiomeID},
-		Shattered_Savanna_BiomeID:                biomeStructs[67], //{"minecraft:shattered_savanna", Shattered_Savanna_BiomeID},
-		Shattered_Savanna_Plateau_BiomeID:        biomeStructs[68], //{"minecraft:shattered_savanna_plateu", Shattered_Savanna_Plateau_BiomeID},
-		Eroded_Badlands_BiomeID:                  biomeStructs[69], //{"minecraft:eroded_badlands", Eroded_Badlands_BiomeID},
-		Modified_Wooded_Badlands_Plateau_BiomeID: biomeStructs[70], //{"minecraft:modified_wooded_badlands_plateu", Modified_Wooded_Badlands_Plateau_BiomeID},
-		Modified_Badlands_Plateau_BiomeID:        biomeStructs[71], //{"minecraft:modified_badlands_plateu", Modified_Badlands_Plateau_BiomeID},
-		Bamboo_Jungle_BiomeID:                    biomeStructs[72], //{"minecraft:bamboo_jungle", Bamboo_Jungle_BiomeID},
-		Bamboo_Jungle_Hills_BiomeID:              biomeStructs[73], //{"minecraft:bamboo_jungle_hills", Bamboo_Jungle_Hills_BiomeID},
-		Soul_Sand_Valley_BiomeID:                 biomeStructs[74], //{"minecraft:soul_sand_valley", Soul_Sand_Valley_BiomeID},
-		Crimson_Forest_BiomeID:                   biomeStructs[75], //{"minecraft:crimson_forest", Crimson_Forest_BiomeID},
-		Warped_Forest_BiomeID:                    biomeStructs[76], //{"minecraft:warped_forest", Warped_Forest_BiomeID},
-		Basalt_Deltas_BiomeID:                    biomeStructs[77], //{"minecraft:basalt_deltas", Basalt_Deltas_BiomeID},
-		Dripstone_Caves_BiomeID:                  biomeStructs[78], //{"minecraft:dripstone_caves", Dripstone_Caves_BiomeID},
-		Lush_Caves_BiomeID:                       biomeStructs[79], //{"minecraft:lush_caves", Lush_Caves_BiomeID},
+		The_Void_BiomeID:                 biomeStructs[The_Void_BiomeID],                 //0
+		Plains_BiomeID:                   biomeStructs[Plains_BiomeID],                   //1
+		Sunflower_Plains_BiomeID:         biomeStructs[Sunflower_Plains_BiomeID],         //2
+		Snowy_Plains_BiomeID:             biomeStructs[Snowy_Plains_BiomeID],             //3
+		Ice_Spikes_BiomeID:               biomeStructs[Ice_Spikes_BiomeID],               //4
+		Desert_BiomeID:                   biomeStructs[Desert_BiomeID],                   //5
+		Swamp_BiomeID:                    biomeStructs[Swamp_BiomeID],                    //6
+		Forest_BiomeID:                   biomeStructs[Forest_BiomeID],                   //7
+		Flower_Forest_BiomeID:            biomeStructs[Flower_Forest_BiomeID],            //8
+		Birch_Forest_BiomeID:             biomeStructs[Birch_Forest_BiomeID],             //9
+		Dark_Forest_BiomeID:              biomeStructs[Dark_Forest_BiomeID],              //10
+		Old_Growth_Birch_Forest_BiomeID:  biomeStructs[Old_Growth_Birch_Forest_BiomeID],  //11
+		Old_Growth_Pine_Taiga_BiomeID:    biomeStructs[Old_Growth_Pine_Taiga_BiomeID],    //12
+		Old_Growth_Spruce_Taiga:          biomeStructs[Old_Growth_Spruce_Taiga],          //13
+		Taiga_BiomeID:                    biomeStructs[Taiga_BiomeID],                    //14
+		Snowy_Taiga_BiomeID:              biomeStructs[Snowy_Taiga_BiomeID],              //15
+		Savanna_BiomeID:                  biomeStructs[Savanna_BiomeID],                  //16
+		Savanna_Plateau_BiomeID:          biomeStructs[Savanna_Plateau_BiomeID],          //17
+		Windswept_Hills_BiomeID:          biomeStructs[Windswept_Hills_BiomeID],          //18
+		Windswept_Gravelly_Hills_BiomeID: biomeStructs[Windswept_Gravelly_Hills_BiomeID], //19
+		Windswept_Forest_BiomeID:         biomeStructs[Windswept_Forest_BiomeID],         //20
+		Windswept_Savanna_BiomeID:        biomeStructs[Windswept_Savanna_BiomeID],        //21
+		Jungle_BiomeID:                   biomeStructs[Jungle_BiomeID],                   //22
+		Sparse_Jungle_BiomeID:            biomeStructs[Sparse_Jungle_BiomeID],            //23
+		Bamboo_Jungle_BiomeID:            biomeStructs[Bamboo_Jungle_BiomeID],            //24
+		Badlands_BiomeID:                 biomeStructs[Badlands_BiomeID],                 //25
+		Eroded_Badlands_BiomeID:          biomeStructs[Eroded_Badlands_BiomeID],          //26
+		Wooded_Badlands_BiomeID:          biomeStructs[Wooded_Badlands_BiomeID],          //27
+		Meadow_BiomeID:                   biomeStructs[Meadow_BiomeID],                   //28
+		Grove_BiomeID:                    biomeStructs[Grove_BiomeID],                    //29
+		Snowy_Slopes_BiomeID:             biomeStructs[Snowy_Slopes_BiomeID],             //30
+		Frozen_Peaks_BiomeID:             biomeStructs[Frozen_Peaks_BiomeID],             //31
+		Jagged_Peaks_BiomeID:             biomeStructs[Jagged_Peaks_BiomeID],             //32
+		Stony_Peaks_BiomeID:              biomeStructs[Stony_Peaks_BiomeID],              //33
+		River_BiomeID:                    biomeStructs[River_BiomeID],                    //34
+		Frozen_River_BiomeID:             biomeStructs[Frozen_River_BiomeID],             //35
+		Beach_BiomeID:                    biomeStructs[Beach_BiomeID],                    //36
+		Snowy_Beach_BiomeID:              biomeStructs[Snowy_Beach_BiomeID],              //37
+		Stony_Shore_BiomeID:              biomeStructs[Stony_Shore_BiomeID],              //38
+		Warm_Ocean_BiomeID:               biomeStructs[Warm_Ocean_BiomeID],               //39
+		Lukewarm_Ocean_BiomeID:           biomeStructs[Lukewarm_Ocean_BiomeID],           //40
+		Deep_Lukewarm_Ocean_BiomeID:      biomeStructs[Deep_Lukewarm_Ocean_BiomeID],      //41
+		Ocean_BiomeID:                    biomeStructs[Ocean_BiomeID],                    //42
+		Deep_Ocean_BiomeID:               biomeStructs[Deep_Ocean_BiomeID],               //43
+		Cold_Ocean_BiomeID:               biomeStructs[Cold_Ocean_BiomeID],               //44
+		Deep_Cold_Ocean_BiomeID:          biomeStructs[Deep_Cold_Ocean_BiomeID],          //45
+		Frozen_Ocean_BiomeID:             biomeStructs[Frozen_Ocean_BiomeID],             //46
+		Deep_Frozen_Ocean_BiomeID:        biomeStructs[Deep_Frozen_Ocean_BiomeID],        //47
+		Mushroom_Fields_BiomeID:          biomeStructs[Mushroom_Fields_BiomeID],          //48
+		Dripstone_Caves_BiomeID:          biomeStructs[Dripstone_Caves_BiomeID],          //49
+		Lush_Caves_BiomeID:               biomeStructs[Lush_Caves_BiomeID],               //50
+		Nether_Wastes_BiomeID:            biomeStructs[Nether_Wastes_BiomeID],            //51
+		Warped_Forest_BiomeID:            biomeStructs[Warped_Forest_BiomeID],            //52
+		Crimson_Forest_BiomeID:           biomeStructs[Crimson_Forest_BiomeID],           //53
+		Soul_Sand_Valley_BiomeID:         biomeStructs[Soul_Sand_Valley_BiomeID],         //54
+		Basalt_Deltas_BiomeID:            biomeStructs[Basalt_Deltas_BiomeID],            //55
+		The_End_BiomeID:                  biomeStructs[The_End_BiomeID],                  //56
+		End_Highlands_BiomeID:            biomeStructs[End_Highlands_BiomeID],            //57
+		End_Midlands_BiomeID:             biomeStructs[End_Midlands_BiomeID],             //58
+		Small_End_Islands_BiomeID:        biomeStructs[Small_End_Islands_BiomeID],        //59
+		End_Barrens_BiomeID:              biomeStructs[End_Barrens_BiomeID],              //60
 	}
 )
 
-var biomeStructs = []Biome{{"minecraft:ocean", Ocean_BiomeID},
-	{"minecraft:plains", Plains_BiomeID},
-	{"minecraft:desert", Desert_BiomeID},
-	{"minecraft:mountains", Mountains_BiomeID},
-	{"minecraft:forest", Forest_BiomeID},
-	{"minecraft:taiga", Taiga_BiomeID},
-	{"minecraft:swamp", Swamp_BiomeID},
-	{"minecraft:river", River_BiomeID},
-	{"minecraft:nether_wastes", Nether_Wastes_BiomeID},
-	{"minecraft:the_end", The_End_BiomeID},
-	{"minecraft:frozen_ocean", Frozen_Ocean_BiomeID},
-	{"minecraft:frozen_river", Frozen_River_BiomeID},
-	{"minecraft:snowy_tundra", Snowy_Tundra_BiomeID},
-	{"minecraft:snowy_mountains", Snowy_Mountains_BiomeID},
-	{"minecraft:mushroom_fields", Mushroom_Fields_BiomeID},
-	{"minecraft:mushroom_fields_shore", Mushroom_Fields_Shore_BiomeID},
-	{"minecraft:beach", Beach_BiomeID},
-	{"minecraft:desert_hills", Desert_Hills_BiomeID},
-	{"minecraft:wooded_hills", Wooded_Hills_BiomeID},
-	{"minecraft:taiga_hills", Taiga_Hills_BiomeID},
-	{"minecraft:mountain_edge", Mountain_Edge_BiomeID},
-	{"minecraft:jungle", Jungle_BiomeID},
-	{"minecraft:jungle_hills", Jungle_Hills_BiomeID},
-	{"minecraft:jungle_edge", Jungle_Edge_BiomeID},
-	{"minecraft:deep_ocean", Deep_Ocean_BiomeID},
-	{"minecraft:stone_shore", Stone_Shore_BiomeID},
-	{"minecraft:snowy_beach", Snowy_Beach_BiomeID},
-	{"minecraft:birch_forest", Birch_Forest_BiomeID},
-	{"minecraft:birch_forest_hills", Birch_Forest_Hills_BiomeID},
-	{"minecraft:dark_forest", Dark_Forest_BiomeID},
-	{"minecraft:snowy_taiga", Snowy_Taiga_BiomeID},
-	{"minecraft:snowy_taiga_hills", Snowy_Taiga_Hills_BiomeID},
-	{"minecraft:giant_tree_taiga", Giant_Tree_Taiga_BiomeID},
-	{"minecraft:giant_tree_taiga_hills", Giant_Tree_Taiga_Hills_BiomeID},
-	{"minecraft:wooded_mountains", Wooded_Mountains_BiomeID},
-	{"minecraft:savanna", Savanna_BiomeID},
-	{"minecraft:savanna_plateu", Savanna_Plateau_BiomeID},
-	{"minecraft:badlands", Badlands_BiomeID},
-	{"minecraft:wooded_badlands_plateu", Wooded_Badlands_Plateau_BiomeID},
-	{"minecraft:badlands_plateu", Badlands_Plateau_BiomeID},
-	{"minecraft:small_end_islands", Small_End_Islands_BiomeID},
-	{"minecraft:end_midlands", End_Midlands_BiomeID},
-	{"minecraft:end_highlands", End_Highlands_BiomeID},
-	{"minecraft:end_barrens", End_Barrens_BiomeID},
-	{"minecraft:warm_ocean", Warm_Ocean_BiomeID},
-	{"minecraft:lukewarm_ocean", Lukewarm_Ocean_BiomeID},
-	{"minecraft:cold_ocean", Cold_Ocean_BiomeID},
-	{"minecraft:deep_warm_ocean", Deep_Warm_Ocean_BiomeID},
-	{"minecraft:deep_lukewarm_ocean", Deep_Lukewarm_Ocean_BiomeID},
-	{"minecraft:deep_cold_ocean", Deep_Cold_Ocean_BiomeID},
-	{"minecraft:deep_frozen_ocean", Deep_Frozen_Ocean_BiomeID},
-	{"minecraft:the_void", The_Void_BiomeID},
-	{"minecraft:sunflower_plains", Sunflower_Plains_BiomeID},
-	{"minecraft:desert_lakes", Desert_BiomeID},
-	{"minecraft:gravelly_mountains", Gravelly_Mountains_BiomeID},
-	{"minecraft:flower_forest", Flower_Forest_BiomeID},
-	{"minecraft:taiga_mountains", Taiga_Mountains_BiomeID},
-	{"minecraft:swamp_hills", Swamp_Hills_BiomeID},
-	{"minecraft:ice_spikes", Ice_Spikes_BiomeID},
-	{"minecraft:modified_junlge", Modified_Jungle_BiomeID},
-	{"minecraft:modified_jungle_edge", Modified_Jungle_Edge_BiomeID},
-	{"minecraft:tall_birch_forest", Tall_Birch_Forest_BiomeID},
-	{"minecraft:tall_birch_hills", Tall_Birch_Hills_BiomeID},
-	{"minecraft:dark_forest_hills", Dark_Forest_Hills_BiomeID},
-	{"minecraft:snowy_taiga_mountains", Snowy_Taiga_Mountains_BiomeID},
-	{"minecraft:giant_spruce_taiga", Giant_Spruce_Taiga_BiomeID},
-	{"minecraft:modified_gavelly_mountains", Modified_Gravelly_Mountains_BiomeID},
-	{"minecraft:shattered_savanna", Shattered_Savanna_BiomeID},
-	{"minecraft:shattered_savanna_plateu", Shattered_Savanna_Plateau_BiomeID},
-	{"minecraft:eroded_badlands", Eroded_Badlands_BiomeID},
-	{"minecraft:modified_wooded_badlands_plateu", Modified_Wooded_Badlands_Plateau_BiomeID},
-	{"minecraft:modified_badlands_plateu", Modified_Badlands_Plateau_BiomeID},
-	{"minecraft:bamboo_jungle", Bamboo_Jungle_BiomeID},
-	{"minecraft:bamboo_jungle_hills", Bamboo_Jungle_Hills_BiomeID},
-	{"minecraft:soul_sand_valley", Soul_Sand_Valley_BiomeID},
-	{"minecraft:crimson_forest", Crimson_Forest_BiomeID},
-	{"minecraft:warped_forest", Warped_Forest_BiomeID},
-	{"minecraft:basalt_deltas", Basalt_Deltas_BiomeID},
-	{"minecraft:dripstone_caves", Dripstone_Caves_BiomeID},
-	{"minecraft:lush_caves", Lush_Caves_BiomeID}}
+var biomeStructs = []Biome{
+	The_Void_BiomeID:                 {"minecraft:the_void", The_Void_BiomeID}, //0
+	Plains_BiomeID:                   {"minecraft:plains", Plains_BiomeID},
+	Sunflower_Plains_BiomeID:         {"minecraft:sunflower_plains", Sunflower_Plains_BiomeID},
+	Snowy_Plains_BiomeID:             {"minecraft:snowt_plains", Snowy_Plains_BiomeID},
+	Ice_Spikes_BiomeID:               {"minecraft:ice_spikes", Ice_Spikes_BiomeID},
+	Desert_BiomeID:                   {"minecraft:desert", Desert_BiomeID},
+	Swamp_BiomeID:                    {"minecraft:swamp", Swamp_BiomeID},
+	Forest_BiomeID:                   {"minecraft:forest", Forest_BiomeID},
+	Flower_Forest_BiomeID:            {"minecraft:flower_forest", Flower_Forest_BiomeID},
+	Birch_Forest_BiomeID:             {"minecraft:birch_forest", Birch_Forest_BiomeID},
+	Dark_Forest_BiomeID:              {"minecraft:dark_forest", Dark_Forest_BiomeID},                           //10
+	Old_Growth_Birch_Forest_BiomeID:  {"minecraft:old_growth_birch_forest", Old_Growth_Birch_Forest_BiomeID},   //11
+	Old_Growth_Pine_Taiga_BiomeID:    {"minecraft:old_growth_pine_taiga", Old_Growth_Pine_Taiga_BiomeID},       //12
+	Old_Growth_Spruce_Taiga:          {"minecraft:old_growth_spruce_taiga", Old_Growth_Spruce_Taiga},           //13
+	Taiga_BiomeID:                    {"minecraft:taiga", Taiga_BiomeID},                                       //14
+	Snowy_Taiga_BiomeID:              {"minecraft:snowy_taiga", Snowy_Taiga_BiomeID},                           //15
+	Savanna_BiomeID:                  {"minecraft:savanna", Savanna_BiomeID},                                   //16
+	Savanna_Plateau_BiomeID:          {"minecraft:savanna_plateu", Savanna_Plateau_BiomeID},                    //17
+	Windswept_Hills_BiomeID:          {"minecraft:windswept_hill", Windswept_Hills_BiomeID},                    //18
+	Windswept_Gravelly_Hills_BiomeID: {"minecraft:windswept_gravelly_hills", Windswept_Gravelly_Hills_BiomeID}, //19
+	Windswept_Forest_BiomeID:         {"minecraft:windswept_forest", Windswept_Forest_BiomeID},                 //20
+	Windswept_Savanna_BiomeID:        {"minecraft:windswept_savanna", Windswept_Savanna_BiomeID},               //21
+	Jungle_BiomeID:                   {"minecraft:jungle", Jungle_BiomeID},                                     //22
+	Sparse_Jungle_BiomeID:            {"minecraft:sparse_jungle", Sparse_Jungle_BiomeID},                       //23
+	Bamboo_Jungle_BiomeID:            {"minecraft:bamboo_jungle", Bamboo_Jungle_BiomeID},                       //24
+	Badlands_BiomeID:                 {"minecraft:badlands", Badlands_BiomeID},                                 //25
+	Eroded_Badlands_BiomeID:          {"minecraft:eroded_badlands", Eroded_Badlands_BiomeID},                   //26
+	Wooded_Badlands_BiomeID:          {"minecraft:wooded_badlands", Wooded_Badlands_BiomeID},                   //28
+	Meadow_BiomeID:                   {"minecraft:meadow", Meadow_BiomeID},                                     //28
+	Grove_BiomeID:                    {"minecraft:grove", Grove_BiomeID},                                       //29
+	Snowy_Slopes_BiomeID:             {"minecraft:snowy_slopes", Snowy_Slopes_BiomeID},                         //30
+	Frozen_Peaks_BiomeID:             {"minecraft:frozen_peaks", Frozen_Peaks_BiomeID},                         //32
+	Jagged_Peaks_BiomeID:             {"minecraft:jagged_peaks", Jagged_Peaks_BiomeID},                         //32
+	Stony_Peaks_BiomeID:              {"minecraft:stony_peaks", Stony_Peaks_BiomeID},                           //33
+	River_BiomeID:                    {"minecraft:river", River_BiomeID},                                       //34
+	Frozen_River_BiomeID:             {"minecraft:frozen_river", Frozen_River_BiomeID},                         //35
+	Beach_BiomeID:                    {"minecraft:beach", Beach_BiomeID},                                       //36
+	Snowy_Beach_BiomeID:              {"minecraft:snowy_beach", Snowy_Beach_BiomeID},                           //37
+	Stony_Shore_BiomeID:              {"minecraft:stony_shore", Stony_Shore_BiomeID},                           //38
+	Warm_Ocean_BiomeID:               {"minecraft:warm_ocean", Warm_Ocean_BiomeID},                             //39
+	Lukewarm_Ocean_BiomeID:           {"minecraft:lukewarm_ocean", Lukewarm_Ocean_BiomeID},                     //40
+	Deep_Lukewarm_Ocean_BiomeID:      {"minecraft:deep_lukewarm_ocean", Deep_Lukewarm_Ocean_BiomeID},           //41
+	Ocean_BiomeID:                    {"minecraft:ocean", Ocean_BiomeID},                                       //42
+	Deep_Ocean_BiomeID:               {"minecraft:deep_ocean", Deep_Ocean_BiomeID},                             //43
+	Cold_Ocean_BiomeID:               {"minecraft:cold_ocean", Cold_Ocean_BiomeID},                             //44
+	Deep_Cold_Ocean_BiomeID:          {"minecraft:deep_cold_ocean", Deep_Cold_Ocean_BiomeID},                   //45
+	Frozen_Ocean_BiomeID:             {"minecraft:frozen_ocean", Frozen_Ocean_BiomeID},                         //46
+	Deep_Frozen_Ocean_BiomeID:        {"minecraft:deep_frozen_ocean", Deep_Frozen_Ocean_BiomeID},               //47
+	Mushroom_Fields_BiomeID:          {"minecraft:mushroom_fields", Mushroom_Fields_BiomeID},                   //48
+	Dripstone_Caves_BiomeID:          {"minecraft:dripstone_caves", Dripstone_Caves_BiomeID},                   //49
+	Lush_Caves_BiomeID:               {"minecraft:lush_caves", Lush_Caves_BiomeID},                             //50
+	Nether_Wastes_BiomeID:            {"minecraft:nether_wastes", Nether_Wastes_BiomeID},                       //51
+	Warped_Forest_BiomeID:            {"minecraft:warped_forest", Warped_Forest_BiomeID},                       //52
+	Crimson_Forest_BiomeID:           {"minecraft:crimson_forest", Crimson_Forest_BiomeID},                     //53
+	Soul_Sand_Valley_BiomeID:         {"minecraft:soul_sand_valley", Soul_Sand_Valley_BiomeID},                 //54
+	Basalt_Deltas_BiomeID:            {"minecraft:basalt_deltas", Basalt_Deltas_BiomeID},                       //55
+	The_End_BiomeID:                  {"minecraft:the_end", The_End_BiomeID},                                   //56
+	End_Highlands_BiomeID:            {"minecraft:end_highlands", End_Highlands_BiomeID},                       //57
+	End_Midlands_BiomeID:             {"minecraft:end_midlands", End_Midlands_BiomeID},                         //58
+	Small_End_Islands_BiomeID:        {"minecraft:small_end_islands", Small_End_Islands_BiomeID},               //59
+	End_Barrens_BiomeID:              {"minecraft:end_barrens", End_Barrens_BiomeID}}                           //60
 
 func GetBiomeByID(ID int) Biome {
 	return biomeIDMap[ID]

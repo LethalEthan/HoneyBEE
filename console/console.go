@@ -4,7 +4,7 @@ import (
 	"HoneyBEE/config"
 	"HoneyBEE/utils"
 	"bufio"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"io"
 	"log"
@@ -105,22 +105,37 @@ func Console() {
 	}
 }
 
-var MD5 string
+var SHA string
+
+// func Hash() string {
+// 	file, err := os.Open(os.Args[0])
+// 	if err != nil {
+// 		MD5 = "00000000000000000000000000000000"
+// 	}
+// 	hash := md5.New()
+// 	if _, err := io.Copy(hash, file); err != nil {
+// 		MD5 = "00000000000000000000000000000000"
+// 	}
+// 	//Get the 16 bytes hash
+// 	hBytes := hash.Sum(nil)[:16]
+// 	file.Close()
+// 	MD5 = hex.EncodeToString(hBytes) //Convert bytes to string
+// 	return MD5
+// }
 
 func Hash() string {
 	file, err := os.Open(os.Args[0])
 	if err != nil {
-		MD5 = "00000000000000000000000000000000"
+		SHA = "00000000000000000000000000000000"
 	}
-	hash := md5.New()
+	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
-		MD5 = "00000000000000000000000000000000"
+		SHA = "00000000000000000000000000000000"
 	}
-	//Get the 16 bytes hash
-	hBytes := hash.Sum(nil)[:16]
+	hBytes := hash.Sum(nil)
 	file.Close()
-	MD5 = hex.EncodeToString(hBytes) //Convert bytes to string
-	return MD5
+	SHA = hex.EncodeToString(hBytes) //Convert bytes to string
+	return SHA
 }
 
 //Shutdown - listens for sigterm and exits
