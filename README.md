@@ -10,7 +10,7 @@ This software is still being developed so expect bugs and issues now and then, a
 
 **This project is a cleanroom project meaning that I have to reverse engineer and read documentation that others and have wrote to understand how the network protocol works along with any other kind of necessary data, world generation will be completely be based off my own work along with AI and other ideas**
 
-**To people who want to contribute: If you would like to contribute to HoneyBEE or HoneyComb you'll need to create a fork and submit a Pull Request (PR), The code will be reviewed and potentially be merged (no guarantees). I will also add your name to the contributors list. Any PR'sand commits must use the same license and a CLA must be signed**
+**To people who want to contribute: If you would like to contribute to HoneyBEE or HoneyComb you'll need to create a fork and submit a Pull Request (PR), The code will be reviewed and potentially be merged (no guarantees). I will also add your name to the contributors list. Any PR's and commits must use the same license and a CLA must be signed**
 
 As of now we only have basic features to start off with but as development continues we will have more features along with a custom plugin system (HoneyComb, will be available later in the future) and perhaps a way to get forge support although that would be WAYY in the future and I'm not too sure how that would be implemented especially with licensing. 
 
