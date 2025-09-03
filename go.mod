@@ -8,7 +8,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/panjf2000/gnet v1.5.3
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
